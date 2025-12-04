@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import RegisterView from '@/views/RegisterView.vue'
-import ManageOrder from '@/views/adminView/manageOrder.vue'
+import ManageOrder from '@/views/adminView/ManageOrder.vue'
 import Dashboard from '@/views/adminView/Dashboard.vue'
 import ManageProduct from '@/views/adminView/ManageProduct.vue'
 import ManageUser from '@/views/adminView/ManageUser.vue'
