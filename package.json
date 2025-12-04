@@ -1,6 +1,6 @@
 {
-  "name": "my-startech-project",
-  "version": "0.0.0",
+  "name": "StarTech-Project",
+  "version": "0.0.1",
   "private": true,
   "type": "module",
   "engines": {
