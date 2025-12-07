@@ -9,7 +9,31 @@
       <aside class="sidebar">
         <nav class="nav-links">
           <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
-          <a href="#" class="nav-item active">Manage Product</a>
+          
+          <div class="nav-dropdown-group">
+            <a href="#" class="nav-item nav-dropdown-toggle active" @click.prevent="toggleProductMenu">
+               Manage Product
+              <span :class="['dropdown-icon', { 'open': isProductMenuOpen }]">⌄</span>
+            </a>
+            
+            <transition name="dropdown">
+              <div v-show="isProductMenuOpen" class="nav-dropdown-menu">
+                
+                <router-link to="/manageproduct" class="nav-sub-item active">
+                   Product Listing
+                </router-link>
+          
+                <router-link to="/product/category" class="nav-sub-item">
+                   Category
+                </router-link>
+                
+                <router-link to="/product/supplier" class="nav-sub-item">
+                   Supplier
+                </router-link>
+                
+              </div>
+            </transition>
+          </div>
           <router-link to="/manageorder" class="nav-item">Manage Orders</router-link>
           <router-link to="/manageuser" class="nav-item">Manage Users</router-link>
           <a href="#" class="nav-item">Setting</a>
@@ -18,7 +42,7 @@
 
       <main class="content-area">
         <div class="top-row">
-          <h1 class="page-title">Manage Products</h1>
+          <h1 class="page-title">Manage Products</h1> 
         </div>
 
         <section class="metrics-row">
@@ -68,7 +92,7 @@
                 <button class="search-icon-btn">🔍</button>
               </div>
               <button class="add-product-btn" @click="addProduct">Add Product</button>
-              <button class="edit-bulk-btn" @click="bulkEditProducts">Edit Bulk</button>
+              <button class="delete-bulk-btn" @click="bulkDeleteProducts">Delete Bulk</button>
             </div>
           </div>
           
@@ -76,7 +100,7 @@
             <table>
               <thead>
                 <tr>
-                  <th><input type="checkbox"></th>
+                  <th><input type="checkbox" v-model="selectAll"></th>
                   <th>Name/SKU</th>
                   <th>Stock at</th>
                   <th>Brand</th>
@@ -122,7 +146,14 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+
+// New reactive state for the sidebar menu
+const isProductMenuOpen = ref(true); 
+
+function toggleProductMenu() {
+  isProductMenuOpen.value = !isProductMenuOpen.value;
+}
 
 // Reactive list of products
 const products = ref([
@@ -157,27 +188,88 @@ const selectedProductIds = ref([]);
 
 let nextId = 3;
 
+/**
+ * NEW: Computed property for Select All/Deselect All functionality.
+ */
+const selectAll = computed({
+  get: () => selectedProductIds.value.length === products.value.length && products.value.length > 0,
+  set: (value) => {
+    selectedProductIds.value = value ? products.value.map(p => p.id) : [];
+  }
+});
+
+
 // --- CRUD Operations ---
 
 function addProduct() {
+  // --- 1. Collect required data ---
+  const newName = prompt('Enter the Name of the New Product:');
+  if (newName === null || newName.trim() === '') {
+    alert('Product creation cancelled: Name is required.');
+    return;
+  }
+  
+  const newBrand = prompt(`Enter the Brand for "${newName}":`, 'New Brand');
+  if (newBrand === null) return;
+  
+  const newCategory = prompt(`Enter the Category for "${newName}":`, 'Unassigned');
+  if (newCategory === null) return;
+  
+  const newSupplier = prompt(`Enter the Supplier for "${newName}":`, 'Unknown Supplier');
+  if (newSupplier === null) return;
+  
+  let newStock = prompt(`Enter the In Stock Quantity for "${newName}":`, 0);
+  let stockValue = parseInt(newStock);
+  if (newStock === null || isNaN(stockValue) || stockValue < 0) {
+    alert('Invalid stock quantity. Product creation cancelled.');
+    return;
+  }
+  
+  let newStatus = prompt(`Enter the Status (Active or Inactive) for "${newName}":`, 'Inactive');
+  const statusLower = (newStatus || '').toLowerCase();
+  if (statusLower !== 'active' && statusLower !== 'inactive') {
+      newStatus = 'Inactive';
+  } else {
+      newStatus = newStatus.charAt(0).toUpperCase() + newStatus.slice(1).toLowerCase();
+  }
+  
+  let newPrice = prompt(`Enter the Price for "${newName}" (e.g., 50.99):`, 0);
+  let priceValue = parseFloat(newPrice);
+  if (newPrice === null || isNaN(priceValue) || priceValue < 0) {
+    alert('Invalid price entered. Product creation cancelled.');
+    return;
+  }
+
+  // --- 2. Create the new product object ---
   const newProduct = {
     id: nextId++,
-    name: 'New Item (Click Edit)',
-    imageSrc: '/new_product.png',
-    stockAt: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-    brand: 'New Brand',
-    category: 'New Category',
-    inStock: 1,
-    supplier: 'Unknown',
-    status: 'Active',
-    price: 0
+    name: newName.trim(),
+    imageSrc: '/placeholder.png', 
+    stockAt: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }),
+    brand: newBrand.trim() || 'TBD',
+    category: newCategory.trim() || 'Unassigned',
+    inStock: stockValue,
+    supplier: newSupplier.trim() || 'TBD',
+    status: newStatus,
+    price: priceValue
   };
+  
+  // --- 3. Add to the list and notify ---
   products.value.push(newProduct);
+  alert(`Product "${newProduct.name}" added successfully with all details!`);
 }
 
+/**
+ * Single product deletion. Success message removed.
+ * @param {number} id - The ID of the product to delete.
+ */
 function deleteProduct(id) {
-  products.value = products.value.filter(p => p.id !== id);
+  if (confirm('Are you sure you want to delete this product?')) {
+    products.value = products.value.filter(p => p.id !== id);
+    // Success alert removed as requested.
+  }
 }
+
 
 /**
  * SINGLE-PRODUCT EDIT LOGIC
@@ -239,42 +331,28 @@ function editProduct(id) {
   }
 }
 
+
 /**
- *  BULK EDIT LOGIC
- * Applies one common change based on a single input to ALL selected products.
+ * BULK DELETE LOGIC. Success message removed.
+ * Deletes all selected products after confirmation.
  */
-function bulkEditProducts() {
+function bulkDeleteProducts() {
   const count = selectedProductIds.value.length;
 
   if (count === 0) {
-    alert('Please select at least one product using the checkboxes to bulk edit.');
+    alert('Please select at least one product using the checkboxes to delete.');
     return;
   }
-  
-  // Ask for ONE common value to apply to ALL selected products
-  const stockIncrease = prompt(`Enter the amount to ADD to 'In Stock' for all ${count} selected products:`, 5);
-  
-  const increaseValue = parseInt(stockIncrease);
 
-  if (isNaN(increaseValue) || stockIncrease === null) {
-      alert('Bulk edit cancelled or invalid stock value entered.');
-      return;
+  if (confirm(`Are you sure you want to delete ${count} selected products?`)) {
+    // Filter out the products whose IDs are in selectedProductIds
+    products.value = products.value.filter(p => !selectedProductIds.value.includes(p.id));
+    
+    // Clear the selection after deletion
+    selectedProductIds.value = [];
+    
+    // Success alert removed as requested.
   }
-  
-  products.value.forEach(product => {
-    if (selectedProductIds.value.includes(product.id)) {
-      // Apply the COMMON change to all selected items
-      product.inStock += increaseValue;
-      
-      // Also apply a common status change: forcing all selected to be active
-      product.status = 'Active';
-    }
-  });
-
-  alert(`${count} products successfully updated in bulk. (Stock +${increaseValue}, Status forced to Active)`);
-  
-  // Clear the selection after the action is complete
-  selectedProductIds.value = [];
 }
 </script>
 
@@ -333,18 +411,84 @@ function bulkEditProducts() {
 }
 
 .nav-item {
-  display: block;
+  display: flex; 
+  align-items: center; 
   padding: 12px;
   margin: 5px 0;
   border-radius: 8px;
   text-decoration: none;
   color: #333;
 }
+
 .nav-item.active {
   background: #e6f0ff;
   color: #0b6cf0;
 }
 
+/* --- Dropdown Styles --- */
+
+.nav-dropdown-group {
+    position: relative;
+}
+
+.nav-dropdown-toggle {
+    cursor: pointer;
+    /* Use space-between to push the arrow to the right */
+    justify-content: space-between; 
+}
+
+.dropdown-icon {
+    font-size: 20px;
+    line-height: 1;
+    transition: transform 0.3s;
+    font-weight: bold;
+}
+
+.dropdown-icon.open {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown-menu {
+    padding: 5px 0;
+    margin-left: 10px; 
+    border-left: 2px solid #0b6cf0;
+    overflow: hidden;
+    width: 100%; 
+    box-sizing: border-box; 
+}
+
+.nav-sub-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px; 
+    margin: 2px 0;
+    border-radius: 8px;
+    text-decoration: none;
+    color: #555;
+    font-size: 14px; 
+}
+
+.nav-sub-item.active {
+    background: #e6f0ff;
+    color: #0b6cf0;
+    font-weight: 500;
+}
+
+/* Transition for smooth dropdown animation */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.3s ease;
+  max-height: 300px; 
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  max-height: 0;
+  transform: translateY(-10px);
+}
+
+/* --- Content Area Styles (Unchanged) --- */
 .content-area {
   grid-area: content;
   padding: 40px;
@@ -365,7 +509,7 @@ function bulkEditProducts() {
     margin-bottom: 25px;
 }
 
-/* --- PRODUCT COMPONENT STYLES --- */
+/* --- PRODUCT COMPONENT STYLES (Retained Emojis in main content area) --- */
 
 .metrics-row {
     display: flex;
@@ -472,9 +616,10 @@ function bulkEditProducts() {
     transition: background 0.2s;
 }
 
-.edit-bulk-btn {
-    background: #ffc107;
-    color: #333;
+/* NEW: Delete Bulk button style */
+.delete-bulk-btn {
+    background: #dc3545; /* Red color for delete action */
+    color: white;
     padding: 10px 15px;
     border: none;
     border-radius: 8px;
