@@ -11,8 +11,8 @@
       <aside class="sidebar">
 
         <nav class="nav-links">
-          <a href="#" class="nav-item">Dashboard</a>
-          <a href="#" class="nav-item">Manage Product</a>
+          <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
+          <router-link to="/manageproduct" class="nav-item">Manage Product</router-link>
           <a href="#" class="nav-item active">Manage Orders</a>
           <router-link to="/manageuser" class="nav-item">Manage Users</router-link>
         </nav>
