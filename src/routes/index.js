@@ -52,7 +52,10 @@ const router = createRouter({
     {
       path: '/cart',
       name: 'cart',
-      component: Cart
+      component: Cart,
+      prop: route =>({
+        Cart_data: route.params.Cart_data
+      })
     },
     {
       path: '/category',
