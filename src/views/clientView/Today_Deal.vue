@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>Manage Product Page</h1>
+        <h1>Today's deal Page</h1>
     </div>
 </template>
 
