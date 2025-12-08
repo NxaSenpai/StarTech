@@ -10,8 +10,8 @@
       <!-- SIDEBAR -->
       <aside class="sidebar">
         <nav class="nav-links">
-          <a href="#" class="nav-item">Dashboard</a>
-          <a href="#" class="nav-item">Manage Product</a>
+          <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
+          <router-link to="/manageproduct" class="nav-item">Manage Product</router-link>
           <router-link to="/manageorder" class="nav-item">Manage Orders</router-link>
           <a href="#" class="nav-item active">Manage Users</a>
         </nav>
