@@ -5,13 +5,13 @@ export default {
     return {
       activeThumb: 1,
       thumbnailImages: [
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 2.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 4.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 3.png'
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 2.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 4.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 3.png'
       ],
       quantity: 1,
-      mainImage: '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png'
+      mainImage: '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png'
     };
   },
   mounted() {
@@ -95,10 +95,10 @@ export default {
         <div class="payment-section">
           <p class="payment-title">Guaranteed Safe Checkout</p>
           <div class="payment-icons">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/aba.png" class="payment-icon visa">
-            <img src="/ace.png" class="payment-icon visa">
-            <img src="/pay.png" class="payment-icon visa">
+            <img src="/pdetail/visa.jpg" class="payment-icon visa">
+            <img src="/pdetail/aba.png" class="payment-icon visa">
+            <img src="/pdetail/ace.png" class="payment-icon visa">
+            <img src="/pdetail/pay.png" class="payment-icon visa">
           </div>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default {
 
       <div class="feature-showcase">
         <div class="feature-image-container">
-          <img src="/air1.webp" alt="Product Feature" class="feature-image">
+          <img src="/pdetail/air1.webp" alt="Product Feature" class="feature-image">
         </div>
 
         <div class="feature-content">
@@ -144,7 +144,7 @@ export default {
         </div>
 
         <div class="feature-image-container">
-          <img src="/air2.webp" alt="Product Feature" class="feature-image">
+          <img src="/pdetail/air2.webp" alt="Product Feature" class="feature-image">
         </div>
       </div>
 
