@@ -5,13 +5,13 @@ export default {
     return {
       activeThumb: 1,
       thumbnailImages: [
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 2.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 4.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 3.png'
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 2.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 4.png',
+        '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 3.png'
       ],
       quantity: 1,
-      mainImage: '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png'
+      mainImage: '/pdetail/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png'
     };
   },
   mounted() {
@@ -84,7 +84,7 @@ export default {
         <div class="quantity-section">
           <div class="quantity-controls">
             <button class="quantity-btn" @click="decreaseQuantity">-</button>
-            <input type="number" class="quantity-input" v-model.number="quantity" min="1">
+            <input  class="quantity-input" v-model.number="quantity" min="1">
             <button class="quantity-btn" @click="increaseQuantity">+</button>
           </div>
           <button class="add-to-cart-btn" @click="addToCart()">Add to cart</button>
@@ -95,10 +95,10 @@ export default {
         <div class="payment-section">
           <p class="payment-title">Guaranteed Safe Checkout</p>
           <div class="payment-icons">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
+            <img src="/pdetail/visa.jpg" class="payment-icon visa">
+            <img src="/pdetail/aba.png" class="payment-icon visa">
+            <img src="/pdetail/ace.png" class="payment-icon visa">
+            <img src="/pdetail/pay.png" class="payment-icon visa">
           </div>
         </div>
       </div>
@@ -107,20 +107,17 @@ export default {
     <!-- Section 2: More About the Product -->
     <div class="section-2">
       <h2 class="section-title">More about the product</h2>
-      <p class="section-description">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sollicitudin consequat iusto in cursus. 
-        Proin non velit quam. Etiam diam turpis, elementum in gravida maximus, efficitur quis nulla. Lorem ipsum 
-        dolor sit amet, consectetur adipiscing elit. Vivamus sit eimet interdum lorem.
-      </p>
+      <ul class="section-description">
+        <li>Keeps your room cool and comfortable</li>
+        <li>Reduces humidity (no sticky feeling)</li>
+        <li>Better air quality</li>
+        <li>Helps productivity and sleep</li>
+        <li>Can protect electronics from overheating</li>
+      </ul>
 
       <div class="feature-showcase">
         <div class="feature-image-container">
-          <img src="" alt="Product Feature" class="feature-image">
-          <div class="feature-overlay">
-            <p class="overlay-text">
-              Cras vehicula semper ex id fermentum turtor varius eget estension et malesuada fames ac ante ipsum, eget.
-            </p>
-          </div>
+          <img src="/pdetail/air1.webp" alt="Product Feature" class="feature-image">
         </div>
 
         <div class="feature-content">
@@ -147,7 +144,7 @@ export default {
         </div>
 
         <div class="feature-image-container">
-          <img src="" alt="Product Feature" class="feature-image">
+          <img src="/pdetail/air2.webp" alt="Product Feature" class="feature-image">
         </div>
       </div>
 
@@ -388,11 +385,15 @@ hr {
 }
 
 .payment-icon {
-  width: 50px;
-  height: 32px;
+  width: 80px;
+  height: 50px;
   background: white;
   border: 1px solid #ddd;
   border-radius: 4px;
+  transition: transform 0.2s;
+}
+.payment-icon:hover{
+  transform: scale(1.5);
 }
 
 /* Section 2 Styles */
