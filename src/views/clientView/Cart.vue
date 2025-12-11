@@ -224,12 +224,14 @@ export default {
 }
 
 .empty-msg {
-  background: #d7d0d7;
+  background: #f1eaf1;
   width: 1200px;
   height: 50px;
   display: flex;
   align-items: center;
   text-align:left;
+  text-decoration-thickness: 10px;
+  padding-left: 10px;
   
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
