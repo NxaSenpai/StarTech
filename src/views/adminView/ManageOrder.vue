@@ -1,100 +1,132 @@
 <template>
+  <div class="page-wrapper">
     <div class="admin-layout">
+
+      <!-- TOP BAR -->
       <header class="admin-header">
-        <div class="logo"><img src="/logo.png" alt=""></div>
+        <h2 class="logo-text">StarTech</h2>
       </header>
-  
+
+      <!-- SIDEBAR -->
       <aside class="sidebar">
-        <h3 class="sidebar-title">Pages</h3>
+
         <nav class="nav-links">
-          <a href="#" class="nav-item">Dashboard</a>
-          <a href="#" class="nav-item">Manage Product</a>
+          <router-link to="/dashboard" class="nav-item">Dashboard</router-link>
+          <router-link to="/manageproduct" class="nav-item">Manage Product</router-link>
           <a href="#" class="nav-item active">Manage Orders</a>
-          <a href="#" class="nav-item">Manage Users</a>
+          <router-link to="/manageuser" class="nav-item">Manage Users</router-link>
         </nav>
+
         <div class="settings">
-          <span class="nav-item setting-link">Setting</span>
+          <a href="#" class="nav-item">Setting</a>
         </div>
       </aside>
-  
+
+      <!-- MAIN CONTENT -->
       <main class="content-area">
-        <div class="page-header">
+
+        <div class="top-row">
           <h1 class="page-title">Manage Orders</h1>
-        </div>
-  
-        <div class="main-content">
+
           <div class="search-box">
-            <input type="text" placeholder="Search by Order ID, Customer Name, Email" class="search-input">
+            <input
+              type="text"
+              placeholder="Search by Order ID, Customer Name, Email"
+              class="search-input"
+            >
           </div>
-  
-          <div class="dashboard-and-table">
-            <div class="stats-dashboard">
-              <div class="stat-card blue">
-                <p>Orders Today:</p>
-                <p class="stat-value">{{ todaysOrderTotal }}</p>
-              </div>
-              <div class="stat-card yellow">
-                <p>Total Pending:</p>
-                <p class="stat-value">{{ pendingTotal }}</p>
-              </div>
-              <div class="stat-card orange">
-                <p>Revenue Waiting:</p>
-                <p class="stat-value">${{ revenueWaiting }}</p>
-              </div>
-              <div class="stat-card green">
-                <p>Total Sales (This month):</p>
-                <p class="stat-value">$1,200.00</p>
-              </div>
+        </div>
+
+
+        <div class="layout-grid">
+
+          <!-- TABLE -->
+          <div class="order-table-box">
+            <div class="table-header">
+              <span>Order ID</span>
+              <span>Customer</span>
+              <span>Date</span>
+              <span>Total</span>
+              <span>Action</span>
             </div>
-  
-            <div class="order-table-container">
-              <table class="order-table">
-                <thead>
-                  <tr>
-                    <th>Order ID</th>
-                    <th>Customer</th>
-                    <th>Date</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="order in orders" :key="order.id">
-                    <td>{{ order.id }}</td>
-                    <td>{{ order.customer }}</td>
-                    <td>{{ order.date }}</td>
-                    <td>{{ order.total }}</td>
-                    <td>
-                      <div class="status-dropdown">
-                        <button class="status-button" @click="toggleDropdown(order.id)">
-                          <span :class="['status', order.status.toLowerCase()]">{{ order.status }}</span>
-                        </button>
-                        <ul v-if="dropdownVisible === order.id" class="dropdown-menu">
-                          <li @click="updateStatus(order, 'Pending')">Pending</li>
-                          <li @click="updateStatus(order, 'Completed')">Completed</li>
-                        </ul>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+
+            <div
+              class="table-row"
+              v-for="order in orders"
+              :key="order.id"
+            >
+              <span>{{ order.id }}</span>
+              <span>{{ order.customer }}</span>
+              <span>{{ order.date }}</span>
+              <span>{{ order.total }}</span>
+
+              <span
+                :class="['status', order.status.toLowerCase()]"
+                @click="toggleDropdown(order.id)"
+                style="cursor: pointer; position: relative;"
+              >
+                {{ order.status }}
+                <div
+                  v-if="dropdownVisible === order.id"
+                  class="dropdown-menu"
+                  @click.stop
+                >
+                  <button
+                    v-if="order.status !== 'Pending'"
+                    @click="updateStatus(order, 'Pending')"
+                    class="dropdown-item"
+                  >Pending</button>
+                  <button
+                    v-if="order.status !== 'Completed'"
+                    @click="updateStatus(order, 'Completed')"
+                    class="dropdown-item"
+                  >Completed</button>
+                </div>
+              </span>
             </div>
           </div>
+
+
+          <!-- STATS -->
+          <div class="stats-dashboard">
+            <div class="stat-card blue">
+              <p>Orders Today:</p>
+              <h2>{{ todaysOrderTotal }}</h2>
+            </div>
+
+            <div class="stat-card orange">
+              <p>Total Pending:</p>
+              <h2>{{ pendingTotal }} orders</h2>
+            </div>
+
+            <div class="stat-card orange">
+              <p>Revenue Waiting:</p>
+              <h2>${{ revenueWaiting }}</h2>
+            </div>
+
+            <div class="stat-card green">
+              <p>Total Sales (This month):</p>
+              <h2>${{ totalSalesThisMonth }}</h2>
+            </div>
+          </div>
+
         </div>
       </main>
     </div>
-  </template>
+  </div>
+</template>
+
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 
 const orders = ref([
-  { id: '# 0001', customer: 'Dara', date: 'Nov 16, 2025', total: '$129.00', status: 'Pending' },
-  { id: '# 0002', customer: 'Dara', date: 'Nov 16, 2025', total: '$129.00', status: 'Pending' },
-  { id: '# 0003', customer: 'Dara', date: 'Nov 16, 2025', total: '$129.00', status: 'Pending' },
-  { id: '# 0004', customer: 'Dara', date: 'Nov 16, 2025', total: '$129.00', status: 'Pending' },
-  { id: '# 0005', customer: 'Dara', date: 'Nov 15, 2025', total: '$129.00', status: 'Completed' },
-  { id: '# 0006', customer: 'Dara', date: 'Nov 15, 2025', total: '$129.00', status: 'Completed' },
+  { id: '# 0001', customer: 'Kitty', date: 'Nov 16, 2025', total: '$999.00', status: 'Pending' },
+  { id: '# 0002', customer: 'Puthika', date: 'Nov 16, 2025', total: '$529.00', status: 'Pending' },
+  { id: '# 0003', customer: 'Srey Nuth', date: 'Nov 16, 2025', total: '$129.00', status: 'Pending' },
+  { id: '# 0004', customer: 'Dara', date: 'Nov 16, 2025', total: '$59.00', status: 'Pending' },
+  { id: '# 0005', customer: 'Daro', date: 'Nov 15, 2025', total: '$19.00', status: 'Completed' },
+  { id: '# 0006', customer: 'Liza', date: 'Nov 15, 2025', total: '$129.00', status: 'Completed' },
 ]);
 
 const dropdownVisible = ref(null);
@@ -108,265 +140,248 @@ const updateStatus = (order, status) => {
   dropdownVisible.value = null;
 };
 
-const todaysOrderTotal = orders.value.filter(order => order.date === 'Nov 16, 2025').length;
-const pendingTotal = orders.value.filter(order => order.status === 'Pending').length;
-const revenueWaiting = orders.value
-  .filter(order => order.status === 'Pending')
-  .reduce((sum, order) => sum + parseFloat(order.total.replace('$', '')), 0)
-  .toFixed(2);
+const todaysOrderTotal = computed(() =>
+  orders.value.filter(order => order.date === 'Nov 16, 2025').length
+);
+
+const pendingTotal = computed(() =>
+  orders.value.filter(order => order.status === 'Pending').length
+);
+
+const revenueWaiting = computed(() =>
+  orders.value
+    .filter(order => order.status === 'Pending')
+    .reduce((sum, order) => sum + parseFloat(order.total.replace('$', '')), 0)
+    .toFixed(2)
+);
+
+// Add this for Total Sales (This month)
+const totalSalesThisMonth = computed(() =>
+  orders.value
+    .filter(order =>
+      order.status === 'Completed' &&
+      order.date.includes('Nov')
+    )
+    .reduce((sum, order) => sum + parseFloat(order.total.replace('$', '')), 0)
+    .toFixed(2)
+);
 
 </script>
 
 <style scoped>
-
+.page-wrapper {
+  background: #ffffff;
+  min-height: 100vh;
+  width: 100vw;
+  padding: 0;
+  margin: 0;
+}
 
 .admin-layout {
+  height: 100vh;
+  width: 100vw;
   display: grid;
-  grid-template-columns: 250px 1fr;
-  grid-template-rows: 60px 1fr;
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 70px 1fr;
   grid-template-areas:
-    "sidebar header"
+    "header header"
     "sidebar content";
-  min-height: 100vh;
-  background-color: #f0f2f5;
+  border-radius: 0;
 }
 
+/* ===== HEADER ===== */
 .admin-header {
   grid-area: header;
-  background-color: #fff;
-  border-bottom: 1px solid #ddd;
+  background: #0b6cf0;
   display: flex;
   align-items: center;
-  padding: 0 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  padding-left: 20px;
+
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-.admin-header .logo {
-  width: 10px;
-  height: 100px;
-  scale: 0.4;
+.logo-text {
+  color: white;
+  font-weight: bold;
 }
 
-
-
+/* ===== SIDEBAR ===== */
 .sidebar {
   grid-area: sidebar;
-  background-color: #fff;
-  padding: 20px 0;
-  border-right: 1px solid #ddd;
-  display: flex;
-  flex-direction: column;
+  border-right: 1px solid #eee;
+  padding: 20px;
+  background: white;
+
+  position: sticky;
+  top: 70px;
+  height: calc(100vh - 70px);
 }
 
-.sidebar-title {
-  font-size: 1em;
-  font-weight: 600;
-  color: #333;
-  padding: 0 20px;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
 
-.nav-links {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
 
 .nav-item {
   display: block;
-  padding: 12px 20px;
-  color: #555;
+  padding: 12px;
+  margin: 5px 0;
+  border-radius: 8px;
   text-decoration: none;
-  transition: background-color 0.2s;
-  font-size: 0.95em;
-  font-weight: 500;
+  color: #333;
 }
-
-.nav-item:hover {
-  background-color: #f5f5f5;
-}
-
 .nav-item.active {
-  background-color: #e6f0ff;
-  color: #007bff;
-  border-left: 4px solid #007bff;
+  background: #e6f0ff;
+  color: #0b6cf0;
 }
 
-.settings {
-  padding: 10px 0;
-  border-top: 1px solid #eee;
-}
-
-.setting-link {
-  padding-left: 20px;
-}
-
-
+/* ===== CONTENT ===== */
 .content-area {
-  grid-area: content;
-  padding: 20px;
-  background-color: #f7f7f7;
-}
-
-.page-header {
-  margin-bottom: 20px;
+  overflow-y: auto;
+  height: calc(100vh - 70px);
 }
 
 .page-title {
-  font-size: 1.8em;
-  font-weight: 600;
+  color: #111;
+  font-weight: 700;
+}
+.table-header span {
+  color: #222;
+}
+.table-row span {
   color: #333;
 }
 
-
-
-.search-box {
-  background-color: #fff;
+.search-box input {
+  margin-top: 10px;
   border: 1px solid #ddd;
-  border-radius: 8px;
-  width: 50%; /* Constrain search bar width */
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-}
-
-.search-input {
-  width: 100%;
   padding: 10px 15px;
-  border: none;
+  width: 350px;
   border-radius: 8px;
-  font-size: 0.95em;
 }
 
-.search-input::placeholder {
-  color: #aaa;
-}
-
-.dashboard-and-table {
+/* ===== LAYOUT ===== */
+.layout-grid {
   display: grid;
-  grid-template-columns: 300px 1fr; 
-  gap: 20px;
+  grid-template-columns: 1fr 250px;
+  gap: 30px;
+  margin-top: 25px;
+  align-items: start;
 }
 
-.stats-dashboard {
+/* ===== TABLE ===== */
+
+.order-table-box {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-}
-
-.stat-card {
-  background-color: #fff;
-  padding: 15px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  font-size: 0.9em;
+  gap: 0;
+  max-height: 700px;
+  overflow-y: auto;
+  background: white;
+  border-radius: 10px;
   border: 1px solid #eee;
+  position: relative;
 }
 
-.stat-value {
-  font-size: 1.6em;
+.table-header {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  padding: 15px 20px;
+  border-radius: 10px 10px 0 0;
+  align-items: center;
+  background: #e0e0e0;
   font-weight: bold;
-  margin-top: 5px;
+  position: sticky;
+  top: 0;
+  z-index: 2;
 }
 
-/* Stat card colors */
-.stat-card.blue { border-left: 4px solid #007bff; color: #007bff; }
-.stat-card.yellow { border-left: 4px solid #ffc107; color: #ffc107; }
-.stat-card.orange { border-left: 4px solid #fd7e14; color: #fd7e14; }
-.stat-card.green { border-left: 4px solid #28a745; color: #28a745; }
-
-
-.order-table-container {
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  overflow: hidden; /* Ensures borders are contained */
-}
-
-.order-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9em;
-}
-
-.order-table th, .order-table td {
-  padding: 12px 15px;
-  text-align: left;
+.table-row {
+  display: grid;
+  grid-template-columns: repeat(5,1fr);
+  padding: 15px 20px;
+  align-items: center;
+  background: #fafafa;
   border-bottom: 1px solid #eee;
-  color: #333;
+}
+
+.table-row:hover {
+  background: #eef4ff;
+  transition: 0.2s ease;
 }
 
 
-.order-table th {
-  background-color: #f5f5f5;
-  color: #666; 
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.order-table tbody tr:last-child td {
-  border-bottom: none;
-}
-
-.order-table tbody tr:hover {
-  background-color: #fafafa;
-}
-
+/* ===== STATUS ===== */
 .status {
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: 600;
-  font-size: 0.85em;
+  position: relative;
+  padding: 6px 12px;
+  border-radius: 20px;
+  width: fit-content;
+  cursor: pointer;
 }
 
 .status.pending {
-  background-color: #fff3cd;
-  color: #856404;
-  border: 1px solid #ffeeba;
+  color: orange;
 }
 
 .status.completed {
-  background-color: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.status-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.status-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0;
+  color: green;
 }
 
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: 36px;
   left: 0;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  list-style: none;
-  padding: 5px 0;
-  margin: 0;
-  z-index: 1000;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  min-width: 120px;
 }
 
-.dropdown-menu li {
+.dropdown-item {
+  background: none;
+  border: none;
   padding: 8px 12px;
+  text-align: left;
   cursor: pointer;
-  transition: background-color 0.2s;
+  color: #333;
+  font-size: 15px;
 }
 
-.dropdown-menu li:hover {
-  background-color: #f5f5f5;
+.dropdown-item:hover {
+  background: #e6f0ff;
+}
+
+/* ===== STATS ===== */
+.stats-dashboard {
+  margin-right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.stat-card {
+  padding: 15px;
+  border-radius: 10px;
+  border: 2px solid;
+}
+
+.stat-card.blue {
+  border-color: #0b6cf0;
+  color: #0b6cf0;
+}
+
+.stat-card.orange {
+  border-color: orange;
+  color: orange;
+}
+
+.stat-card.green {
+  border-color: green;
+  color: green;
 }
 
 </style>

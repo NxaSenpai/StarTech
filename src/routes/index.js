@@ -4,12 +4,15 @@ import RegisterView from '@/views/RegisterView.vue'
 import ManageOrder from '@/views/adminView/ManageOrder.vue'
 import Dashboard from '@/views/adminView/Dashboard.vue'
 import ManageProduct from '@/views/adminView/ManageProduct.vue'
+import ManageCategory from '../views/adminView/ManageCategory.vue' 
+import ManageSupplier from '../views/adminView/ManageSupplier.vue'
 import ManageUser from '@/views/adminView/ManageUser.vue'
 import Cart from '@/views/clientView/Cart.vue'
 import CategoryView from '@/views/clientView/CategoryView.vue'
 import EventView from '@/views/clientView/EventView.vue'
 import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
+import HomeView from '@/views/clientView/HomeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,6 +48,16 @@ const router = createRouter({
       component: ManageProduct
     },
     {
+      path: '/product/category',
+      name: 'categorymanagement',
+      component: ManageCategory 
+    },
+    {
+      path: '/product/supplier',
+      name: 'suppliermanagement',
+      component: ManageSupplier 
+    },
+    {
       path: '/manageuser',
       name: 'manageuser',
       component: ManageUser
@@ -76,6 +89,11 @@ const router = createRouter({
       path: '/profile',
       name: 'profile',
       component: Profile
+    },
+    {
+      path: '/home',
+      name: 'home',
+      component:HomeView
     }
   ]
 })
