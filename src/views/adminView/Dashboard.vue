@@ -323,7 +323,7 @@ export default {
 .bar {
   width: 25px;
   background-color: #0b6cf0; 
-  border-radius: 3px 3px 0 0;
+  border-radius: 10px 10px 0 0;
   position: relative;
   display: flex;
   flex-direction: column;

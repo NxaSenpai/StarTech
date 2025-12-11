@@ -115,7 +115,7 @@ export default {
               </div>
             </div>
             <button class="add-to-cart-btn" @click="addToCart()">
-              <span class="cart-icon">🛒</span> Add to cart
+              <span class="cart-icon"></span>Add to cart
             </button>
             <button class="wishlist-btn">♡</button>
           </div>
@@ -128,7 +128,7 @@ export default {
           </div>
 
           <div class="payment-section">
-            <p class="payment-title">🔒 Guaranteed Safe & Secure Checkout</p>
+            <p class="payment-title">Guaranteed Safe & Secure Checkout</p>
             <div class="payment-icons">
               <img src="/pdetail/visa.jpg" class="payment-icon" alt="Visa">
               <img src="/pdetail/aba.png" class="payment-icon" alt="ABA">
@@ -521,6 +521,7 @@ export default {
 }
 
 .quantity-input {
+color: #000000;
   width: 60px;
   text-align: center;
   border: none;
@@ -552,9 +553,6 @@ export default {
   box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
 }
 
-.cart-icon {
-  font-size: 18px;
-}
 
 .wishlist-btn {
   background: white;
