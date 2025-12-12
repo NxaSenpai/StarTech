@@ -268,6 +268,7 @@ export default {
 }
 
 .input-group {
+  color: #000000;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -326,6 +327,7 @@ export default {
 }
 
 .sort-select {
+color: #000000;
   padding: 8px 32px 8px 12px;
   border: 1px solid #ddd;
   border-radius: 6px;

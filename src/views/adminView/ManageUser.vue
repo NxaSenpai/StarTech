@@ -4,7 +4,7 @@
 
       <!-- TOP BAR -->
       <header class="admin-header">
-        <h2 class="logo-text">StarTech</h2>
+        <img class ="logo-img" src="/logo.png" alt="">
       </header>
 
       <!-- SIDEBAR -->
@@ -78,61 +78,118 @@
 
         <!-- User Details Modal -->
         <div v-if="selectedUser" class="modal-overlay" @click.self="closeModal">
-          <div class="modal-content edit-modal">
-            <button class="modal-close-icon" @click="closeModal">✕</button>
+          <div class="modal-content modern-modal">
+            <button class="modal-close-icon" @click="closeModal">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
             
             <div class="modal-header">
-              <img :src="editUser.profile" alt="Profile" class="profile-pic" />
-              <h2 class="modal-title">User Details</h2>
+              <div class="profile-container">
+                <img :src="editUser.profile" alt="Profile" class="profile-pic" />
+                <div class="status-badge" :class="editUser.role.toLowerCase()">
+                  {{ editUser.role }}
+                </div>
+              </div>
+              <h2 class="modal-title">{{ editUser.name }}</h2>
+              <p class="modal-subtitle">Member since {{ editUser.joinSince }}</p>
             </div>
 
-            <div class="modal-fields">
-              <div class="form-group">
-                <label>User ID:</label>
-                <input v-model="editUser.id" class="modal-input" disabled />
-              </div>
+            <div class="modal-body">
+              <div class="form-grid">
+                <div class="form-group">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                    </svg>
+                    User ID
+                  </label>
+                  <input v-model="editUser.id" class="modal-input" disabled />
+                </div>
 
-              <div class="form-group">
-                <label>Name:</label>
-                <input v-model="editUser.name" class="modal-input" />
-              </div>
+                <div class="form-group">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm9 7h-6v13h-2v-6h-2v6H9V9H3V7h18v2z"/>
+                    </svg>
+                    Full Name
+                  </label>
+                  <input v-model="editUser.name" class="modal-input editable" />
+                </div>
 
-              <div class="form-group">
-                <label>Email:</label>
-                <input v-model="editUser.email" class="modal-input" disabled />
-              </div>
+                <div class="form-group full-width">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+                    </svg>
+                    Email Address
+                  </label>
+                  <input v-model="editUser.email" class="modal-input" disabled />
+                </div>
 
-              <div class="form-group">
-                <label>Role:</label>
-                <select v-model="editUser.role" class="modal-input">
-                  <option value="Admin">Admin</option>
-                  <option value="User">User</option>
-                </select>
-              </div>
+                <div class="form-group">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Role
+                  </label>
+                  <select v-model="editUser.role" class="modal-input editable">
+                    <option value="Admin">Administrator</option>
+                    <option value="User">Regular User</option>
+                  </select>
+                </div>
 
-              <div class="form-group">
-                <label>Joined Since:</label>
-                <input v-model="editUser.joinSince" class="modal-input" disabled />
-              </div>
+                <div class="form-group">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM7 10h5v5H7z"/>
+                    </svg>
+                    Join Date
+                  </label>
+                  <input v-model="editUser.joinSince" class="modal-input" disabled />
+                </div>
 
-              <div class="form-group">
-                <label>Password:</label>
-                <div class="password-row">
-                  <input
-                    :type="showPassword ? 'text' : 'password'"
-                    v-model="editUser.password"
-                    class="modal-input password-input"
-                  />
-                  <button class="reveal-btn" @click="showPassword = !showPassword">
-                    {{ showPassword ? 'Hide' : 'Show' }}
-                  </button>
+                <div class="form-group full-width">
+                  <label>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
+                    </svg>
+                    Password
+                  </label>
+                  <div class="password-container">
+                    <input
+                      :type="showPassword ? 'text' : 'password'"
+                      v-model="editUser.password"
+                      class="modal-input editable password-input"
+                    />
+                    <button class="password-toggle" @click="showPassword = !showPassword">
+                      <svg v-if="!showPassword" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                      </svg>
+                      <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z"/>
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div class="modal-actions">
-              <button class="save-btn" @click="saveEdit">Save Changes</button>
-              <button class="cancel-btn" @click="closeModal">Cancel</button>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" @click="closeModal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                </svg>
+                Cancel
+              </button>
+              <button class="btn btn-primary" @click="saveEdit">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/>
+                </svg>
+                Save Changes
+              </button>
             </div>
           </div>
         </div>
@@ -253,15 +310,15 @@ const userCount = computed(() => users.value.filter(u => u.role === 'User').leng
   background: #0b6cf0;
   display: flex;
   align-items: center;
-  padding-left: 20px;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-.logo-text {
-  color: white;
-  font-weight: bold;
+.logo-img {
+  scale: .4;
+  margin-left: -90px;
+  filter: brightness(0) invert(1);
 }
 
 .sidebar {
@@ -288,11 +345,14 @@ const userCount = computed(() => users.value.filter(u => u.role === 'User').leng
 }
 
 .content-area {
+  padding: 40px;
+color: #000000;
   overflow-y: auto;
   height: calc(100vh - 70px);
 }
 
 .page-title {
+  font-size: 24px;
   color: #111;
   font-weight: 700;
 }
@@ -373,187 +433,283 @@ const userCount = computed(() => users.value.filter(u => u.role === 'User').leng
 .modal-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0,0,0,0.4);
+  background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6));
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 10000;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
 }
 
-.modal-content {
-  background: #fff;
-  color: #000000;
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modern-modal {
+  scale: .95;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  color: #1a202c;
   padding: 0;
-  border-radius: 16px;
-  min-width: 420px;
+  border-radius: 10px;
+  min-width: 520px;
   max-width: 90vw;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  max-height: 100vh;
+  overflow-y: auto;
+  box-shadow: 
+    0 25px 50px -12px rgba(0,0,0,0.25),
+    0 0 0 1px rgba(255,255,255,0.05);
   position: relative;
-  overflow: hidden;
+  transform: scale(0.95);
+  animation: modalIn 0.3s ease-out forwards;
+}
+
+@keyframes modalIn {
+  to { transform: scale(1); }
 }
 
 .modal-close-icon {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  background: none;
+  top: 20px;
+  right: 20px;
+  background: rgba(255,255,255,0.9);
   border: none;
-  font-size: 24px;
+  font-size: 16px;
   cursor: pointer;
-  color: #999;
-  width: 32px;
-  height: 32px;
+  color: #64748b;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: 0.2s;
+  border-radius: 12px;
+  transition: all 0.2s;
+  z-index: 10;
 }
 
 .modal-close-icon:hover {
-  background: #f0f0f0;
-  color: #333;
-}
-
-/* ===== EDIT MODAL ===== */
-.edit-modal {
-  padding: 40px 32px 32px 32px;
+  background: #fee2e2;
+  color: #dc2626;
+  transform: scale(1.05);
 }
 
 .modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 40px 32px 32px 32px;
   text-align: center;
-  margin-bottom: 28px;
+  position: relative;
+}
+
+.profile-container {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 16px;
 }
 
 .profile-pic {
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
-  margin-bottom: 16px;
-  border: 3px solid #0b6cf0;
+  border: 4px solid rgba(255,255,255,0.3);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.status-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 12px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid white;
+}
+
+.status-badge.admin {
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: white;
+}
+
+.status-badge.user {
+  background: linear-gradient(135deg, #34d399, #10b981);
+  color: white;
 }
 
 .modal-title {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 700;
-  color: #111;
-  margin: 0;
+  margin: 0 0 8px 0;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-.modal-fields {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  margin-bottom: 24px;
+.modal-subtitle {
+  font-size: 16px;
+  opacity: 0.9;
+  margin: 0;
+  font-weight: 400;
+}
+
+.modal-body {
+  padding: 32px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 20px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
 }
 
 .form-group label {
   font-weight: 600;
   font-size: 14px;
-  color: #333;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.modal-input {
-  padding: 10px 14px;
-  border-radius: 8px;
-  border: 1px solid #ddd;
-  font-size: 15px;
-  width: 100%;
-  transition: 0.2s;
-  font-family: inherit;
-}
-
-.modal-input:focus {
-  outline: none;
-  border-color: #0b6cf0;
-  box-shadow: 0 0 0 3px rgba(11, 108, 240, 0.1);
-}
-
-.modal-input:disabled {
-  background: #f5f5f5;
-  color: #666;
-  cursor: not-allowed;
-}
-
-.password-row {
+  color: #374151;
   display: flex;
   align-items: center;
   gap: 8px;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.form-group label svg {
+  color: #6b7280;
+}
+
+.modal-input {
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  font-size: 15px;
+  transition: all 0.2s;
+  font-family: inherit;
+  background: #ffffff;
+}
+
+.modal-input.editable {
+  border-color: #d1d5db;
+}
+
+.modal-input.editable:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  transform: translateY(-1px);
+}
+
+.modal-input:disabled {
+  background: #f9fafb;
+  color: #6b7280;
+  cursor: not-allowed;
+  border-color: #e5e7eb;
+}
+
+.password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
 .password-input {
   flex: 1;
+  padding-right: 50px;
 }
 
-.reveal-btn {
-  background: #f0f0f0;
-  border: 1px solid #ddd;
-  color: #333;
-  cursor: pointer;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 13px;
-  transition: 0.2s;
-  white-space: nowrap;
-}
-
-.reveal-btn:hover {
-  background: #e0e0e0;
-  border-color: #bbb;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding-top: 20px;
-  border-top: 1px solid #eee;
-}
-
-.save-btn {
-  flex: 1;
-  background: #0b6cf0;
-  color: white;
+.password-toggle {
+  position: absolute;
+  right: 12px;
+  background: none;
   border: none;
-  border-radius: 8px;
-  padding: 10px 16px;
+  color: #6b7280;
   cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.password-toggle:hover {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.modal-footer {
+  padding: 24px 32px 32px 32px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 12px;
   font-size: 15px;
   font-weight: 600;
-  transition: 0.2s;
-}
-
-.save-btn:hover {
-  background: #084b9c;
-  box-shadow: 0 4px 12px rgba(11, 108, 240, 0.3);
-}
-
-.cancel-btn {
-  flex: 1;
-  background: #f5f5f5;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 10px 16px;
   cursor: pointer;
-  font-size: 15px;
-  font-weight: 600;
-  transition: 0.2s;
+  transition: all 0.2s;
+  border: none;
+  text-decoration: none;
 }
 
-.cancel-btn:hover {
-  background: #eee;
-  border-color: #bbb;
+.btn-secondary {
+  background: #ffffff;
+  color: #6b7280;
+  border: 2px solid #e5e7eb;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+  transform: translateY(-1px);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 14px 0 rgba(102, 126, 234, 0.39);
+}
+
+.btn-primary:hover {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px);
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 640px) {
+  .modern-modal {
+    min-width: 95vw;
+    margin: 20px;
+    border-radius: 16px;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+  }
+  
+  .btn {
+    justify-content: center;
+  }
 }
 
 /* ===== STATS ===== */
