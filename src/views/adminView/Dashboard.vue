@@ -3,7 +3,7 @@
     <div class="admin-layout">
 
       <header class="admin-header">
-        <h2 class="logo-text">StarTech</h2>
+        <img class="logo-img" src="/logo.png" alt="">
       </header>
 
       <aside class="sidebar">
@@ -137,15 +137,15 @@ export default {
   background: #0b6cf0; 
   display: flex;
   align-items: center;
-  padding-left: 20px;
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-.logo-text {
-  color: white;
-  font-weight: bold;
+.logo-img {
+  scale: .4;
+  margin-left: -90px;
+  filter: brightness(0) invert(1);
 }
 
 .sidebar {
