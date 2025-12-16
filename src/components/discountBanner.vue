@@ -15,7 +15,7 @@ defineProps<{
     <div class="content">
       <h3 class="title">{{ title }}</h3>
       <p class="price">Starting at <strong>{{ startingPrice }}</strong></p>
-      <span class="shop-link">Shop now →</span>
+      <div class="shop-btn"><span class="shop-link">Shop now</span></div>
     </div>
   </a>
 </template>
@@ -27,7 +27,7 @@ defineProps<{
   height: 280px;
   width: 410px;
   margin: 12px 0;
-  border-radius: 28px;
+  border-radius: 15px;
   overflow: hidden;
   background: url('') center/cover no-repeat;
 
@@ -39,11 +39,10 @@ defineProps<{
 }
 
 .discount-banner:hover {
-  transform: translateY(-12px) scale(1.02);
+  transform: translateY(-1px) scale(1.01);
   box-shadow: 0 30px 70px rgba(0,0,0,0.22);
 }
 
-/* Dark overlay for text readability */
 .overlay {
   position: absolute;
   inset: 0;
@@ -86,17 +85,12 @@ defineProps<{
 }
 
 .shop-link {
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #60a5fa;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #ffffff;
   text-shadow: 0 2px 10px rgba(0,0,0,0.4);
 }
 
-.shop-link:hover {
-  color: #93bbfc;
-}
-
-/* Mobile  */
 @media (max-width: 900px) {
   .discount-banner {
     width: 100%;
@@ -114,5 +108,21 @@ defineProps<{
     background: rgba(0,0,0,0.5);
   }
   .title { font-size: 2.2rem; }
+}
+
+.shop-btn{
+  border-radius: 7px;
+  background: rgb(93, 93, 252);
+  justify-items: center;
+  align-content: center;
+  padding: 5px;
+  padding-left:10px;
+  width: 105px;
+  height: 40px;
+}
+
+.shop-btn:hover{
+  background: #0056b3;
+  cursor: pointer;
 }
 </style>

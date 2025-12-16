@@ -68,8 +68,8 @@ defineProps<{
   position: absolute;
   top: 16px;
   left: 16px;                
-  background: #e0f5e8;
-  color: #166534;
+  background: #cfd5fc;
+  color: #1b4496;
   font-size: 12px;
   font-weight: 800;
   padding: 6px 16px;
@@ -123,7 +123,7 @@ defineProps<{
   position: absolute;
   left: 0;
   top: 0;
-  color: #fbbf24;
+  color: #f5bc2a;
   overflow: hidden;
   width: calc(v-bind(rating) * 20%);
 }
@@ -141,7 +141,7 @@ defineProps<{
 
 .current {
   font-size: 1.2rem;           
-  color: #16a34a;
+  color: #1655a3;
 }
 
 .old {
@@ -150,10 +150,9 @@ defineProps<{
   text-decoration: line-through;
 }
 
-/* Add button – exact size & style from your screenshot */
 .add-btn {
-  background: #c3f2d4;
-  color: #166534;
+  background: #c4d8ff;
+  color: #1b4496;
   border: none;
   padding: 10px 28px;
   border-radius: 50px;
@@ -165,11 +164,10 @@ defineProps<{
 }
 
 .add-btn:hover {
-  background: #bbf7d0;
+  background: #d6e5fb;
   transform: translateY(-2px);
 }
 
-/* Mobile perfect */
 @media (max-width: 480px) {
   .product-card {
     max-width: 280px;

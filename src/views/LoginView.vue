@@ -154,6 +154,7 @@
     width: 100%; 
 }
   .form-group { 
+    color:black;
     margin-bottom: 1.5rem; 
 }
   .form-group label { 

@@ -32,31 +32,26 @@ const products = [
 ]
 
 
-// Optional: any other logic
 console.log("HomeView loaded – StarTech style!")
 </script>
 
 <template>
   <div class="home-layout">
 
-    <!-- 1. The Header-->
     <Header />
 
-    <!-- 2. Main contents -->
     <main class="main-content">
 
-      <!-- a. Hero Banner -->
     <section class="banner">
-    <div class="hero-section">
+    <div class="hero-section" style="background: url('/banner_image.jpg') no-repeat center center / cover;">
       <div class="hero-content">
-        <h1>Welcome to <span>StarTech</span></h1>
-        <p>Best place for laptops, gadgets & electronics in Cambodia</p>
-        <button class="shop-now-btn">Shop Now</button>
+      <h1>Welcome to <span>StarTech</span></h1>
+      <p>Best place for laptops, gadgets & electronics in Cambodia</p>
+      <button class="shop-now-btn">Shop Now</button>
       </div>
     </div>
-  </section>
+    </section>
 
-      <!-- b. ShopByCategory grids -->
     <section class="ShopByCatetgory">
       <div class="container">
         <h2 class="section-title">Shop by Category</h2>
@@ -73,7 +68,6 @@ console.log("HomeView loaded – StarTech style!")
       </div>
     </section>
 
-    <!-- c. Discount banners -->
   <section class="discounts-section">
     <div class = "container">
       <h2 class="section-title">Our shop best Deal</h2>
@@ -98,7 +92,6 @@ console.log("HomeView loaded – StarTech style!")
 
   </section>
 
-      <!-- d. Today's best deal grids -->
       <section class="ProductCard">
       <div class="container">
         <h2 class="section-title">Featured Products</h2>
@@ -121,10 +114,8 @@ console.log("HomeView loaded – StarTech style!")
 
     </main>
 
-    <!-- e. Product Brands banner(no component) -->
     <section class="brand-deal-banner">
       <div class="brand-deal-inner">
-        <!-- Left: Text -->
         <div class="deal-text">
           <p class="tag">Brand's deal</p>
           <h2>Save up to $200 on select<br><strong>Samsung washing machines</strong></h2>
@@ -144,8 +135,6 @@ console.log("HomeView loaded – StarTech style!")
       </div>
     </section>
 
-
-    <!-- 3. Footer -->
     <Footer />
 
   </div>
@@ -154,8 +143,9 @@ console.log("HomeView loaded – StarTech style!")
 <style scoped>
 
 .section-title{
+  font-size: 25px;
   color: black;
-  font-weight: 500;
+  font-weight: 700;
   margin-top: 70px;
   margin-bottom: 50px;
 }
@@ -171,20 +161,24 @@ console.log("HomeView loaded – StarTech style!")
   margin: auto;
 }
 
-.hero-section {
+.hero-section{
   text-align: center;
   padding:100px 20px;
   background: linear-gradient(135deg, #aeccec 0%, #d0deee 100%);
   border-radius: 16px;
+  z-index: -1;
 
-  /* background: linear-gradient(rgba(0, 0, 0, 0.52), rgba(0, 0, 0, 0.58)),
-              url('/background_log.jpg') center/cover no-repeat; */
 }
 
 .hero-section h1 {
   font-size: 3.4rem;
   color: lab(53.37% 21.92 -73.11);
   margin-bottom: 16px;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 1;
 }
 
 .hero-section h1 span {
@@ -194,7 +188,7 @@ console.log("HomeView loaded – StarTech style!")
 
 .hero-section p {
   font-size: 1.4rem;
-  color: #444;
+  color: #e1e1e1;
   margin-bottom: 32px;
 }
 
@@ -217,14 +211,12 @@ console.log("HomeView loaded – StarTech style!")
   box-shadow: 0 10px 25px rgba(0, 123, 255, 0.4);
 }
 
-/* Category Grid */
 .categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 35px;
 }
 
-/* Products Grid */
 .products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -249,7 +241,6 @@ console.log("HomeView loaded – StarTech style!")
 @media (max-width: 640px) {
   .discounts-section { margin: 60px auto; gap: 20px; }
 }
-/* Brand Deal Banner – Clean & Modern */
 .brand-deal-banner {
   max-width: 1400px;
   margin: 80px auto;
@@ -258,7 +249,6 @@ console.log("HomeView loaded – StarTech style!")
 
 
 
-/* brands deal banner (no component) */
 .brand-deal-inner {
   display: flex;
   align-items: center;
@@ -329,7 +319,6 @@ console.log("HomeView loaded – StarTech style!")
   object-fit: cover;
 }
 
-/* Mobile */
 @media (max-width: 900px) {
   .brand-deal-inner {
     flex-direction: column;

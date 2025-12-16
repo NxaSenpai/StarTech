@@ -1,8 +1,9 @@
 <template>
-<Header />
-  <div class="min-h-screen bg-gray-50 py-12 px-6">
-    <div class="max-w-6xl mx-auto">
-      <h1 class="text-4xl font-semibold text-gray-800 mb-8">My Order</h1>
+  <div class="min-h-screen bg-gray-50 flex flex-col">
+    <Header />
+    <main class="flex-1 flex items-center justify-center py-8 px-6">
+      <div class="max-w-6xl w-full">
+        <h1 class="label">My Order</h1>
 
       <!-- Order Card -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-8">
@@ -39,7 +40,7 @@
         </div>
 
         <!-- Payment and Summary Section -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="summary">
           <!-- Left Side: Payment & Delivery -->
           <div>
             <!-- Payment -->
@@ -84,10 +85,10 @@
           </div>
         </div>
       </div>
-    </div>
-   
+      </div>
+    </main>
+    <Footer />
   </div>
- <Footer />
 </template>
 
 <script>
@@ -131,5 +132,21 @@ export default {
 </script>
 
 <style scoped>
-/* Additional custom styles if needed */
+.label{
+  font: 1em sans-serif;
+  font-size: 35px;
+  margin-bottom: 20px;
+  font-weight: bold;
+  color:black;
+}
+
+.summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 4rem;
+  padding-top: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
 </style>
