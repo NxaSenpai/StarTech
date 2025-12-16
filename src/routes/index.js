@@ -13,6 +13,9 @@ import EventView from '@/views/clientView/EventView.vue'
 import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
 import HomeView from '@/views/clientView/HomeView.vue'
+import Order from '@/views/clientView/Order.vue'
+
+
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -68,6 +71,14 @@ const router = createRouter({
       component: Cart,
       prop: route =>({
         Cart_data: route.params.Cart_data
+      })
+    },
+    {
+      path: '/orders',
+      name: 'order',
+      component: Order,
+      prop: route =>({
+        order_data: route.params.order_data
       })
     },
     {
