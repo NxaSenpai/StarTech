@@ -105,6 +105,11 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component:HomeView
+    },
+    {
+      path: '/new-arrivals',
+      name: 'NewArrivals',
+      component:EventView
     }
   ]
 })
