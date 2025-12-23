@@ -1,4 +1,3 @@
-<!-- src/components/Header.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -66,9 +65,6 @@ const handleSearch = () => {
 .header {
   background: white;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
 }
 
 .main-bar {
