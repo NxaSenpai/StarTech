@@ -2,17 +2,23 @@
   <Header />
   <div class="min-h-screen bg-gray-50 py-12  ">
     <div class="max-w-5xl mx-auto">
-      <h2 class="text-3xl font-semibold text-gray-800 mb-8">My Profile</h2>
+      <h2 class="text-3xl font-semibold text-gray-800 mb-8">My Profil e</h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Profile Picture Section -->
-        <div class="bg-white rounded-lg shadow-sm p-6 flex flex-col items-center">
+        <div class=" rounded-lg  p-6 flex flex-col items-center">
           <div class="w-40 h-40 rounded-full overflow-hidden bg-gray-200 mb-4">
+            <input 
+              type="file"
+              v-if="isEditing"
+              @change="onAvatarChange"
+              class="absolute w-40 h-40 opacity-0 cursor-pointer"
+            >
             <img
-              :src="profile.avatar"
-              alt="Profile"
-              class="w-full h-full object-cover"
-            />
+                :src="profile.avatar || editedProfile.avatar"
+                alt="Profile"
+                class="w-full h-full object-cover"
+              />
           </div>
           <button
             @click="handleEdit"
@@ -187,6 +193,17 @@ export default {
       if (confirm('Are you sure you want to log out?')) {
         alert('Logged out successfully!');
         // Add logout logic here
+      }
+    },
+    onAvatarChange(event){
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          // this.previewAvatar = e.target.result;
+          this.editedProfile.avatar = e.target.result;
+        };
+        reader.readAsDataURL(file);
       }
     }
   }
