@@ -384,7 +384,7 @@ export default {
 }
 
 .current-price {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgb(99, 234, 99);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -504,7 +504,7 @@ export default {
 }
 
 .quantity-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: black;
   border: none;
   width: 40px;
   height: 40px;
@@ -533,7 +533,7 @@ export default {
   background: rgb(145, 235, 145);
   color: white;
   border: none;
-  width: 140px;
+  width: 160px;
   height: 40px;
   padding: 2px;
   border-radius: 8px;
@@ -545,6 +545,7 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
 }
 
 .add-to-cart-btn:hover {
@@ -598,10 +599,13 @@ export default {
 }
 
 .payment-section {
-  background: linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%);
+  background: rgb(244, 238, 238);
   padding: 25px;
   border-radius: 12px;
+  border: 300px;
   text-align: center;
+  border-color: red;
+  margin: 5px;
 }
 
 .payment-title {
@@ -890,7 +894,7 @@ export default {
 
 .card-btn {
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: rgb(114, 114, 230);
   color: white;
   border: none;
   padding: 15px;
