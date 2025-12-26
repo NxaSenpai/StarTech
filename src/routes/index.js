@@ -4,7 +4,7 @@ import RegisterView from '@/views/RegisterView.vue'
 import ManageOrder from '@/views/adminView/ManageOrder.vue'
 import Dashboard from '@/views/adminView/Dashboard.vue'
 import ManageProduct from '@/views/adminView/ManageProduct.vue'
-import ManageCategory from '../views/adminView/ManageCategory.vue' 
+import ManageCategory from '../views/adminView/ManageCategory.vue'
 import ManageSupplier from '../views/adminView/ManageSupplier.vue'
 import ManageUser from '@/views/adminView/ManageUser.vue'
 import Cart from '@/views/clientView/Cart.vue'
@@ -22,8 +22,8 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      name: 'home',
-      redirect: '/login' 
+      name: 'root',
+      redirect: '/login'
     },
     {
       path: '/login',
@@ -69,7 +69,7 @@ const router = createRouter({
       path: '/cart',
       name: 'cart',
       component: Cart,
-      prop: route =>({
+      props: route =>({
         Cart_data: route.params.Cart_data
       })
     },
@@ -77,7 +77,7 @@ const router = createRouter({
       path: '/orders',
       name: 'order',
       component: Order,
-      prop: route =>({
+      props: route =>({
         order_data: route.params.order_data
       })
     },
@@ -105,6 +105,11 @@ const router = createRouter({
       path: '/home',
       name: 'home',
       component:HomeView
+    },
+    {
+      path: '/new-arrivals',
+      name: 'NewArrivals',
+      component:EventView
     }
   ]
 })

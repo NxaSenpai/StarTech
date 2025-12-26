@@ -16,7 +16,6 @@ defineProps<{
     active-class="active"
   >
     <div class="card-inner">
-      <!-- Category Image -->
       <div class="image-wrapper">
         <img
           :src="imageUrl"
@@ -26,7 +25,6 @@ defineProps<{
         />
       </div>
 
-      <!-- Text Content -->
       <div class="text-content">
         <h3 class="category-title">{{ title.toUpperCase() }}</h3>
         <p class="product-count">{{ productCount }} PRODUCTS</p>
@@ -47,7 +45,7 @@ defineProps<{
   transition: all 0.35s ease;
   text-decoration: none;
   color: inherit;
-  border: 1px solid #eef2f6;
+  border: 1px solid #eef2f6;  
 }
 
 .category-card:hover {
@@ -109,7 +107,6 @@ defineProps<{
   font-weight: 500;
 }
 
-/* Responsive */
 @media (max-width: 768px) {
   .category-card {
     max-width: 280px;

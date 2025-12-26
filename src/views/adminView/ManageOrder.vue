@@ -4,7 +4,7 @@
 
       <!-- TOP BAR -->
       <header class="admin-header">
-        <h2 class="logo-text">StarTech</h2>
+        <img class="logo-img" src="/logo.png" alt="">
       </header>
 
       <!-- SIDEBAR -->
@@ -195,16 +195,15 @@ const totalSalesThisMonth = computed(() =>
   background: #0b6cf0;
   display: flex;
   align-items: center;
-  padding-left: 20px;
-
   position: sticky;
   top: 0;
   z-index: 1000;
 }
 
-.logo-text {
-  color: white;
-  font-weight: bold;
+.logo-img {
+  scale: .4;
+  margin-left: -90px;
+  filter: brightness(0) invert(1);
 }
 
 /* ===== SIDEBAR ===== */
@@ -236,11 +235,13 @@ const totalSalesThisMonth = computed(() =>
 
 /* ===== CONTENT ===== */
 .content-area {
+  padding: 40px;
   overflow-y: auto;
   height: calc(100vh - 70px);
 }
 
 .page-title {
+  font-size: 24px;
   color: #111;
   font-weight: 700;
 }
@@ -252,6 +253,7 @@ const totalSalesThisMonth = computed(() =>
 }
 
 .search-box input {
+  color: #000000;
   margin-top: 10px;
   border: 1px solid #ddd;
   padding: 10px 15px;

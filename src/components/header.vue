@@ -1,4 +1,3 @@
-<!-- src/components/Header.vue -->
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
@@ -17,7 +16,7 @@ const handleSearch = () => {
 <template>
   <header class="header">
     <div class="main-bar">
-      <router-link to="/" class="logo">
+      <router-link to="/home" class="logo">
         <img src="/logo.png" alt="Logo" class="logo-img" />
       </router-link>
 
@@ -41,9 +40,9 @@ const handleSearch = () => {
       </form>
 
       <div class="user-section">
-        <div class="profile-avatar">
+        <router-link to="/profile" class="profile-avatar">
           <div class="avatar-inner">T</div>
-        </div>
+        </router-link>
       </div>
     </div>
 
@@ -66,9 +65,6 @@ const handleSearch = () => {
 .header {
   background: white;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-  position: sticky;
-  top: 0;
-  z-index: 1000;
 }
 
 .main-bar {

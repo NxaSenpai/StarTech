@@ -3,12 +3,10 @@
 
 <template>
   <footer class="footer">
-    <!-- Main Footer Content -->
     <div class="footer-main">
       <div class="container">
         <div class="footer-grid">
 
-          <!-- Brand Column -->
           <div class="footer-col brand">
             <h2 class="footer-logo">StarTech</h2>
             <p class="footer-desc">
@@ -16,7 +14,6 @@
             </p>
           </div>
 
-          <!-- Shop -->
           <div class="footer-col">
             <h3 class="footer-title">Shop</h3>
             <ul class="footer-links">
@@ -28,7 +25,6 @@
             </ul>
           </div>
 
-          <!-- Need help? -->
           <div class="footer-col">
             <h3 class="footer-title">Need help?</h3>
             <ul class="footer-links">
@@ -55,23 +51,6 @@
       </div>
     </div>
 
-    <!-- Bottom Bar with Copyright + Payment Icons -->
-
-    <!-- <div class="footer-bottom">
-      <div class="container">
-        <div class="bottom-content">
-          <p>&copy; 2025 StarTech. All rights reserved.</p>
-          <div class="payment-icons">
-            <img src="https://simpleicons.org/icons/amazon.svg" alt="Amazon Pay" />
-            <img src="https://simpleicons.org/icons/discover.svg" alt="Discover" />
-            <img src="https://simpleicons.org/icons/visa.svg" alt="Visa" />
-            <img src="https://simpleicons.org/icons/mastercard.svg" alt="Mastercard" />
-            <img src="https://simpleicons.org/icons/paypal.svg" alt="PayPal" />
-          </div>
-        </div>
-      </div>
-    </div> -->
-
   </footer>
 </template>
 
@@ -80,7 +59,7 @@
   background: #0f172a;
   color: #cbd5e1;
   font-size: 15px;
-  margin-top: auto; /* Helps push footer down when content is short */
+  margin-top: auto;
 }
 
 .container {
@@ -89,7 +68,6 @@
   padding: 0 20px;
 }
 
-/* Main Grid */
 .footer-main {
   padding: 70px 0 50px;
   border-bottom: 1px solid #1e293b;
@@ -150,13 +128,11 @@
 .footer-links a {
   color: #94a3b8;
   text-decoration: none;
-  transition: all 0.2s;
   display: inline-block;
 }
 
 .footer-links a:hover {
   color: white;
-  transform: translateX(4px);
 }
 
 .footer-contact li {
@@ -164,7 +140,6 @@
   font-weight: 500;
 }
 
-/* Bottom Bar */
 .footer-bottom {
   background: #020617;
   padding: 28px 0;
@@ -202,7 +177,6 @@
   transform: scale(1.15);
 }
 
-/* ——— MOBILE OPTIMIZATION (Beautiful on phones!) ——— */
 @media (max-width: 1024px) {
   .footer-grid {
     grid-template-columns: 1fr 1fr;
