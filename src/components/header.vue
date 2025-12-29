@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -11,6 +11,42 @@ const handleSearch = () => {
     searchQuery.value = ''
   }
 }
+
+const user = ref<Record<string, any>>({})
+
+const storageHandler = (e: StorageEvent) => {
+  if (e.key === 'user') {
+    try { user.value = JSON.parse(e.newValue || '{}') } catch { user.value = {} }
+  }
+}
+
+const userChangedHandler = (ev: Event) => {
+  try {
+    const detail = (ev as CustomEvent).detail
+    user.value = detail && Object.keys(detail).length ? detail : JSON.parse(localStorage.getItem('user') || '{}')
+  } catch {
+    user.value = {}
+  }
+}
+
+const initial = computed(() => {
+  const name = user.value?.name ? String(user.value.name).trim() : ''
+  if (name) return name.charAt(0).toUpperCase()
+  const email = user.value?.email ? String(user.value.email).trim() : ''
+  if (email) return email.charAt(0).toUpperCase()
+  return 'U'
+})
+
+onMounted(() => {
+  try { user.value = JSON.parse(localStorage.getItem('user') || '{}') } catch { user.value = {} }
+  window.addEventListener('storage', storageHandler)
+  window.addEventListener('user-changed', userChangedHandler as EventListener)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('storage', storageHandler)
+  window.removeEventListener('user-changed', userChangedHandler as EventListener)
+})
 </script>
 
 <template>
@@ -41,7 +77,7 @@ const handleSearch = () => {
 
       <div class="user-section">
         <router-link to="/profile" class="profile-avatar">
-          <div class="avatar-inner">T</div>
+          <div class="avatar-inner">{{ initial }}</div>
         </router-link>
       </div>
     </div>
@@ -78,7 +114,7 @@ const handleSearch = () => {
 }
 
 .user-section {
-  flex-shrink: 0;   /* prevents overlap on small screens */
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -215,13 +251,12 @@ const handleSearch = () => {
 @media (max-width: 1024px) {
   .main-bar {
     flex-wrap: wrap;
-    justify-content: space-between;   /* ← This keeps logo left + avatar right */
+    justify-content: space-between;
   }
 
-  /* Push search bar to full width below, but keep logo & avatar on top row */
   .search-form {
     order: 3;
-    flex-basis: 100%;                  /* ← full width */
+    flex-basis: 100%;
     max-width: none;
     margin: 12px 0 0;
   }
@@ -230,7 +265,6 @@ const handleSearch = () => {
     height: 48px;
   }
 
-  /* Make sure avatar stays on the right even when wrapped */
   .user-section {
     margin-left: auto;                 
   }
@@ -273,7 +307,7 @@ const handleSearch = () => {
 
 @media (max-width: 768px) {
   .nav-bar {
-    justify-content: flex-start;   /* move menu to the left */
+    justify-content: flex-start;
   }
   .nav-list {
     padding-left: 0;              

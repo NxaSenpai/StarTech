@@ -9,7 +9,12 @@
         <div class="profile-grid">
           <aside class="profile-card">
             <div class="avatar">
-              <img :src="profile.avatar" alt="Profile" />
+              <template v-if="profile.avatar && profile.avatar.length">
+                <img :src="profile.avatar" alt="Avatar" />
+              </template>
+              <template v-else>
+                <div class="avatar-inner">{{ initial }}</div>
+              </template>
             </div>
             <button @click="handleEdit" class="btn btn-outline">Edit</button>
           </aside>
@@ -29,34 +34,6 @@
                 <div class="value">
                   <input v-if="isEditing" type="email" v-model="editedProfile.email" class="input" />
                   <span v-else class="text">{{ profile.email }}</span>
-                </div>
-              </div>
-
-              <div class="info-row">
-                <div class="label">Phone Number</div>
-                <div class="value">
-                  <input v-if="isEditing" type="tel" v-model="editedProfile.phone" class="input" />
-                  <span v-else class="text">{{ profile.phone }}</span>
-                </div>
-              </div>
-
-              <div class="info-row">
-                <div class="label">Gender</div>
-                <div class="value">
-                  <select v-if="isEditing" v-model="editedProfile.gender" class="input">
-                    <option>Male</option>
-                    <option>Female</option>
-                    <option>Other</option>
-                  </select>
-                  <span v-else class="text">{{ profile.gender }}</span>
-                </div>
-              </div>
-
-              <div class="info-row last">
-                <div class="label">Country</div>
-                <div class="value">
-                  <input v-if="isEditing" type="text" v-model="editedProfile.country" class="input" />
-                  <span v-else class="text">{{ profile.country }}</span>
                 </div>
               </div>
             </div>
@@ -84,24 +61,51 @@
 <script>
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
+import { getUser, updateUser } from "@/services/api";
+
 export default {
   name: 'UserProfile',
-  components: {
-    Header,
-    Footer
-  },
+  components: { Header, Footer },
   data() {
+    const saved = JSON.parse(localStorage.getItem('user') || '{}');
     return {
       isEditing: false,
       profile: {
-        name: 'Abby',
-        email: 'abbythebest168@gmail.com',
-        phone: '+885 99889969',
-        gender: 'Male',
-        country: 'Poland',
-        avatar: 'smart_wifi.png'
+        name: saved.name || 'User',
+        email: saved.email || 'unknown@example.com',
+        avatar: saved.avatar || 'smart_wifi.png',
       },
       editedProfile: {}
+    }
+  },
+  computed: {
+    initial() {
+      const n = (this.profile && this.profile.name) ? String(this.profile.name).trim() : '';
+      return n ? n.charAt(0).toUpperCase() : 'U';
+    }
+  },
+  mounted() {
+    const saved = JSON.parse(localStorage.getItem('user') || '{}');
+    if (saved && saved.email) {
+      getUser(saved.email)
+        .then(({ status, data }) => {
+          if (status === 200 && data) {
+            this.profile.name = data.name || this.profile.name;
+            this.profile.email = data.email || this.profile.email;
+            if (data.avatar) this.profile.avatar = data.avatar;
+            localStorage.setItem('user', JSON.stringify({
+              name: this.profile.name,
+              email: this.profile.email,
+              avatar: this.profile.avatar
+            }));
+            window.dispatchEvent(new CustomEvent('user-changed', { detail: { name: this.profile.name, email: this.profile.email, avatar: this.profile.avatar } }));
+          } else {
+            console.warn('getUser:', data?.message || 'status ' + status);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to fetch user profile:', err);
+        });
     }
   },
   methods: {
@@ -109,26 +113,39 @@ export default {
       this.isEditing = true;
       this.editedProfile = { ...this.profile };
     },
-    handleSave() {
-      this.profile = { ...this.editedProfile };
-      this.isEditing = false;
-      alert('Profile saved successfully!');
+    async handleSave() {
+      try {
+        const { status, data } = await updateUser({ email: this.profile.email, name: this.editedProfile.name });
+        if (status === 200) {
+          this.profile = { ...this.editedProfile };
+          localStorage.setItem('user', JSON.stringify(this.profile));
+          // notify same-tab listeners
+          window.dispatchEvent(new CustomEvent('user-changed', { detail: this.profile }));
+          alert('Profile saved successfully!');
+          this.isEditing = false;
+        } else {
+          alert('Failed to update profile: ' + (data?.message || 'status ' + status));
+        }
+      } catch (err) {
+        console.error('Profile update error:', err);
+        alert(err?.data?.message || err.message || 'Failed to update profile.');
+      }
     },
     handleCancel() {
       this.editedProfile = { ...this.profile };
       this.isEditing = false;
     },
     handleLogout() {
-      if (confirm('Are you sure you want to log out?')) {
-        alert('Logged out successfully!');
-      }
+      localStorage.removeItem('user');
+      window.dispatchEvent(new CustomEvent('user-changed', { detail: {} }));
+      this.$router.push('/login');
     }
   }
 }
 </script>
 
+
 <style scoped>
-/* Page layout */
 .page {
   min-height: 100vh;
   display: flex;
@@ -310,4 +327,7 @@ export default {
     width: 100%;
   }
 }
+
+.avatar { width: 96px; height: 96px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.08); font-size:36px; font-weight:700; color:#1e88e5 }
+.avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover }
 </style>

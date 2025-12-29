@@ -127,17 +127,17 @@
               <DiscountBanner
                 title="Wireless headphones"
                 startingPrice="$49"
-                image="/washingMachine.jpg"
+                image="/wirelessheadphone.png"
               />
               <DiscountBanner
-                title="Grooming"
+                title="Gagdets"
                 startingPrice="$39"
-                image="/discounts/trimmer.png"
+                image="/kitchengadget.png"
               />
               <DiscountBanner
                 title="Video games"
                 startingPrice="$49"
-                image="/discounts/gameboy.png"
+                image="/videogame.png"
               />
             </div>
           </div>
@@ -193,7 +193,7 @@
               </div>
               <div class="feature">
                 <span class="feature-icon">✓</span>
-                <span>5 Year Warranty</span>
+                <span>1 Year Warranty</span>
               </div>
             </div>
             <a href="/category/washing-machines" class="shop-now-link">
@@ -210,19 +210,6 @@
               loading="lazy"
             />
           </div>
-        </div>
-      </section>
-  
-      <section class="newsletter-section">
-        <div class="newsletter-inner">
-          <div class="newsletter-content">
-            <h3>Stay Updated</h3>
-            <p>Subscribe to get special offers, free giveaways, and exclusive deals.</p>
-          </div>
-          <form class="newsletter-form" @submit.prevent>
-            <input type="email" placeholder="Enter your email" class="newsletter-input" />
-            <button type="submit" class="newsletter-btn">Subscribe</button>
-          </form>
         </div>
       </section>
   
@@ -422,6 +409,11 @@
     font-weight: 600;
     margin-bottom: 24px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: all 1s ease;
+  }
+
+  .hero-badge:hover{
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
   }
   
   .hero-section h1 {
@@ -612,7 +604,6 @@
     box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
   }
   
-  /* Brand Deal Banner */
   .brand-deal-banner {
     max-width: 1400px;
     margin: 0 auto 80px;
@@ -721,82 +712,7 @@
     height: 100%;
     object-fit: cover;
   }
-  
-  .newsletter-section {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    padding: 60px 20px;
-    margin-bottom: 0;
-  }
-  
-  .newsletter-inner {
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40px;
-    flex-wrap: wrap;
-  }
-  
-  .newsletter-content h3 {
-    font-size: 1.8rem;
-    color: white;
-    font-weight: 700;
-    margin: 0 0 8px;
-  }
-  
-  .newsletter-content p {
-    color: #94a3b8;
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-  .newsletter-form {
-    display: flex;
-    gap: 12px;
-    flex: 1;
-    max-width: 450px;
-  }
-  
-  .newsletter-input {
-    flex: 1;
-    padding: 16px 24px;
-    border: none;
-    border-radius: 50px;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .newsletter-input::placeholder {
-    color: #94a3b8;
-  }
-  
-  .newsletter-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    background: rgba(255, 255, 255, 0.15);
-  }
-  
-  .newsletter-btn {
-    padding: 16px 32px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-  
-  .newsletter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-  }
-  
+
   @media (max-width: 1024px) {
     .hero-section h1 {
       font-size: 2.8rem;

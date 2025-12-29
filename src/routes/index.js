@@ -51,15 +51,15 @@ const router = createRouter({
       component: ManageProduct
     },
     {
-      path: '/product/category',
-      name: 'categorymanagement',
-      component: ManageCategory 
-    },
-    {
-      path: '/product/supplier',
-      name: 'suppliermanagement',
-      component: ManageSupplier 
-    },
+      path: '/managecategories',
+      name: 'managecategories',
+      component: ManageCategory
+    },
+    {
+      path: '/managesupplier',
+      name: 'managesupplier',
+      component: ManageSupplier
+    },
     {
       path: '/manageuser',
       name: 'manageuser',
