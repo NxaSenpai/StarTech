@@ -8,7 +8,7 @@
         <div class="footer-grid">
 
           <div class="footer-col brand">
-            <h2 class="footer-logo">StarTech</h2>
+            <img class="footer-logo" alt="StarTech Logo" src="/logo.png" />
             <p class="footer-desc">
               We bring you the latest in electronics, gadgets, and smart home solutions—all in one place.
             </p>
@@ -41,9 +41,9 @@
           <div class="footer-col">
             <h3 class="footer-title">Contact</h3>
             <ul class="footer-contact">
-              <li>123 Fifth Avenue, New York, NY 10160</li>
-              <li>contact@info.com</li>
-              <li>929-242-6868</li>
+              <li>123 Khan Meanchey, Phnom Penh, Cambodia</li>
+              <li>startech99@gmail.com</li>
+              <li>999-888-777</li>
             </ul>
           </div>
 
@@ -80,11 +80,9 @@
 }
 
 .footer-logo {
-  font-size: 30px;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
+  filter: brightness(0) invert(1);
+  width: 200px;
+  margin-bottom: 20px;
 }
 
 .footer-desc {

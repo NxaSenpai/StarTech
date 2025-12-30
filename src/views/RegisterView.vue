@@ -85,6 +85,7 @@
   <script setup>
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'
+  import { signup } from '../services/api'
   
   const name = ref('')
   const email = ref('')
@@ -105,15 +106,22 @@
       return
     }
   
-    console.log('Registering:', name.value, email.value, password.value)
-  
-    await new Promise(resolve => setTimeout(resolve, 1500))
-  
-    // Mock success
-    localStorage.setItem('userToken', 'mock-jwt-token')
-    router.push('/')
-  
-    loading.value = false
+    try {
+      const { status } = await signup({
+        name: name.value,
+        email: email.value,
+        password: password.value,
+      })
+      if (status === 201) {
+        router.push('/login')
+      }
+    } catch (e) {
+      const status = e?.status
+      const msg = e?.data?.message
+      error.value = msg || (status === 409 ? 'Email already registered' : 'Signup failed')
+    } finally {
+      loading.value = false
+    }
   }
   </script>
   
