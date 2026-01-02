@@ -76,12 +76,27 @@
         email: email.value,
         password: password.value,
       });
+      
       if (status === 200) {
         const name = data?.name || '';
-        const userObj = { name, email: email.value };
+        const role = data?.role || 'user';
+        const userEmail = data?.email || email.value;
+        
+        const userObj = { 
+          name, 
+          email: userEmail,
+          role 
+        };
         localStorage.setItem('user', JSON.stringify(userObj));
         window.dispatchEvent(new CustomEvent('user-changed', { detail: userObj }));
-        router.push('/home');
+        
+        console.log('User logged in with role:', role);
+
+        if (role === 'superadmin' || role === 'admin') {
+          router.push('/dashboard');
+        } else {
+          router.push('/home');
+        }
       }
     } catch (e) {
       const status = e?.status;

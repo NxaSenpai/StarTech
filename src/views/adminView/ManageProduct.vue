@@ -185,23 +185,8 @@
               </tbody>
             </table>
           </div>
-
-          <!-- Pagination -->
-          <div class="pagination">
-            <div class="pagination-info">
-              Showing {{ filteredProducts.length }} of {{ products.length }} products
-            </div>
-            <div class="pagination-controls">
-              <button class="page-btn" disabled>Previous</button>
-              <button class="page-btn active">1</button>
-              <button class="page-btn">2</button>
-              <button class="page-btn">3</button>
-              <button class="page-btn">Next</button>
-            </div>
-          </div>
         </section>
-
-        <!-- Add/Edit Product Modal -->
+        
         <div v-if="showProductModal" class="modal-overlay" @click.self="closeProductModal">
           <div class="modal-container large-modal">
             <div class="modal-header">
@@ -580,9 +565,15 @@ export default {
   color: black;
   grid-area: content;
   padding: 30px 40px;
-  overflow-y: auto;
+  overflow: hidden;
   height: calc(100vh - 70px);
   background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-row {
+  flex-shrink: 0;
 }
 
 .breadcrumb {
@@ -611,6 +602,7 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .header-left .page-title {
@@ -691,6 +683,7 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .metric-card {
@@ -748,12 +741,21 @@ export default {
   filter: invert(1);
 }
 
+.product-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .table-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   gap: 15px;
+  flex-shrink: 0;
 }
 
 .search-box {
@@ -806,9 +808,12 @@ export default {
   background: white;
   border: 1px solid #e9ecef;
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 table {
@@ -818,6 +823,9 @@ table {
 
 thead {
   background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 th {
@@ -828,6 +836,7 @@ th {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: #f8f9fa;
 }
 
 td {
@@ -835,6 +844,10 @@ td {
   border-top: 1px solid #e9ecef;
   font-size: 14px;
   color: #495057;
+}
+
+tbody {
+  background: white;
 }
 
 .table-row:hover {
@@ -1018,26 +1031,6 @@ td {
 .empty-content p {
   color: #6c757d;
   margin: 0;
-}
-
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-}
-
-.pagination-info {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 8px;
 }
 
 .page-btn {

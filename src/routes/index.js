@@ -14,6 +14,8 @@ import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
 import HomeView from '@/views/clientView/HomeView.vue'
 import Order from '@/views/clientView/Order.vue'
+import ManageAdmin from '@/views/adminView/ManageAdmin.vue'
+import Settings from '@/views/adminView/Settings.vue'
 
 
 
@@ -65,6 +67,19 @@ const router = createRouter({
       name: 'manageuser',
       component: ManageUser
     },
+
+    {
+      path: '/manageadmin',
+      name: 'manageadmin',
+      component: ManageAdmin
+    },
+
+    {
+      path: '/settings',
+      name: 'settings',
+      component: Settings
+    },
+
     {
       path: '/cart',
       name: 'cart',

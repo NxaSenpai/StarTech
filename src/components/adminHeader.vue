@@ -2,10 +2,6 @@
     <header class="admin-header">
       <img class="logo-img" src="/logo.png" alt="">
       <div class="header-actions">
-        <button class="icon-btn">
-          <img src="/notification.png" alt="">
-          <span class="badge">{{ notificationCount }}</span>
-        </button>
         <div class="user-info">
           <span class="user-name">{{ userName }}</span>
           <div class="avatar">{{ userInitial }}</div>

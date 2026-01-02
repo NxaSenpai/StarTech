@@ -11,52 +11,58 @@
           <div class="breadcrumb">
             <span class="breadcrumb-item">Dashboard</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-item active">Manage Users</span>
+            <span class="breadcrumb-item active">Manage Admins</span>
           </div>
         </div>
 
         <div class="page-header">
           <div class="header-left">
-            <h1 class="page-title">User Management</h1>
-            <p class="page-subtitle">View and manage registered users</p>
+            <h1 class="page-title">Admin Management</h1>
+            <p class="page-subtitle">View and manage admin accounts</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" @click="showAddModal = true">
+              <img src="/addIcon.png" class="btn-icon">
+              Add Admin
+            </button>
           </div>
         </div>
 
         <section class="stats-cards">
           <div class="stat-card">
-            <div class="stat-icon blue"><img class="manage-icon" src="/userIcon.png" alt=""></div>
+            <div class="stat-icon blue"><img class="manage-icon" src="/adminIcon.png" alt=""></div>
             <div class="stat-info">
-              <p class="stat-label">Total Users</p>
-              <h3 class="stat-value">{{ totalUsers }}</h3>
+              <p class="stat-label">Total Admins</p>
+              <h3 class="stat-value">{{ totalAdmins }}</h3>
             </div>
           </div>
         </section>
 
-        <section class="user-content">
+        <section class="admin-content">
           <div class="table-controls">
             <div class="search-box">
               <img src="/searchIcon.png" class="search-icon">
               <input 
                 type="text" 
-                placeholder="Search by User ID, Name, Email..." 
+                placeholder="Search by Admin ID, Name, Email..." 
                 v-model="searchQuery"
                 class="search-input"
               >
             </div>
             <div class="filter-actions">
               <select v-model="sortBy" class="filter-select">
-                <option value="uid">Sort by UID</option>
-                <option value="recent">Recently Joined</option>
+                <option value="id">Sort by ID</option>
+                <option value="recent">Recently Added</option>
                 <option value="name">Sort by Name</option>
                 <option value="email">Sort by Email</option>
               </select>
               <button 
-                v-if="selectedUserIds.length > 0" 
+                v-if="selectedAdminIds.length > 0" 
                 class="btn btn-danger" 
-                @click="bulkDeleteUsers"
+                @click="bulkDeleteAdmins"
               >
                 <img src="/deleteIcon.png" class="btn-icon">
-                Delete Selected ({{ selectedUserIds.length }})
+                Delete Selected ({{ selectedAdminIds.length }})
               </button>
             </div>
           </div>
@@ -68,57 +74,56 @@
                   <th class="checkbox-col">
                     <input type="checkbox" v-model="selectAll" class="custom-checkbox">
                   </th>
-                  <th>User ID</th>
-                  <th>User Info</th>
+                  <th>Admin ID</th>
+                  <th>Name</th>
                   <th>Email</th>
                   <th>Join Date</th>
                   <th class="action-col">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredUsers.length === 0">
-                  <td colspan="6" class="empty-state">
+                <tr v-if="filteredAdmins.length === 0">
+                  <td colspan="7" class="empty-state">
                     <div class="empty-content">
-                      <span class="empty-icon">👥</span>
-                      <p>No users found</p>
+                      <p>No admins found</p>
                     </div>
                   </td>
                 </tr>
-                <tr v-for="user in filteredUsers" :key="user.id" class="table-row">
+                <tr v-for="admin in filteredAdmins" :key="admin.id" class="table-row">
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      :value="user.id" 
-                      v-model="selectedUserIds"
+                      :value="admin.id" 
+                      v-model="selectedAdminIds"
                       class="custom-checkbox"
                     >
                   </td>
-                  <td class="user-id-cell">
-                    <span class="user-id">{{ user.id }}</span>
+                  <td class="admin-id-cell">
+                    <span class="admin-id">{{ admin.id }}</span>
                   </td>
-                  <td class="user-cell">
-                    <div class="user-info">
-                      <img :src="user.profile" :alt="user.name" class="user-avatar">
-                      <span class="user-name">{{ user.name }}</span>
+                  <td class="name-cell">
+                    <div class="admin-name-wrapper">
+                      <div class="avatar-placeholder">{{ getInitials(admin.name) }}</div>
+                      <span class="admin-name">{{ admin.name }}</span>
                     </div>
                   </td>
-                  <td class="email-cell">{{ user.email }}</td>
-                  <td class="date-cell">{{ user.joinSince }}</td>
+                  <td class="email-cell">{{ admin.email }}</td>
+                  <td class="date-cell">{{ admin.joinDate }}</td>
                   <td class="action-cell">
                     <div class="action-buttons">
                       <button 
-                        class="action-btn view-btn" 
-                        @click="viewUserDetails(user)"
-                        title="View Details"
+                        class="action-btn edit-btn" 
+                        @click="editAdmin(admin)"
+                        title="Edit Admin"
                       >
-                        <img class="btn-icon-black" src="/viewIcon.png" alt="">
+                        <img class="btn-icon-black" src="/editIcon.png" alt="">
                       </button>
                       <button 
                         class="action-btn delete-btn" 
-                        @click="deleteUser(user.id)"
+                        @click="deleteAdmin(admin.id)"
                         title="Delete"
                       >
-                      <img class="btn-icon-black" src="/deleteIcon.png" alt="">
+                        <img class="btn-icon-black" src="/deleteIcon.png" alt="">
                       </button>
                     </div>
                   </td>
@@ -128,54 +133,70 @@
           </div>
         </section>
 
-        <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
-          <div class="modal-container">
+        <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+          <div class="modal-container small-modal">
             <div class="modal-header">
               <div>
-                <h3>User Details</h3>
-                <p class="modal-subtitle">View user information</p>
+                <h3>{{ isEditing ? 'Edit Admin' : 'Add New Admin' }}</h3>
+                <p class="modal-subtitle">{{ isEditing ? 'Update admin information' : 'Create a new admin account' }}</p>
               </div>
-              <button class="close-btn" @click="closeDetailsModal">✕</button>
+              <button class="close-btn" @click="closeAddModal">✕</button>
             </div>
             <div class="modal-body">
-              <div class="profile-section">
-                <img :src="selectedUser.profile" :alt="selectedUser.name" class="profile-image">
-              </div>
-
-              <div class="details-section">
-                <h4 class="section-title">Personal Information</h4>
-                <div class="info-grid">
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">User ID</span>
-                      <span class="info-value">{{ selectedUser.id }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">Full Name</span>
-                      <span class="info-value">{{ selectedUser.name }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item full-width">
-                    <div class="info-content">
-                      <span class="info-label">Email Address</span>
-                      <span class="info-value">{{ selectedUser.email }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">Join Date</span>
-                      <span class="info-value">{{ selectedUser.joinSince }}</span>
-                    </div>
-                  </div>
+              <form @submit.prevent="saveAdmin" class="admin-form">
+                <div class="form-group">
+                  <label class="form-label">Full Name <span class="required">*</span></label>
+                  <input 
+                    type="text" 
+                    v-model="formData.name" 
+                    class="form-input"
+                    placeholder="Enter full name"
+                    required
+                  >
                 </div>
-              </div>
+
+                <div class="form-group">
+                  <label class="form-label">Email Address <span class="required">*</span></label>
+                  <input 
+                    type="email" 
+                    v-model="formData.email" 
+                    class="form-input"
+                    placeholder="Enter email address"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Password <span class="required">*</span></label>
+                  <div class="password-input-wrapper">
+                    <input 
+                      :type="showPassword ? 'text' : 'password'" 
+                      v-model="formData.password" 
+                      class="form-input"
+                      :placeholder="isEditing ? 'Leave blank to keep current password' : 'Enter password'"
+                      :required="!isEditing"
+                    >
+                    <button 
+                      type="button" 
+                      class="toggle-password" 
+                      @click="showPassword = !showPassword"
+                    >
+                      {{ showPassword ? 'Hide' : 'Show' }}
+                    </button>
+                  </div>
+                  <small class="form-hint">{{ isEditing ? 'Leave blank to keep current password' : 'Minimum 8 characters' }}</small>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="closeAddModal">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    {{ isEditing ? 'Update Admin' : 'Add Admin' }}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div class="modal-footer"></div>
           </div>
         </div>
 
@@ -190,129 +211,97 @@ import AdminHeader from '@/components/AdminHeader.vue';
 import AdminSidebar from '@/components/AdminSidebar.vue';
 
 export default {
-  name: 'ManageUser',
+  name: 'ManageAdmin',
   components: {
     AdminHeader,
     AdminSidebar
   },
   setup() {
-    const adminName = ref('Admin');
+    const adminName = ref('Super Admin');
     const notifications = ref(3);
     const searchQuery = ref('');
-    const sortBy = ref('uid');
-    const showDetailsModal = ref(false);
-    const selectedUser = ref(null);
+    const sortBy = ref('id');
+    const showAddModal = ref(false);
+    const showPassword = ref(false);
+    const isEditing = ref(false);
 
-    const users = ref([
+    const admins = ref([
       {
-        id: 'U001',
-        name: 'Alice Johnson',
-        email: 'alice@example.com',
-        joinSince: '2023-01-10',
-        lastActive: '2 hours ago',
-        profile: 'https://randomuser.me/api/portraits/women/1.jpg',
-        totalOrders: 24,
-        totalSpent: '1,250.00',
-        reviews: 8
+        id: 'A001',
+        name: 'John Doe',
+        email: 'john@startech.com',
+        password: 'password123',
+        joinDate: '2023-01-15',
+        role: 'Super Admin'
       },
       {
-        id: 'U002',
-        name: 'Bob Smith',
-        email: 'bob@example.com',
-        joinSince: '2023-03-15',
-        lastActive: '1 day ago',
-        profile: 'https://randomuser.me/api/portraits/men/2.jpg',
-        totalOrders: 12,
-        totalSpent: '850.00',
-        reviews: 5
+        id: 'A002',
+        name: 'Jane Smith',
+        email: 'jane@startech.com',
+        password: 'admin2023',
+        joinDate: '2023-06-20',
+        role: 'Admin'
       },
       {
-        id: 'U003',
-        name: 'Charlie Brown',
-        email: 'charlie@example.com',
-        joinSince: '2024-02-20',
-        lastActive: '5 days ago',
-        profile: 'https://randomuser.me/api/portraits/men/3.jpg',
-        totalOrders: 3,
-        totalSpent: '200.00',
-        reviews: 1
+        id: 'A003',
+        name: 'Mike Johnson',
+        email: 'mike@startech.com',
+        password: 'secure456',
+        joinDate: '2024-02-10',
+        role: 'Admin'
       },
       {
-        id: 'U004',
-        name: 'Diana Prince',
-        email: 'diana@example.com',
-        joinSince: '2022-11-05',
-        lastActive: '1 hour ago',
-        profile: 'https://randomuser.me/api/portraits/women/4.jpg',
-        totalOrders: 45,
-        totalSpent: '3,200.00',
-        reviews: 15
-      },
-      {
-        id: 'U005',
-        name: 'Eve Martinez',
-        email: 'eve@example.com',
-        joinSince: '2024-06-01',
-        lastActive: '3 hours ago',
-        profile: 'https://randomuser.me/api/portraits/women/5.jpg',
-        totalOrders: 8,
-        totalSpent: '450.00',
-        reviews: 3
-      },
-      {
-        id: 'U006',
-        name: 'Frank Wilson',
-        email: 'frank@example.com',
-        joinSince: '2024-12-15',
-        lastActive: 'Just now',
-        profile: 'https://randomuser.me/api/portraits/men/6.jpg',
-        totalOrders: 2,
-        totalSpent: '150.00',
-        reviews: 0
+        id: 'A004',
+        name: 'Sarah Williams',
+        email: 'sarah@startech.com',
+        password: 'adminpass789',
+        joinDate: '2024-12-05',
+        role: 'Admin'
       },
     ]);
 
-    const selectedUserIds = ref([]);
+    const selectedAdminIds = ref([]);
+    
+    const formData = ref({
+      id: '',
+      name: '',
+      email: '',
+      password: '',
+      joinDate: '',
+      role: 'Admin'
+    });
 
     const selectAll = computed({
-      get: () => selectedUserIds.value.length === filteredUsers.value.length && filteredUsers.value.length > 0,
+      get: () => selectedAdminIds.value.length === filteredAdmins.value.length && filteredAdmins.value.length > 0,
       set: (value) => {
-        selectedUserIds.value = value ? filteredUsers.value.map(u => u.id) : [];
+        selectedAdminIds.value = value ? filteredAdmins.value.map(a => a.id) : [];
       }
     });
 
-    const totalUsers = computed(() => users.value.length);
+    const totalAdmins = computed(() => admins.value.length);
+    
+    const activeAdmins = computed(() => admins.value.length);
 
     const newThisMonth = computed(() =>
-      users.value.filter(u => u.joinSince.includes('2024-12')).length
+      admins.value.filter(a => a.joinDate.includes('2024-12')).length
     );
 
-    const activeToday = computed(() =>
-      users.value.filter(u => 
-        u.lastActive.includes('hour') || u.lastActive.includes('Just now')
-      ).length
+    const superAdmins = computed(() =>
+      admins.value.filter(a => a.role === 'Super Admin').length
     );
 
-    const totalRevenue = computed(() =>
-      users.value
-        .reduce((sum, u) => sum + parseFloat(u.totalSpent.replace(',', '')), 0)
-        .toFixed(2)
-    );
+    const filteredAdmins = computed(() => {
+      let filtered = admins.value;
 
-    const filteredUsers = computed(() => {
-      let filtered = users.value;
-
-      // Search filter
       if (searchQuery.value) {
-        filtered = filtered.filter(u => 
-          u.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+        filtered = filtered.filter(a => 
+          a.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          a.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          a.email.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
 
-      // Sort
-      if (sortBy.value === 'uid') {
+      if (sortBy.value === 'id') {
         filtered = [...filtered].sort((a, b) => a.id.localeCompare(b.id));
       } else if (sortBy.value === 'name') {
         filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
@@ -320,47 +309,85 @@ export default {
         filtered = [...filtered].sort((a, b) => a.email.localeCompare(b.email));
       } else if (sortBy.value === 'recent') {
         filtered = [...filtered].sort((a, b) => 
-          new Date(b.joinSince) - new Date(a.joinSince)
+          new Date(b.joinDate) - new Date(a.joinDate)
         );
       }
 
       return filtered;
     });
 
-    function viewUserDetails(user) {
-      selectedUser.value = user;
-      showDetailsModal.value = true;
+    function getInitials(name) {
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
     }
 
-    function closeDetailsModal() {
-      showDetailsModal.value = false;
-      selectedUser.value = null;
+    function editAdmin(admin) {
+      isEditing.value = true;
+      formData.value = { ...admin, password: '' };
+      showAddModal.value = true;
     }
 
-    function deleteUser(id) {
-      if (confirm('Are you sure you want to delete this user?')) {
-        users.value = users.value.filter(u => u.id !== id);
-        selectedUserIds.value = selectedUserIds.value.filter(uid => uid !== id);
-        alert('User deleted successfully!');
+    function saveAdmin() {
+      if (isEditing.value) {
+        const index = admins.value.findIndex(a => a.id === formData.value.id);
+        if (index !== -1) {
+          const updatedAdmin = { ...formData.value };
+          if (!updatedAdmin.password) {
+            updatedAdmin.password = admins.value[index].password;
+          }
+          admins.value[index] = updatedAdmin;
+          alert('Admin updated successfully!');
+        }
+      } else {
+        const newAdmin = {
+          ...formData.value,
+          id: `A${String(admins.value.length + 1).padStart(3, '0')}`,
+          joinDate: new Date().toISOString().split('T')[0]
+        };
+        admins.value.push(newAdmin);
+        alert('Admin added successfully!');
+      }
+      closeAddModal();
+    }
+
+    function closeAddModal() {
+      showAddModal.value = false;
+      isEditing.value = false;
+      showPassword.value = false;
+      formData.value = {
+        id: '',
+        name: '',
+        email: '',
+        password: '',
+        joinDate: '',
+        role: 'Admin'
+      };
+    }
+
+    function deleteAdmin(id) {
+      if (confirm('Are you sure you want to delete this admin?')) {
+        admins.value = admins.value.filter(a => a.id !== id);
+        selectedAdminIds.value = selectedAdminIds.value.filter(aid => aid !== id);
+        alert('Admin deleted successfully!');
       }
     }
 
-    function bulkDeleteUsers() {
-      const count = selectedUserIds.value.length;
+    function bulkDeleteAdmins() {
+      const count = selectedAdminIds.value.length;
       if (count === 0) {
-        alert('Please select at least one user to delete.');
+        alert('Please select at least one admin to delete.');
         return;
       }
 
-      if (confirm(`Are you sure you want to delete ${count} selected user(s)?`)) {
-        users.value = users.value.filter(u => !selectedUserIds.value.includes(u.id));
-        selectedUserIds.value = [];
-        alert(`${count} user(s) deleted successfully!`);
+      if (confirm(`Are you sure you want to delete ${count} selected admin(s)?`)) {
+        admins.value = admins.value.filter(a => !selectedAdminIds.value.includes(a.id));
+        selectedAdminIds.value = [];
+        alert(`${count} admin(s) deleted successfully!`);
       }
-    }
-
-    function exportUsers() {
-      alert('Exporting users...');
     }
 
     function handleSettingsClick() {
@@ -372,21 +399,24 @@ export default {
       notifications,
       searchQuery,
       sortBy,
-      showDetailsModal,
-      selectedUser,
-      users,
-      selectedUserIds,
+      showAddModal,
+      showPassword,
+      isEditing,
+      admins,
+      selectedAdminIds,
+      formData,
       selectAll,
-      totalUsers,
+      totalAdmins,
+      activeAdmins,
       newThisMonth,
-      activeToday,
-      totalRevenue,
-      filteredUsers,
-      viewUserDetails,
-      closeDetailsModal,
-      deleteUser,
-      bulkDeleteUsers,
-      exportUsers,
+      superAdmins,
+      filteredAdmins,
+      getInitials,
+      editAdmin,
+      saveAdmin,
+      closeAddModal,
+      deleteAdmin,
+      bulkDeleteAdmins,
       handleSettingsClick
     };
   }
@@ -578,12 +608,12 @@ export default {
   margin: 0;
 }
 
-.manage-icon{
+.manage-icon {
   width: 20px;
   height: 20px;
 }
 
-.user-content {
+.admin-content {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -614,7 +644,6 @@ export default {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #6c757d;
 }
 
 .search-input {
@@ -654,8 +683,6 @@ export default {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 table {
@@ -711,26 +738,31 @@ tbody {
   accent-color: #0b6cf0;
 }
 
-.user-id-cell {
+.admin-id-cell {
   font-weight: 600;
   color: #0b6cf0;
 }
 
-.user-info {
+.admin-name-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.user-avatar {
+.avatar-placeholder {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #e9ecef;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.user-name {
+.admin-name {
   font-weight: 500;
   color: #212529;
 }
@@ -738,6 +770,15 @@ tbody {
 .email-cell {
   color: #6c757d;
   font-size: 15px;
+}
+
+.password-cell {
+  color: #6c757d;
+}
+
+.password-hidden {
+  letter-spacing: 2px;
+  font-size: 16px;
 }
 
 .date-cell {
@@ -772,7 +813,7 @@ tbody {
   height: 15px;
 }
 
-.view-btn:hover {
+.edit-btn:hover {
   border-color: #0b6cf0;
   background: #e6f0ff;
 }
@@ -792,11 +833,6 @@ tbody {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
 }
 
 .empty-content p {
@@ -827,7 +863,7 @@ tbody {
   background: white;
   border-radius: 12px;
   width: 90%;
-  max-width: 700px;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 0.3s;
@@ -888,121 +924,71 @@ tbody {
   padding: 24px;
 }
 
-.profile-section {
+.admin-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
-  border-bottom: 1px solid #e9ecef;
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.profile-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
-}
-
-.details-section {
-  margin-bottom: 30px;
-}
-
-.details-section:last-child {
-  margin-bottom: 0;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #212529;
-  margin: 0 0 16px 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
-.info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-
-.info-content {
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
+  gap: 8px;
 }
 
-.info-label {
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+.required {
+  color: #dc3545;
+}
+
+.form-input {
+    width: 80%;
+  padding: 10px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0b6cf0;
+  box-shadow: 0 0 0 3px rgba(11, 108, 240, 0.1);
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  width: 50px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 5px;
+  border-color: rgb(185, 184, 184);
+  border-radius: 5px;
+  border-width: 1px;
+}
+
+.form-hint {
   font-size: 12px;
   color: #6c757d;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.info-value {
-  font-size: 14px;
-  color: #212529;
-  font-weight: 500;
-}
-
-.activity-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  background: #0b6cf0;
-  border-radius: 12px;
-  color: white;
-  text-align: center;
-}
-
-.activity-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.activity-value {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.activity-label {
-  font-size: 12px;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.modal-footer {
+.form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #e9ecef;
+  margin-top: 10px;
 }
 
 @media (max-width: 1200px) {
@@ -1028,11 +1014,6 @@ tbody {
 
   .search-box {
     max-width: 100%;
-  }
-
-  .info-grid,
-  .activity-stats {
-    grid-template-columns: 1fr;
   }
 }
 

@@ -48,22 +48,6 @@ const newProducts = [
         </div>
       </section>
 
-      <!-- Banners Row -->
-      <section class="banners-section">
-        <div class="container">
-          <div class="banners-grid">
-            <div class="banner-left">
-              <p>The only case<br>you need.</p>
-              <a href="#" class="banner-link">Shop now →</a>
-            </div>
-            <div class="banner-right">
-              <p>Get 30% OFF<br>selected items</p>
-              <a href="#" class="banner-link">Shop now →</a>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <!-- Products Grid -->
       <section class="products-section">
         <div class="container">
