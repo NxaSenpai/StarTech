@@ -76,6 +76,11 @@ onUnmounted(() => {
       </form>
 
       <div class="user-section">
+
+        <router-link class="cart-btn" to="/cart">
+          <img class="cart-icon" src="/cart.png" alt="">
+        </router-link>
+
         <router-link to="/profile" class="profile-avatar">
           <div class="avatar-inner">{{ initial }}</div>
         </router-link>
@@ -91,7 +96,6 @@ onUnmounted(() => {
         <li><router-link to="/new" active-class="active">New Arrivals</router-link></li>
         <li><router-link to="/deals" active-class="active">Today's Deal</router-link></li>
         <li><router-link to="/orders" active-class="active">My Orders</router-link></li>
-        <li><router-link to="/cart" active-class="active">Cart (0)</router-link></li>
       </ul>
     </nav>
   </header>
@@ -114,6 +118,8 @@ onUnmounted(() => {
 }
 
 .user-section {
+  display: flex;
+  gap: 30px;
   flex-shrink: 0;
   z-index: 10;
 }
@@ -182,6 +188,21 @@ onUnmounted(() => {
 }
 
 .search-btn:active { transform: scale(0.95); }
+
+.cart-btn {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cart-icon {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s;
+}
 
 .profile-avatar {
   width: 42px;

@@ -1,4 +1,8 @@
 <script setup lang="ts">
+
+import router from '@/routes';
+import { Router, useRouter } from 'vue-router'
+
 defineProps<{
   image?: string
   title: string
@@ -8,10 +12,18 @@ defineProps<{
   reviewCount?: number
   isOnSale?: boolean
 }>()
-</script>
 
+
+function goToProductDetails() {
+  console.log("I was clicked")
+    console.log("Router:", router)
+  router.push('/pdetails')
+}
+
+</script>
+;
 <template>
-  <div class="product-card">
+  <div class="product-card" @click="goToProductDetails()">
     <div 
       v-if="isOnSale" class="sale-badge">Sale!
     </div>
@@ -61,6 +73,7 @@ defineProps<{
 }
 
 .product-card:hover {
+  cursor: pointer;
   transform: translateY(-8px);
 }
 

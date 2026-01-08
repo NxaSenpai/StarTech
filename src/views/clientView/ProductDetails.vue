@@ -875,6 +875,11 @@ color: #000000;
   margin-bottom: 10px;
 }
 
+.wishlist-btn {
+  color: #b1b1b1;
+  border-color: #b1b1b1;
+}
+
 .product-card-price {
   padding: 0 20px 20px;
   font-size: 24px;

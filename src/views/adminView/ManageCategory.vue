@@ -158,6 +158,18 @@
           </div>
         </section>
 
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
         <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
           <div class="modal-container">
             <div class="modal-header">
@@ -241,12 +253,29 @@ export default {
     const selectedCategoryIds = ref([]);
     const isLoading = ref(false);
 
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
+
     const formData = ref({
       name: '',
       productCount: 0,
       status: 'Active',
       description: ''
     });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
 
     const selectAll = computed({
       get: () => selectedCategoryIds.value.length === filteredCategories.value.length && filteredCategories.value.length > 0,
@@ -307,13 +336,7 @@ export default {
         console.log('First category:', categories.value[0]);
       } catch (error) {
         console.error('Failed to fetch categories:', error);
-        if (error.response) {
-          alert(`Server error: ${error.response.status}`);
-        } else if (error.request) {
-          alert('Cannot connect to server. Please ensure backend is running on http://localhost:3000');
-        } else {
-          alert('Failed to load categories: ' + error.message);
-        }
+        showToast('error', 'Failed to load categories. Please check your connection.');
       } finally {
         isLoading.value = false;
       }
@@ -350,7 +373,7 @@ export default {
 
     async function saveCategory() {
       if (!formData.value.name.trim()) {
-        alert('Category name is required!');
+        showToast('error', 'Category name is required!');
         return;
       }
 
@@ -362,7 +385,7 @@ export default {
             status: formData.value.status,
             description: formData.value.description
           });
-          alert('Category updated successfully!');
+          showToast('success', 'Category updated successfully!');
         } else {
           await axios.post(`${API_URL}/categories`, {
             name: formData.value.name,
@@ -370,18 +393,15 @@ export default {
             status: formData.value.status,
             description: formData.value.description || ''
           });
-          alert('Category added successfully!');
+          showToast('success', 'Category added successfully!');
         }
         
         await fetchCategories();
         closeModal();
       } catch (error) {
         console.error('Save failed:', error);
-        if (error.response) {
-          alert(`Failed to save category: ${error.response.data.message || 'Server error'}`);
-        } else {
-          alert('Failed to save category. Please check your connection.');
-        }
+        const errorMsg = error.response?.data?.message || 'Failed to save category. Please try again.';
+        showToast('error', errorMsg);
       }
     }
 
@@ -389,15 +409,14 @@ export default {
       if (confirm('Are you sure you want to delete this category?')) {
         try {
           await axios.delete(`${API_URL}/categories/${id}`);
-          alert('Category deleted successfully!');
+          showToast('success', 'Category deleted successfully!');
           await fetchCategories();
         } catch (error) {
           console.error('Delete failed:', error);
-          if (error.response && error.response.status === 404) {
-            alert('Category not found');
-          } else {
-            alert('Failed to delete category');
-          }
+          const errorMsg = error.response?.status === 404 
+            ? 'Category not found' 
+            : 'Failed to delete category';
+          showToast('error', errorMsg);
         }
       }
     }
@@ -405,7 +424,7 @@ export default {
     async function bulkDeleteCategories() {
       const count = selectedCategoryIds.value.length;
       if (count === 0) {
-        alert('Please select categories to delete');
+        showToast('error', 'Please select categories to delete');
         return;
       }
       
@@ -414,12 +433,12 @@ export default {
           await axios.post(`${API_URL}/categories/bulk-delete`, {
             ids: selectedCategoryIds.value
           });
-          alert(`${count} categories deleted successfully!`);
+          showToast('success', `${count} categories deleted successfully!`);
           selectedCategoryIds.value = [];
           await fetchCategories();
         } catch (error) {
           console.error('Bulk delete failed:', error);
-          alert('Failed to delete categories');
+          showToast('error', 'Failed to delete categories');
         }
       }
     }
@@ -437,10 +456,10 @@ export default {
         linkElement.setAttribute('href', dataUri);
         linkElement.setAttribute('download', exportFileDefaultName);
         linkElement.click();
-        alert('Categories exported successfully!');
+        showToast('success', 'Categories exported successfully!');
       } catch (error) {
         console.error('Export failed:', error);
-        alert('Failed to export categories');
+        showToast('error', 'Failed to export categories');
       }
     }
 
@@ -463,6 +482,7 @@ export default {
       categories,
       selectedCategoryIds,
       formData,
+      toast,
       selectAll,
       activeCategoriesCount,
       inactiveCategoriesCount,
@@ -1032,6 +1052,53 @@ tbody {
   border-top: 1px solid #e9ecef;
 }
 
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-content {
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.success-toast .toast-content {
+  background: #28a745;
+}
+
+.error-toast .toast-content {
+  background: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
+}
+
 @media (max-width: 1200px) {
   .admin-layout {
     grid-template-columns: 220px 1fr;
@@ -1076,4 +1143,3 @@ tbody {
   }
 }
 </style>
-```

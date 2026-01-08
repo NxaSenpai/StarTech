@@ -7,7 +7,6 @@
       <AdminSidebar />
 
       <main class="content-area">
-        <!-- Breadcrumb -->
         <div class="top-row">
           <div class="breadcrumb">
             <span class="breadcrumb-item">Dashboard</span>
@@ -16,7 +15,6 @@
           </div>
         </div>
 
-        <!-- Page Header -->
         <div class="page-header">
           <div class="header-left">
             <h1 class="page-title">Settings</h1>
@@ -24,9 +22,7 @@
           </div>
         </div>
 
-        <!-- Settings Content -->
         <div class="settings-container">
-          <!-- Profile Settings -->
           <section class="settings-section">
             <div class="section-header">
               <div class="header-content">
@@ -56,8 +52,9 @@
                       v-model="profile.email" 
                       class="form-input"
                       placeholder="Enter your email"
-                      required
+                      disabled
                     >
+                    <small class="form-hint">Email cannot be changed</small>
                   </div>
                 </div>
 
@@ -65,14 +62,16 @@
                   <label class="form-label">Role</label>
                   <input 
                     type="text" 
-                    v-model="profile.role" 
+                    :value="roleDisplay" 
                     class="form-input"
                     disabled
                   >
                 </div>
 
                 <div class="form-actions">
-                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                  <button type="submit" class="btn btn-primary" :disabled="saving">
+                    {{ saving ? 'Saving...' : 'Save Changes' }}
+                  </button>
                 </div>
               </form>
             </div>
@@ -100,6 +99,12 @@
               </div>
             </div>
           </section>
+        </div>
+
+        <div v-if="showSuccess" class="success-toast">
+          <div class="toast-content">
+            <span>Profile updated successfully!</span>
+          </div>
         </div>
 
         <div v-if="showLogoutModal" class="modal-overlay" @click.self="showLogoutModal = false">
@@ -132,7 +137,10 @@
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import AdminHeader from '@/components/AdminHeader.vue';
-import AdminSidebar from '@/components/adminSidebar.vue';
+import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'Settings',
@@ -144,42 +152,103 @@ export default {
     const router = useRouter();
     const adminName = ref('Admin');
     const showLogoutModal = ref(false);
+    const showSuccess = ref(false);
+    const saving = ref(false);
 
     const profile = ref({
-      name: 'John Doe',
-      email: 'john@startech.com',
-      role: 'Super Admin'
+      name: '',
+      email: '',
+      role: 'user'
     });
 
-    onMounted(() => {
-      const savedProfile = localStorage.getItem('admin-profile');
-      if (savedProfile) {
-        const parsed = JSON.parse(savedProfile);
-        profile.value = { ...profile.value, ...parsed };
+    const roleDisplay = computed(() => {
+      const role = profile.value.role;
+      if (role === 'superadmin') return 'Super Admin';
+      if (role === 'admin') return 'Admin';
+      return 'User';
+    });
+
+    const loadProfile = () => {
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const user = JSON.parse(userData);
+          profile.value = {
+            name: user.name || '',
+            email: user.email || '',
+            role: user.role || 'user'
+          };
+          adminName.value = user.name || 'Admin';
+        } else {
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Failed to load profile:', error);
+        router.push('/login');
       }
-    });
+    };
 
-    function saveProfile() {
-      localStorage.setItem('admin-profile', JSON.stringify(profile.value));
-    }
+    const saveProfile = async () => {
+      if (!profile.value.name.trim()) {
+        alert('Name cannot be empty');
+        return;
+      }
 
-    function handleLogout() {
+      saving.value = true;
+      try {
+        await axios.patch(`${API_URL}/user`, {
+          email: profile.value.email,
+          name: profile.value.name
+        });
+
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        const updatedUser = {
+          ...currentUser,
+          name: profile.value.name
+        };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        window.dispatchEvent(new CustomEvent('user-changed', { detail: updatedUser }));
+
+        showSuccess.value = true;
+        setTimeout(() => {
+          showSuccess.value = false;
+        }, 3000);
+
+        adminName.value = profile.value.name;
+      } catch (error) {
+        console.error('Failed to save profile:', error);
+        alert('Failed to save changes. Please try again.');
+      } finally {
+        saving.value = false;
+      }
+    };
+
+    const handleLogout = () => {
       showLogoutModal.value = true;
-    }
+    };
 
-    function confirmLogout() {
-      localStorage.removeItem('admin-token');
-      localStorage.removeItem('admin-profile');
+    const confirmLogout = () => {
+      localStorage.removeItem('user');
+      
+      window.dispatchEvent(new CustomEvent('user-changed', { detail: {} }));
       
       showLogoutModal.value = false;
       
       router.push('/login');
-    }
+    };
+
+    onMounted(() => {
+      loadProfile();
+    });
 
     return {
       adminName,
       profile,
+      roleDisplay,
       showLogoutModal,
+      showSuccess,
+      saving,
       saveProfile,
       handleLogout,
       confirmLogout
@@ -341,6 +410,12 @@ export default {
   cursor: not-allowed;
 }
 
+.form-hint {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: -4px;
+}
+
 .form-actions {
   display: flex;
   justify-content: flex-end;
@@ -366,10 +441,15 @@ export default {
   color: white;
 }
 
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #0958c9;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(11, 108, 240, 0.3);
+}
+
+.btn-primary:disabled {
+  background: #a8d1ff;
+  cursor: not-allowed;
 }
 
 .btn-secondary {
@@ -421,7 +501,6 @@ export default {
   flex: 1;
 }
 
-
 .action-content {
   flex: 1;
 }
@@ -438,13 +517,37 @@ export default {
   color: #6c757d;
   margin: 2px 0;
 }
-
-.action-description strong {
-  color: #212529;
-  font-weight: 600;
+.success-toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
 }
 
-/* Modal Styles */
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-content {
+  background: #28a745;
+  color: white;
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+}
+
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -572,5 +675,11 @@ export default {
     width: 100%;
     justify-content: center;
   }
+
+  .success-toast {
+    right: 10px;
+    left: 10px;
+  }
 }
 </style>
+``` 

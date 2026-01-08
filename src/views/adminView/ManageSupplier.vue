@@ -164,6 +164,18 @@
           </div>
         </section>
 
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
         <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
           <div class="modal-container">
             <div class="modal-header">
@@ -292,6 +304,12 @@ export default {
     const selectedSupplierIds = ref([]);
     const isLoading = ref(false);
 
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
+
     const formData = ref({
       companyName: '',
       contactPerson: '',
@@ -302,6 +320,17 @@ export default {
       address: '',
       notes: ''
     });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
 
     const selectAll = computed({
       get: () => selectedSupplierIds.value.length === filteredSuppliers.value.length && filteredSuppliers.value.length > 0,
@@ -367,13 +396,7 @@ export default {
         console.log('Suppliers loaded:', suppliers.value.length);
       } catch (error) {
         console.error('Failed to fetch suppliers:', error);
-        if (error.response) {
-          alert(`Server error: ${error.response.status}`);
-        } else if (error.request) {
-          alert('Cannot connect to server. Please ensure backend is running on http://localhost:3000');
-        } else {
-          alert('Failed to load suppliers: ' + error.message);
-        }
+        showToast('error', 'Failed to load suppliers. Please check your connection.');
       } finally {
         isLoading.value = false;
       }
@@ -418,7 +441,7 @@ export default {
 
     async function saveSupplier() {
       if (!formData.value.companyName.trim() || !formData.value.contactPerson.trim() || !formData.value.email.trim()) {
-        alert('Company name, contact person, and email are required!');
+        showToast('error', 'Company name, contact person, and email are required!');
         return;
       }
 
@@ -435,7 +458,7 @@ export default {
             address: formData.value.address || '',
             notes: formData.value.notes || ''
           });
-          alert('Supplier updated successfully!');
+          showToast('success', 'Supplier updated successfully!');
         } else {
           await axios.post(`${API_URL}/suppliers`, {
             companyName: formData.value.companyName,
@@ -447,19 +470,15 @@ export default {
             address: formData.value.address || '',
             notes: formData.value.notes || ''
           });
-          alert('Supplier added successfully!');
+          showToast('success', 'Supplier added successfully!');
         }
         
         await fetchSuppliers();
         closeModal();
       } catch (error) {
         console.error('Save failed:', error);
-        console.error('Error details:', error.response?.data);
-        if (error.response) {
-          alert(`Failed to save supplier: ${error.response.data.message || 'Server error'}`);
-        } else {
-          alert('Failed to save supplier. Please check your connection.');
-        }
+        const errorMsg = error.response?.data?.message || 'Failed to save supplier. Please try again.';
+        showToast('error', errorMsg);
       }
     }
 
@@ -468,18 +487,16 @@ export default {
       if (confirm('Are you sure you want to delete this supplier?')) {
         try {
           await axios.delete(`${API_URL}/suppliers/${id}`);
-          alert('Supplier deleted successfully!');
+          showToast('success', 'Supplier deleted successfully!');
           await fetchSuppliers();
         } catch (error) {
           console.error('Delete failed:', error);
-          console.error('Error details:', error.response?.data);
-          if (error.response && error.response.status === 404) {
-            alert('Supplier not found');
-          } else if (error.response && error.response.status === 400) {
-            alert('Invalid supplier ID format');
-          } else {
-            alert('Failed to delete supplier');
-          }
+          const errorMsg = error.response?.status === 404 
+            ? 'Supplier not found' 
+            : error.response?.status === 400
+            ? 'Invalid supplier ID format'
+            : 'Failed to delete supplier';
+          showToast('error', errorMsg);
         }
       }
     }
@@ -487,7 +504,7 @@ export default {
     async function bulkDeleteSuppliers() {
       const count = selectedSupplierIds.value.length;
       if (count === 0) {
-        alert('Please select at least one supplier to delete.');
+        showToast('error', 'Please select at least one supplier to delete.');
         return;
       }
 
@@ -496,12 +513,12 @@ export default {
           await axios.post(`${API_URL}/suppliers/bulk-delete`, {
             ids: selectedSupplierIds.value
           });
-          alert(`${count} suppliers deleted successfully!`);
+          showToast('success', `${count} suppliers deleted successfully!`);
           selectedSupplierIds.value = [];
           await fetchSuppliers();
         } catch (error) {
           console.error('Bulk delete failed:', error);
-          alert('Failed to delete suppliers');
+          showToast('error', 'Failed to delete suppliers');
         }
       }
     }
@@ -519,10 +536,10 @@ export default {
         linkElement.setAttribute('href', dataUri);
         linkElement.setAttribute('download', exportFileDefaultName);
         linkElement.click();
-        alert('Suppliers exported successfully!');
+        showToast('success', 'Suppliers exported successfully!');
       } catch (error) {
         console.error('Export failed:', error);
-        alert('Failed to export suppliers');
+        showToast('error', 'Failed to export suppliers');
       }
     }
 
@@ -545,6 +562,7 @@ export default {
       suppliers,
       selectedSupplierIds,
       formData,
+      toast,
       selectAll,
       activeSuppliers,
       totalProducts,
@@ -1156,6 +1174,53 @@ tbody {
   gap: 12px;
   padding: 20px 24px;
   border-top: 1px solid #e9ecef;
+}
+
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-content {
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.success-toast .toast-content {
+  background: #28a745;
+}
+
+.error-toast .toast-content {
+  background: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
 }
 
 @media (max-width: 1200px) {
