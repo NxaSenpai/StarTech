@@ -19,8 +19,6 @@
             <ul class="footer-links">
               <li><a href="#">Hot deals</a></li>
               <li><a href="#">Categories</a></li>
-              <li><a href="#">Brands</a></li>
-              <li><a href="#">Rebates</a></li>
               <li><a href="#">Weekly deals</a></li>
             </ul>
           </div>
@@ -30,9 +28,7 @@
             <ul class="footer-links">
               <li><a href="#">About</a></li>
               <li><a href="#">Contact</a></li>
-              <li><a href="#">Order tracking</a></li>
               <li><a href="#">FAQs</a></li>
-              <li><a href="#">Return policy</a></li>
               <li><a href="#">Privacy policy</a></li>
             </ul>
           </div>
@@ -75,8 +71,8 @@
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1fr;
-  gap: 50px;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: 100px;
 }
 
 .footer-logo {

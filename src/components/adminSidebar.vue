@@ -13,10 +13,14 @@
         </router-link>
       </nav>
       <div class="settings">
-        <a href="#" class="nav-item" @click.prevent="handleSettings">
+        <router-link 
+          to="/settings" 
+          class="nav-item"
+          :class="{ active: isActive('/settings') }"
+        >
           <img class="nav-icon" src="/settingIcon.png" alt="">
           <span>Settings</span>
-        </a>
+        </router-link>
       </div>
     </aside>
   </template>
@@ -57,6 +61,11 @@
             path: '/manageuser',
             icon: '/userIcon.png',
             label: 'Manage Users'
+          },
+          {
+            path: '/manageadmin',
+            icon: '/adminIcon.png',
+            label: 'Manage Admins'
           }
         ]
       };
@@ -64,9 +73,6 @@
     methods: {
       isActive(path) {
         return this.$route.path === path;
-      },
-      handleSettings() {
-        this.$emit('settings-click');
       }
     }
   };

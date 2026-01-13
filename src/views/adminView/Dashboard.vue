@@ -128,10 +128,9 @@ export default {
       adminName: 'Admin',
       notifications: 3,
       
-      // Sales Analytics Chart
       salesChartSeries: [{
         name: 'Revenue',
-        data: [4200, 5300, 4800, 6100, 7200, 6800, 8500, 9200, 8800, 10500, 11200, 12624]
+        data: [4200, 5300, 4800, 6100, 7200, 5800, 5500, 9200, 8800, 10500, 11200, 12624]
       }],
       salesChartOptions: {
         chart: {
@@ -168,7 +167,6 @@ export default {
         }
       },
 
-      // Category Bar Chart
       categoryChartSeries: [{
         name: 'Sales',
         data: [15000, 28000, 18000, 32000, 12000, 24000]
@@ -201,7 +199,6 @@ export default {
         grid: { borderColor: '#f1f1f1' }
       },
 
-      // Stock Donut Chart
       stockChartSeries: [52.1, 22.8, 13.9, 11.2, 20],
       stockChartOptions: {
         chart: { type: 'donut' },
