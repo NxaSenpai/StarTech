@@ -8,7 +8,7 @@
         <div class="footer-grid">
 
           <div class="footer-col brand">
-            <h2 class="footer-logo">StarTech</h2>
+            <img class="footer-logo" alt="StarTech Logo" src="/logo.png" />
             <p class="footer-desc">
               We bring you the latest in electronics, gadgets, and smart home solutions—all in one place.
             </p>
@@ -19,8 +19,6 @@
             <ul class="footer-links">
               <li><a href="#">Hot deals</a></li>
               <li><a href="#">Categories</a></li>
-              <li><a href="#">Brands</a></li>
-              <li><a href="#">Rebates</a></li>
               <li><a href="#">Weekly deals</a></li>
             </ul>
           </div>
@@ -30,9 +28,7 @@
             <ul class="footer-links">
               <li><a href="#">About</a></li>
               <li><a href="#">Contact</a></li>
-              <li><a href="#">Order tracking</a></li>
               <li><a href="#">FAQs</a></li>
-              <li><a href="#">Return policy</a></li>
               <li><a href="#">Privacy policy</a></li>
             </ul>
           </div>
@@ -41,9 +37,9 @@
           <div class="footer-col">
             <h3 class="footer-title">Contact</h3>
             <ul class="footer-contact">
-              <li>123 Fifth Avenue, New York, NY 10160</li>
-              <li>contact@info.com</li>
-              <li>929-242-6868</li>
+              <li>123 Khan Meanchey, Phnom Penh, Cambodia</li>
+              <li>startech99@gmail.com</li>
+              <li>999-888-777</li>
             </ul>
           </div>
 
@@ -75,16 +71,14 @@
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1fr;
-  gap: 50px;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: 100px;
 }
 
 .footer-logo {
-  font-size: 30px;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
+  filter: brightness(0) invert(1);
+  width: 200px;
+  margin-bottom: 20px;
 }
 
 .footer-desc {

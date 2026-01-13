@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
   import Header from '@/components/header.vue'
   import Footer from '@/components/footer.vue'
   import ShopByCategory from '@/components/shopByCategory.vue'
@@ -60,25 +60,25 @@
               <h1>Welcome to <span class="gradient-text">StarTech</span></h1>
               <p>Discover premium laptops, gadgets & electronics with unbeatable prices</p>
               <div class="hero-buttons">
-                <button class="shop-now-btn primary">
+                <router-link to="/products" class="shop-now-btn primary">
                   <span>Shop Now</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
-                </button>
-                <button class="shop-now-btn secondary">View Deals</button>
+                </router-link>
+                <router-link to="/bestdeal" class="shop-now-btn secondary">View Deals</router-link>
               </div>
               <div class="trust-badges">
                 <div class="badge">
-                  <img src="/freeshipIcon.png" class="badge-icon"></img>
+                  <img src="/freeshipIcon.png" class="badge-icon">
                   <span>Free Shipping</span>
                 </div>
                 <div class="badge">
-                  <img src="/shield.png" class="badge-icon"></img>
+                  <img src="/shield.png" class="badge-icon">
                   <span>2 Year Warranty</span>
                 </div>
                 <div class="badge">
-                  <img src="/return.png" class="badge-icon"></img>
+                  <img src="/return.png" class="badge-icon">
                   <span>Easy Returns</span>
                 </div>
               </div>
@@ -93,7 +93,7 @@
                 <span class="section-tag">Browse</span>
                 <h2 class="section-title">Shop by Category</h2>
               </div>
-              <a href="/categories" class="view-all-link">
+              <a href="/category" class="view-all-link">
                 View All
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M5 12h14M12 5l7 7-7 7"/>
@@ -127,17 +127,17 @@
               <DiscountBanner
                 title="Wireless headphones"
                 startingPrice="$49"
-                image="/washingMachine.jpg"
+                image="/wirelessheadphone.png"
               />
               <DiscountBanner
-                title="Grooming"
+                title="Gagdets"
                 startingPrice="$39"
-                image="/discounts/trimmer.png"
+                image="/kitchengadget.png"
               />
               <DiscountBanner
                 title="Video games"
                 startingPrice="$49"
-                image="/discounts/gameboy.png"
+                image="/videogame.png"
               />
             </div>
           </div>
@@ -149,12 +149,6 @@
               <div class="section-header-left">
                 <span class="section-tag">Trending</span>
                 <h2 class="section-title">Featured Products</h2>
-              </div>
-              <div class="filter-tabs">
-                <button class="filter-tab active">All</button>
-                <button class="filter-tab">New Arrivals</button>
-                <button class="filter-tab">Best Sellers</button>
-                <button class="filter-tab">On Sale</button>
               </div>
             </div>
             <div class="products-grid">
@@ -173,11 +167,10 @@
               />
             </div>
             <div class="load-more">
-              <button class="load-more-btn">Load More Products</button>
+              <router-link to="/products" class="load-more-btn">Load More Products</router-link>
             </div>
           </div>
         </section>
-  
       </main>
   
       <section class="brand-deal-banner">
@@ -188,20 +181,20 @@
             <p class="desc">Limited time offer • Free delivery & installation</p>
             <div class="deal-features">
               <div class="feature">
-                <span class="feature-icon">✓</span>
+                <img src="/verifiedIcon.png" class="feature-icon">
                 <span>Free Installation</span>
               </div>
               <div class="feature">
-                <span class="feature-icon">✓</span>
-                <span>5 Year Warranty</span>
+                <img src="/verifiedIcon.png" class="feature-icon">
+                <span>1 Year Warranty</span>
               </div>
             </div>
-            <a href="/category/washing-machines" class="shop-now-link">
+            <router-link to="/products" class="shop-now-link">
               Shop now
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
-            </a>
+            </router-link>
           </div>
           <div class="deal-image">
             <img 
@@ -210,19 +203,6 @@
               loading="lazy"
             />
           </div>
-        </div>
-      </section>
-  
-      <section class="newsletter-section">
-        <div class="newsletter-inner">
-          <div class="newsletter-content">
-            <h3>Stay Updated</h3>
-            <p>Subscribe to get special offers, free giveaways, and exclusive deals.</p>
-          </div>
-          <form class="newsletter-form" @submit.prevent>
-            <input type="email" placeholder="Enter your email" class="newsletter-input" />
-            <button type="submit" class="newsletter-btn">Subscribe</button>
-          </form>
         </div>
       </section>
   
@@ -422,6 +402,11 @@
     font-weight: 600;
     margin-bottom: 24px;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    transform: all 1s ease;
+  }
+
+  .hero-badge:hover{
+    background: linear-gradient(135deg, #60a5fa, #a78bfa, #f472b6);
   }
   
   .hero-section h1 {
@@ -547,33 +532,6 @@
     padding: 80px 0;
   }
   
-  .filter-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .filter-tab {
-    padding: 10px 20px;
-    border: none;
-    background: #f1f5f9;
-    color: #64748b;
-    font-weight: 600;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .filter-tab:hover {
-    background: #e2e8f0;
-    color: #1e293b;
-  }
-  
-  .filter-tab.active {
-    background: #1e293b;
-    color: white;
-  }
-  
   .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -612,7 +570,6 @@
     box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
   }
   
-  /* Brand Deal Banner */
   .brand-deal-banner {
     max-width: 1400px;
     margin: 0 auto 80px;
@@ -721,82 +678,7 @@
     height: 100%;
     object-fit: cover;
   }
-  
-  .newsletter-section {
-    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-    padding: 60px 20px;
-    margin-bottom: 0;
-  }
-  
-  .newsletter-inner {
-    max-width: 800px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 40px;
-    flex-wrap: wrap;
-  }
-  
-  .newsletter-content h3 {
-    font-size: 1.8rem;
-    color: white;
-    font-weight: 700;
-    margin: 0 0 8px;
-  }
-  
-  .newsletter-content p {
-    color: #94a3b8;
-    margin: 0;
-    font-size: 1rem;
-  }
-  
-  .newsletter-form {
-    display: flex;
-    gap: 12px;
-    flex: 1;
-    max-width: 450px;
-  }
-  
-  .newsletter-input {
-    flex: 1;
-    padding: 16px 24px;
-    border: none;
-    border-radius: 50px;
-    font-size: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-  }
-  
-  .newsletter-input::placeholder {
-    color: #94a3b8;
-  }
-  
-  .newsletter-input:focus {
-    outline: none;
-    border-color: #3b82f6;
-    background: rgba(255, 255, 255, 0.15);
-  }
-  
-  .newsletter-btn {
-    padding: 16px 32px;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    border: none;
-    border-radius: 50px;
-    font-weight: 700;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-  }
-  
-  .newsletter-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
-  }
-  
+
   @media (max-width: 1024px) {
     .hero-section h1 {
       font-size: 2.8rem;
@@ -843,12 +725,6 @@
     .section-header {
       flex-direction: column;
       align-items: flex-start;
-    }
-    
-    .filter-tabs {
-      width: 100%;
-      overflow-x: auto;
-      padding-bottom: 8px;
     }
     
     .brand-deal-inner {
