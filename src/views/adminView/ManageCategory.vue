@@ -38,17 +38,17 @@
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon green"><img class="manage-icon" src="/verifiedIcon.png" alt=""></div>
-              <div class="stat-info">
-                <p class="stat-label">Active Categories</p>
-                <h3 class="stat-value">{{ activeCategoriesCount }}</h3>
-              </div>
-            </div>
-            <div class="stat-card">
               <div class="stat-icon orange"><img class="manage-icon" src="/productIcon.png" alt=""></div>
               <div class="stat-info">
                 <p class="stat-label">Total Products</p>
                 <h3 class="stat-value">{{ totalProductsCount }}</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><img class="manage-icon" src="/verifiedIcon.png" alt=""></div>
+              <div class="stat-info">
+                <p class="stat-label">Active Categories</p>
+                <h3 class="stat-value">{{ activeCategoriesCount }}</h3>
               </div>
             </div>
             <div class="stat-card">

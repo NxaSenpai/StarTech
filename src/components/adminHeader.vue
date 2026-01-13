@@ -4,7 +4,7 @@
     <div class="header-actions">
       <div class="user-info">
         <span class="user-name">{{ displayName }}</span>
-        <router-link to="/admin/settings" class="avatar">{{ userInitial }}</router-link>
+        <router-link to="/settings" class="avatar">{{ userInitial }}</router-link>
       </div>
     </div>
   </header>

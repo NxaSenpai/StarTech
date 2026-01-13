@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 
-import router from '@/routes';
-import { Router, useRouter } from 'vue-router'
+const router = useRouter()
 
 defineProps<{
   image?: string
@@ -11,19 +11,16 @@ defineProps<{
   rating?: number
   reviewCount?: number
   isOnSale?: boolean
+  productId?: string
 }>()
 
-
-function goToProductDetails() {
-  console.log("I was clicked")
-    console.log("Router:", router)
-  router.push('/pdetails')
+const navigateToDetails = () => {
+  router.push({ name: 'pdetails' })
 }
-
 </script>
-;
+
 <template>
-  <div class="product-card" @click="goToProductDetails()">
+  <div class="product-card" @click="navigateToDetails">
     <div 
       v-if="isOnSale" class="sale-badge">Sale!
     </div>
@@ -53,7 +50,7 @@ function goToProductDetails() {
         <span v-if="oldPrice" class="old">${{ oldPrice.toFixed(2) }}</span>
       </div>
 
-      <button class="add-btn">Add +</button>
+      <button class="add-btn" @click.stop="$emit('add-to-cart')">Add +</button>
     </div>
   </div>
 </template>
@@ -70,10 +67,10 @@ function goToProductDetails() {
   box-shadow: 0 10px 30px rgba(0,0,0,0.07);
   transition: transform 0.35s ease;
   border: 1px solid #a09f9f;
+  cursor: pointer;
 }
 
 .product-card:hover {
-  cursor: pointer;
   transform: translateY(-8px);
 }
 

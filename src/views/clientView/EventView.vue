@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import Header from '@/components/header.vue'
 import Footer from '@/components/footer.vue'
 import ProductCard from '@/components/productCard.vue'
@@ -14,22 +14,6 @@ const newProducts = [
   { title: 'Instant Camera with Film Pack', price: 129.00, rating: 4.9, reviews: 890, sale: false, img: '/Asus_controller.png' },
   { title: 'Smart Watch with GPS and Fitness Tracking', price: 399.00, oldPrice: 449.00, rating: 4.7, reviews: 678, sale: true, img: '/Asus_controller.png' },
   { title: 'Vintage Gaming Console Retro Edition', price: 89.99, rating: 4.5, reviews: 234, sale: false, img: '/Asus_controller.png' },
-  { title: 'Android Tablet 10" 128GB with Keyboard Case', price: 299.00, oldPrice: 399.00, rating: 4.6, reviews: 456, sale: true, img: ' ' },
-  { title: 'iPad Pro 11" (2024) M4 Chip 256GB', price: 999.00, rating: 5.0, reviews: 123, sale: false, img: ' ' },
-  { title: '5G Unlocked Smartphone 128GB Dual SIM', price: 699.00, oldPrice: 899.00, rating: 4.8, reviews: 789, sale: true, img: ' ' },
-  { title: 'Flagship Unlocked Smartphone 256GB Pro-Grade Camera', price: 1099.00, oldPrice: 1299.00, rating: 4.9, reviews: 1023, sale: true, img: ' ' },
-  { title: '13" MacBook Air (M3) 16GB RAM 512GB SSD', price: 1499.00, rating: 4.9, reviews: 345, sale: false, img: ' ' },
-  { title: '14" Rugged Ultrabook 4K Touchscreen Intel i7', price: 1299.00, oldPrice: 1599.00, rating: 4.7, reviews: 267, sale: true, img: ' ' },
-  { title: 'Ultrabook Gaming Laptop RTX 4070 1TB SSD', price: 1899.00, rating: 4.8, reviews: 512, sale: false, img: ' ' },
-  { title: '15" Display Laptop Intel i9 32GB RAM', price: 2199.00, oldPrice: 2499.00, rating: 4.9, reviews: 178, sale: true, img: ' ' },
-  { title: 'Built-in Oven Microwave Combo', price: 799.00, oldPrice: 999.00, rating: 4.5, reviews: 89, sale: true, img: ' ' },
-  { title: 'Wall Oven with Air Fry', price: 1199.00, rating: 4.6, reviews: 134, sale: false, img: ' ' },
-  { title: 'Front Load Washer 5.0 cu.ft.', price: 899.00, oldPrice: 1099.00, rating: 4.7, reviews: 456, sale: true, img: ' ' },
-  { title: 'Top Load Washer with Impeller', price: 699.00, rating: 4.4, reviews: 312, sale: false, img: ' ' },
-  { title: 'Speed Queen Heavy Duty Top Load Washer', price: 1299.00, oldPrice: 1499.00, rating: 4.8, reviews: 98, sale: true, img: ' ' },
-  { title: '10 cu.ft. Combination Washer/Dryer', price: 1599.00, rating: 4.5, reviews: 167, sale: false, img: ' ' },
-  { title: 'Double Door In-Door Fridge Freezer', price: 1899.00, oldPrice: 2199.00, rating: 4.7, reviews: 234, sale: true, img: ' ' },
-  { title: 'Side-by-Side Refrigerator with Ice Maker', price: 2199.00, rating: 4.8, reviews: 189, sale: false, img: ' ' },
 ]
 </script>
 
@@ -38,17 +22,15 @@ const newProducts = [
     <Header />
 
     <main class="event-main">
-      <!-- Hero Banner -->
       <section class="event-hero">
         <div class="hero-bg">
           <div class="hero-content">
-            <h1>New Arrivals !!</h1>
+            <h1>Today Arrivals !!</h1>
             <p>Discover the latest gadgets & electronics at StarTech</p>
           </div>
         </div>
       </section>
 
-      <!-- Products Grid -->
       <section class="products-section">
         <div class="container">
           <div class="products-grid">
@@ -63,17 +45,6 @@ const newProducts = [
               :isOnSale="product.sale"
               :image="product.img"
             />
-          </div>
-        </div>
-      </section>
-
-      <!-- Bottom Banner -->
-      <section class="bottom-banner">
-        <div class="container">
-          <div class="bottom-inner">
-            <h2>Check Out <br>Our Latest Products !!</h2>
-            <button class="shop-btn">SHOP NOW</button>
-            <div class="bottom-images"> </div>
           </div>
         </div>
       </section>
@@ -95,7 +66,6 @@ const newProducts = [
   padding: 0 20px;
 }
 
-/* Hero */
 .event-hero {
   margin-bottom: 60px;
   margin-top: 40px;
@@ -123,61 +93,6 @@ const newProducts = [
   margin-bottom: 0;
 }
 
-/* Banners Row */
-.banners-section {
-  margin-bottom: 80px;
-}
-
-.banners-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-}
-
-.banner-left,
-.banner-right {
-  background-size: cover;
-  background-position: center;
-  border-radius: 16px;
-  padding: 60px 40px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  min-height: 300px;
-  position: relative;
-}
-
-.banner-left {
-    background-color: #b3cae4;
-  /* background-image: url('/background_log.jpg');  */
-}
-
-.banner-right {
-    background-color: #b3cae4;
-  /* background-image: url('/background_log.jpg');  */
-}
-
-.banner-left p,
-.banner-right p {
-  font-size: 2.2rem;
-  font-weight: 700;
-  color: #6b84ea;
-  margin: 0 0 20px;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
-}
-
-.banner-link {
-  font-size: 1.2rem;
-  color: #0986a1;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.banner-link:hover {
-  text-decoration: underline;
-}
-
-/* Products */
 .products-section {
   margin-bottom: 100px;
 }
@@ -188,16 +103,6 @@ const newProducts = [
   gap: 40px;
 }
 
-/* Bottom Banner */
-.bottom-banner {
-  background-color: #b3cae4;
-  /* background-image: url('/background_log.jpg');  */
-  border-radius: 20px;
-  padding: 80px 40px;
-  text-align: center;
-  color: #fff;
-  margin-bottom: 80px;
-}
 
 .bottom-inner h2 {
   font-size: 3rem;
@@ -221,11 +126,7 @@ const newProducts = [
   background: #a4b3ff;
 }
 
-/* Responsive */
 @media (max-width: 992px) {
-  .banners-grid {
-    grid-template-columns: 1fr;
-  }
   
   .hero-content h1 {
     font-size: 2.8rem;
@@ -244,11 +145,6 @@ const newProducts = [
   
   .hero-content h1 {
     font-size: 2.2rem;
-  }
-  
-  .banner-left p,
-  .banner-right p {
-    font-size: 1.8rem;
   }
 }
 </style>

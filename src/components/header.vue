@@ -56,26 +56,11 @@ onUnmounted(() => {
         <img src="/logo.png" alt="Logo" class="logo-img" />
       </router-link>
 
-      <form @submit.prevent="handleSearch" class="search-form">
-        <div class="search-wrapper">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search products, brands..."
-            class="search-input"
-            aria-label="Search"
-          />
-          <button type="submit" class="search-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-        </div>
-      </form>
-
       <div class="user-section">
+
+        <router-link class="cart-btn" to="/wishlist">
+          <img class="cart-icon" src="/wishlistIcon.png" alt="">
+        </router-link>
 
         <router-link class="cart-btn" to="/cart">
           <img class="cart-icon" src="/cart.png" alt="">
@@ -90,11 +75,8 @@ onUnmounted(() => {
     <nav class="nav-bar">
       <ul class="nav-list">
         <li><router-link to="/products" active-class="active">All Products</router-link></li>
-        <li><router-link to="/category/home" active-class="active">Home Appliances</router-link></li>
-        <li><router-link to="/category/audio" active-class="active">Audio & Video</router-link></li>
-        <li><router-link to="/category/fridge" active-class="active">Refrigerator</router-link></li>
-        <li><router-link to="/new" active-class="active">New Arrivals</router-link></li>
-        <li><router-link to="/deals" active-class="active">Today's Deal</router-link></li>
+        <li><router-link to="/eventview" active-class="active">Today Arrivals</router-link></li>
+        <li><router-link to="/eventview" active-class="active">Best Deal</router-link></li>
         <li><router-link to="/orders" active-class="active">My Orders</router-link></li>
       </ul>
     </nav>
@@ -105,6 +87,9 @@ onUnmounted(() => {
 .header {
   background: white;
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  position: sticky;
+  top: 0;
+  z-index: 10000;
 }
 
 .main-bar {

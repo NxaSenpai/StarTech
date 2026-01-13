@@ -72,7 +72,11 @@
               <thead>
                 <tr>
                   <th class="checkbox-col">
-                    <input type="checkbox" v-model="selectAll" class="custom-checkbox">
+                    <input 
+                      type="checkbox" 
+                      class="custom-checkbox"
+                      v-model="selectAll"
+                    >
                   </th>
                   <th>Admin ID</th>
                   <th>Name</th>
@@ -82,25 +86,30 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredAdmins.length === 0">
-                  <td colspan="7" class="empty-state">
+                <tr v-if="isLoading">
+                  <td colspan="6" class="empty-state">
+                    <div class="empty-content">
+                      <p>Loading admins...</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-else-if="filteredAdmins.length === 0">
+                  <td colspan="6" class="empty-state">
                     <div class="empty-content">
                       <p>No admins found</p>
                     </div>
                   </td>
                 </tr>
-                <tr v-for="admin in filteredAdmins" :key="admin.id" class="table-row">
+                <tr v-else v-for="admin in filteredAdmins" :key="admin.id" class="table-row">
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      :value="admin.id" 
-                      v-model="selectedAdminIds"
                       class="custom-checkbox"
+                      :value="admin.id"
+                      v-model="selectedAdminIds"
                     >
                   </td>
-                  <td class="admin-id-cell">
-                    <span class="admin-id">{{ admin.id }}</span>
-                  </td>
+                  <td class="admin-id-cell">{{ admin.id }}</td>
                   <td class="name-cell">
                     <div class="admin-name-wrapper">
                       <div class="avatar-placeholder">{{ getInitials(admin.name) }}</div>
@@ -109,21 +118,13 @@
                   </td>
                   <td class="email-cell">{{ admin.email }}</td>
                   <td class="date-cell">{{ admin.joinDate }}</td>
-                  <td class="action-cell">
+                  <td class="action-col">
                     <div class="action-buttons">
-                      <button 
-                        class="action-btn edit-btn" 
-                        @click="editAdmin(admin)"
-                        title="Edit Admin"
-                      >
-                        <img class="btn-icon-black" src="/editIcon.png" alt="">
+                      <button class="action-btn edit-btn" @click="editAdmin(admin)" title="Edit">
+                        <img src="/editIcon.png" class="btn-icon-black" alt="Edit">
                       </button>
-                      <button 
-                        class="action-btn delete-btn" 
-                        @click="deleteAdmin(admin.id)"
-                        title="Delete"
-                      >
-                        <img class="btn-icon-black" src="/deleteIcon.png" alt="">
+                      <button class="action-btn delete-btn" @click="deleteAdmin(admin.id)" title="Delete">
+                        <img src="/deleteIcon.png" class="btn-icon-black" alt="Delete">
                       </button>
                     </div>
                   </td>
@@ -200,15 +201,30 @@
           </div>
         </div>
 
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
       </main>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AdminHeader from '@/components/AdminHeader.vue';
 import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ManageAdmin',
@@ -224,41 +240,9 @@ export default {
     const showAddModal = ref(false);
     const showPassword = ref(false);
     const isEditing = ref(false);
+    const isLoading = ref(false);
 
-    const admins = ref([
-      {
-        id: 'A001',
-        name: 'John Doe',
-        email: 'john@startech.com',
-        password: 'password123',
-        joinDate: '2023-01-15',
-        role: 'Super Admin'
-      },
-      {
-        id: 'A002',
-        name: 'Jane Smith',
-        email: 'jane@startech.com',
-        password: 'admin2023',
-        joinDate: '2023-06-20',
-        role: 'Admin'
-      },
-      {
-        id: 'A003',
-        name: 'Mike Johnson',
-        email: 'mike@startech.com',
-        password: 'secure456',
-        joinDate: '2024-02-10',
-        role: 'Admin'
-      },
-      {
-        id: 'A004',
-        name: 'Sarah Williams',
-        email: 'sarah@startech.com',
-        password: 'adminpass789',
-        joinDate: '2024-12-05',
-        role: 'Admin'
-      },
-    ]);
+    const admins = ref([]);
 
     const selectedAdminIds = ref([]);
     
@@ -268,8 +252,56 @@ export default {
       email: '',
       password: '',
       joinDate: '',
-      role: 'Admin'
+      role: 'admin'
     });
+
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
+
+    async function fetchAdmins() {
+      isLoading.value = true;
+      try {
+        const [adminResponse, superadminResponse] = await Promise.all([
+          axios.get(`${API_URL}/users`, { params: { role: 'admin' } }),
+          axios.get(`${API_URL}/users`, { params: { role: 'superadmin' } })
+        ]);
+
+        console.log('Admins loaded:', adminResponse.data);
+        console.log('Super admins loaded:', superadminResponse.data);
+
+        const allAdmins = [...adminResponse.data, ...superadminResponse.data];
+        
+        admins.value = allAdmins.map(admin => ({
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          password: '********',
+          joinDate: admin.joinSince,
+          role: admin.role === 'superadmin' ? 'Super Admin' : 'Admin'
+        }));
+
+        console.log('Mapped admins:', admins.value);
+      } catch (error) {
+        console.error('Failed to fetch admins:', error);
+        showToast('error', 'Failed to load admins. Please check your connection.');
+      } finally {
+        isLoading.value = false;
+      }
+    }
 
     const selectAll = computed({
       get: () => selectedAdminIds.value.length === filteredAdmins.value.length && filteredAdmins.value.length > 0,
@@ -282,9 +314,10 @@ export default {
     
     const activeAdmins = computed(() => admins.value.length);
 
-    const newThisMonth = computed(() =>
-      admins.value.filter(a => a.joinDate.includes('2024-12')).length
-    );
+    const newThisMonth = computed(() => {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      return admins.value.filter(a => a.joinDate && a.joinDate.startsWith(currentMonth)).length;
+    });
 
     const superAdmins = computed(() =>
       admins.value.filter(a => a.role === 'Super Admin').length
@@ -331,27 +364,44 @@ export default {
       showAddModal.value = true;
     }
 
-    function saveAdmin() {
-      if (isEditing.value) {
-        const index = admins.value.findIndex(a => a.id === formData.value.id);
-        if (index !== -1) {
-          const updatedAdmin = { ...formData.value };
-          if (!updatedAdmin.password) {
-            updatedAdmin.password = admins.value[index].password;
-          }
-          admins.value[index] = updatedAdmin;
-          alert('Admin updated successfully!');
-        }
-      } else {
-        const newAdmin = {
-          ...formData.value,
-          id: `A${String(admins.value.length + 1).padStart(3, '0')}`,
-          joinDate: new Date().toISOString().split('T')[0]
-        };
-        admins.value.push(newAdmin);
-        alert('Admin added successfully!');
+    async function saveAdmin() {
+      if (!formData.value.name.trim() || !formData.value.email.trim()) {
+        showToast('error', 'Name and email are required!');
+        return;
       }
-      closeAddModal();
+
+      try {
+        if (isEditing.value) {
+          const updateData = {
+            email: formData.value.email,
+            name: formData.value.name
+          };
+
+          if (formData.value.password && formData.value.password.trim()) {
+            updateData.password = formData.value.password;
+          }
+
+          await axios.patch(`${API_URL}/user`, updateData);
+          showToast('success', 'Admin updated successfully!');
+        } else {
+          const signupData = {
+            name: formData.value.name,
+            email: formData.value.email,
+            password: formData.value.password,
+            role: formData.value.role === 'Super Admin' ? 'superadmin' : 'admin'
+          };
+
+          await axios.post(`${API_URL}/signup`, signupData);
+          showToast('success', 'Admin added successfully!');
+        }
+        
+        await fetchAdmins();
+        closeAddModal();
+      } catch (error) {
+        console.error('Save failed:', error);
+        const errorMsg = error.response?.data?.message || 'Failed to save admin. Please try again.';
+        showToast('error', errorMsg);
+      }
     }
 
     function closeAddModal() {
@@ -364,35 +414,53 @@ export default {
         email: '',
         password: '',
         joinDate: '',
-        role: 'Admin'
+        role: 'admin'
       };
     }
 
-    function deleteAdmin(id) {
+    async function deleteAdmin(id) {
       if (confirm('Are you sure you want to delete this admin?')) {
-        admins.value = admins.value.filter(a => a.id !== id);
-        selectedAdminIds.value = selectedAdminIds.value.filter(aid => aid !== id);
-        alert('Admin deleted successfully!');
+        try {
+          await axios.delete(`${API_URL}/users/${id}`);
+          showToast('success', 'Admin deleted successfully!');
+          await fetchAdmins();
+        } catch (error) {
+          console.error('Delete failed:', error);
+          showToast('error', 'Failed to delete admin');
+        }
       }
     }
 
-    function bulkDeleteAdmins() {
+    async function bulkDeleteAdmins() {
       const count = selectedAdminIds.value.length;
       if (count === 0) {
-        alert('Please select at least one admin to delete.');
+        showToast('error', 'Please select at least one admin to delete.');
         return;
       }
 
       if (confirm(`Are you sure you want to delete ${count} selected admin(s)?`)) {
-        admins.value = admins.value.filter(a => !selectedAdminIds.value.includes(a.id));
-        selectedAdminIds.value = [];
-        alert(`${count} admin(s) deleted successfully!`);
+        try {
+          await axios.post(`${API_URL}/users/bulk-delete`, {
+            ids: selectedAdminIds.value
+          });
+          showToast('success', `${count} admin(s) deleted successfully!`);
+          selectedAdminIds.value = [];
+          await fetchAdmins();
+        } catch (error) {
+          console.error('Bulk delete failed:', error);
+          showToast('error', 'Failed to delete admins');
+        }
       }
     }
 
     function handleSettingsClick() {
       console.log('Settings clicked');
     }
+
+    onMounted(() => {
+      console.log('ManageAdmin mounted, fetching admins...');
+      fetchAdmins();
+    });
 
     return {
       adminName,
@@ -405,12 +473,14 @@ export default {
       admins,
       selectedAdminIds,
       formData,
+      toast,
       selectAll,
       totalAdmins,
       activeAdmins,
       newThisMonth,
       superAdmins,
       filteredAdmins,
+      isLoading,
       getInitials,
       editAdmin,
       saveAdmin,
@@ -989,6 +1059,53 @@ tbody {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 10px;
+}
+
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-content {
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.success-toast .toast-content {
+  background: #28a745;
+}
+
+.error-toast .toast-content {
+  background: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
 }
 
 @media (max-width: 1200px) {

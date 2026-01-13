@@ -288,10 +288,10 @@
                         >
                       </div>
                       <button type="button" class="remove-image-btn" @click="removeImage">
-                        ✕ Remove Image
+                        Remove Image
                       </button>
                       <button type="button" class="change-image-btn" @click="triggerFileInput">
-                        🔄 Change Image
+                        Change Image
                       </button>
                     </div>
                     

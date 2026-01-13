@@ -79,7 +79,6 @@
                 <tr v-if="filteredUsers.length === 0">
                   <td colspan="6" class="empty-state">
                     <div class="empty-content">
-                      <span class="empty-icon">👥</span>
                       <p>No users found</p>
                     </div>
                   </td>
@@ -179,15 +178,30 @@
           </div>
         </div>
 
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
       </main>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AdminHeader from '@/components/AdminHeader.vue';
 import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ManageUser',
@@ -202,77 +216,54 @@ export default {
     const sortBy = ref('uid');
     const showDetailsModal = ref(false);
     const selectedUser = ref(null);
-
-    const users = ref([
-      {
-        id: 'U001',
-        name: 'Alice Johnson',
-        email: 'alice@example.com',
-        joinSince: '2023-01-10',
-        lastActive: '2 hours ago',
-        profile: 'https://randomuser.me/api/portraits/women/1.jpg',
-        totalOrders: 24,
-        totalSpent: '1,250.00',
-        reviews: 8
-      },
-      {
-        id: 'U002',
-        name: 'Bob Smith',
-        email: 'bob@example.com',
-        joinSince: '2023-03-15',
-        lastActive: '1 day ago',
-        profile: 'https://randomuser.me/api/portraits/men/2.jpg',
-        totalOrders: 12,
-        totalSpent: '850.00',
-        reviews: 5
-      },
-      {
-        id: 'U003',
-        name: 'Charlie Brown',
-        email: 'charlie@example.com',
-        joinSince: '2024-02-20',
-        lastActive: '5 days ago',
-        profile: 'https://randomuser.me/api/portraits/men/3.jpg',
-        totalOrders: 3,
-        totalSpent: '200.00',
-        reviews: 1
-      },
-      {
-        id: 'U004',
-        name: 'Diana Prince',
-        email: 'diana@example.com',
-        joinSince: '2022-11-05',
-        lastActive: '1 hour ago',
-        profile: 'https://randomuser.me/api/portraits/women/4.jpg',
-        totalOrders: 45,
-        totalSpent: '3,200.00',
-        reviews: 15
-      },
-      {
-        id: 'U005',
-        name: 'Eve Martinez',
-        email: 'eve@example.com',
-        joinSince: '2024-06-01',
-        lastActive: '3 hours ago',
-        profile: 'https://randomuser.me/api/portraits/women/5.jpg',
-        totalOrders: 8,
-        totalSpent: '450.00',
-        reviews: 3
-      },
-      {
-        id: 'U006',
-        name: 'Frank Wilson',
-        email: 'frank@example.com',
-        joinSince: '2024-12-15',
-        lastActive: 'Just now',
-        profile: 'https://randomuser.me/api/portraits/men/6.jpg',
-        totalOrders: 2,
-        totalSpent: '150.00',
-        reviews: 0
-      },
-    ]);
-
+    const users = ref([]);
     const selectedUserIds = ref([]);
+    const isLoading = ref(false);
+
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
+
+    async function fetchUsers() {
+      isLoading.value = true;
+      try {
+        const response = await axios.get(`${API_URL}/users`, {
+          params: { role: 'user' }
+        });
+        console.log('Users loaded:', response.data);
+        
+        users.value = response.data.map(user => ({
+          id: user._id || 'N/A',
+          name: user.name,
+          email: user.email,
+          joinSince: user.joinSince,
+          profile: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=0b6cf0&color=fff',
+          totalOrders: 0,
+          totalSpent: '0.00',
+          reviews: 0
+        }));
+        
+        console.log('Mapped users:', users.value);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+        showToast('error', 'Failed to load users. Please check your connection.');
+      } finally {
+        isLoading.value = false;
+      }
+    }
 
     const selectAll = computed({
       get: () => selectedUserIds.value.length === filteredUsers.value.length && filteredUsers.value.length > 0,
@@ -283,26 +274,9 @@ export default {
 
     const totalUsers = computed(() => users.value.length);
 
-    const newThisMonth = computed(() =>
-      users.value.filter(u => u.joinSince.includes('2024-12')).length
-    );
-
-    const activeToday = computed(() =>
-      users.value.filter(u => 
-        u.lastActive.includes('hour') || u.lastActive.includes('Just now')
-      ).length
-    );
-
-    const totalRevenue = computed(() =>
-      users.value
-        .reduce((sum, u) => sum + parseFloat(u.totalSpent.replace(',', '')), 0)
-        .toFixed(2)
-    );
-
     const filteredUsers = computed(() => {
       let filtered = users.value;
 
-      // Search filter
       if (searchQuery.value) {
         filtered = filtered.filter(u => 
           u.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -311,7 +285,6 @@ export default {
         );
       }
 
-      // Sort
       if (sortBy.value === 'uid') {
         filtered = [...filtered].sort((a, b) => a.id.localeCompare(b.id));
       } else if (sortBy.value === 'name') {
@@ -337,35 +310,49 @@ export default {
       selectedUser.value = null;
     }
 
-    function deleteUser(id) {
+    async function deleteUser(id) {
       if (confirm('Are you sure you want to delete this user?')) {
-        users.value = users.value.filter(u => u.id !== id);
-        selectedUserIds.value = selectedUserIds.value.filter(uid => uid !== id);
-        alert('User deleted successfully!');
+        try {
+          await axios.delete(`${API_URL}/users/${id}`);
+          showToast('success', 'User deleted successfully!');
+          await fetchUsers();
+        } catch (error) {
+          console.error('Delete failed:', error);
+          showToast('error', 'Failed to delete user');
+        }
       }
     }
 
-    function bulkDeleteUsers() {
+    async function bulkDeleteUsers() {
       const count = selectedUserIds.value.length;
       if (count === 0) {
-        alert('Please select at least one user to delete.');
+        showToast('error', 'Please select at least one user to delete.');
         return;
       }
 
       if (confirm(`Are you sure you want to delete ${count} selected user(s)?`)) {
-        users.value = users.value.filter(u => !selectedUserIds.value.includes(u.id));
-        selectedUserIds.value = [];
-        alert(`${count} user(s) deleted successfully!`);
+        try {
+          await axios.post(`${API_URL}/users/bulk-delete`, {
+            ids: selectedUserIds.value
+          });
+          showToast('success', `${count} user(s) deleted successfully!`);
+          selectedUserIds.value = [];
+          await fetchUsers();
+        } catch (error) {
+          console.error('Bulk delete failed:', error);
+          showToast('error', 'Failed to delete users');
+        }
       }
-    }
-
-    function exportUsers() {
-      alert('Exporting users...');
     }
 
     function handleSettingsClick() {
       console.log('Settings clicked');
     }
+
+    onMounted(() => {
+      console.log('ManageUser mounted, fetching users...');
+      fetchUsers();
+    });
 
     return {
       adminName,
@@ -378,15 +365,13 @@ export default {
       selectedUserIds,
       selectAll,
       totalUsers,
-      newThisMonth,
-      activeToday,
-      totalRevenue,
       filteredUsers,
+      isLoading,
+      toast,
       viewUserDetails,
       closeDetailsModal,
       deleteUser,
       bulkDeleteUsers,
-      exportUsers,
       handleSettingsClick
     };
   }
@@ -794,11 +779,6 @@ tbody {
   gap: 12px;
 }
 
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
-}
-
 .empty-content p {
   color: #6c757d;
   margin: 0;
@@ -1005,52 +985,50 @@ tbody {
   border-top: 1px solid #e9ecef;
 }
 
-@media (max-width: 1200px) {
-  .admin-layout {
-    grid-template-columns: 220px 1fr;
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
   }
 }
 
-@media (max-width: 968px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.toast-content {
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: white;
+}
 
-  .page-header {
-    flex-direction: column;
-    gap: 15px;
-  }
+.success-toast .toast-content {
+  background: #28a745;
+}
 
-  .table-controls {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .search-box {
-    max-width: 100%;
-  }
-
-  .info-grid,
-  .activity-stats {
-    grid-template-columns: 1fr;
-  }
+.error-toast .toast-content {
+  background: #dc3545;
 }
 
 @media (max-width: 768px) {
-  .content-area {
-    padding: 20px;
-  }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-
-  table {
-    font-size: 12px;
-  }
-
-  th, td {
-    padding: 12px 8px;
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
   }
 }
 </style>
