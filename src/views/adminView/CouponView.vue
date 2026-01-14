@@ -1,4 +1,6 @@
 <template>
+<AdminHeader :userName="adminName" :notificationCount="notifications" />
+      
   <div class="coupon-management">
     <div class="header">
       <div class="header-content">
@@ -32,77 +34,71 @@
       </div>
     </div>
 
-    <!-- Coupons List -->
-    <div class="coupons-grid">
-      <div v-for="coupon in coupons" :key="coupon.id" 
-           :class="['coupon-card', { expired: isExpired(coupon.expiryDate), 'expiring-soon': isExpiringSoon(coupon.expiryDate) }]">
-        <div class="coupon-ribbon" v-if="isExpired(coupon.expiryDate)">
-          <span>Expired</span>
-        </div>
-        <div class="coupon-ribbon warning" v-else-if="isExpiringSoon(coupon.expiryDate)">
-          <span>Expiring Soon</span>
-        </div>
-        
-        <div class="coupon-header">
-          <div class="code-badge">
-            <span class="code-text">{{ coupon.code }}</span>
-          </div>
-          <span :class="['status-badge', coupon.active ? 'active' : 'inactive']">
-            <span class="status-dot"></span>
-            {{ coupon.active ? 'Active' : 'Inactive' }}
-          </span>
-        </div>
-        
-        <div class="discount-display">
-          <div class="discount-value">
-            {{ coupon.type === 'percentage' ? `${coupon.value}%` : `$${coupon.value}` }}
-          </div>
-          <div class="discount-label">OFF</div>
-        </div>
-
-        <div class="coupon-details">
-          <div class="detail-item">
-            <div class="detail-content">
-              <span class="detail-label">Expires</span>
-              <span class="detail-value" :class="{ 'text-danger': isExpired(coupon.expiryDate), 'text-warning': isExpiringSoon(coupon.expiryDate) }">
-                {{ formatDate(coupon.expiryDate) }}
+    <!-- Coupons Table -->
+    <div class="table-container">
+      <table class="coupons-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Discount</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Expiry Date</th>
+            <th>Usage</th>
+            <th>Min Purchase</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="coupon in coupons" :key="coupon.id" 
+              :class="{ 'expired-row': isExpired(coupon.expiryDate), 'expiring-soon-row': isExpiringSoon(coupon.expiryDate) }">
+            <td>
+              <div class="code-cell">
+                <span class="code-badge">{{ coupon.code }}</span>
+                <span v-if="isExpired(coupon.expiryDate)" class="badge badge-danger">Expired</span>
+                <span v-else-if="isExpiringSoon(coupon.expiryDate)" class="badge badge-warning">Expiring Soon</span>
+              </div>
+            </td>
+            <td class="discount-cell">
+              <strong>{{ coupon.type === 'percentage' ? `${coupon.value}%` : `$${coupon.value}` }}</strong>
+            </td>
+            <td>
+              <span class="type-badge">{{ coupon.type === 'percentage' ? 'Percentage' : 'Fixed' }}</span>
+            </td>
+            <td>
+              <span :class="['status-badge', coupon.active ? 'active' : 'inactive']">
+                <span class="status-dot"></span>
+                {{ coupon.active ? 'Active' : 'Inactive' }}
               </span>
-            </div>
-          </div>
-          
-          <div class="detail-item">
-            <div class="detail-content">
-              <span class="detail-label">Usage</span>
-              <span class="detail-value">
-                {{ coupon.usedCount }} / {{ coupon.maxUses || 50 }}
-              </span>
-            </div>
-          </div>
-
-          <div class="detail-item" v-if="coupon.minPurchase">
-            <div class="detail-content">
-              <span class="detail-label">Min Purchase</span>
-              <span class="detail-value">${{ coupon.minPurchase }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="progress-bar" v-if="coupon.maxUses">
-          <div class="progress-fill" :style="{ width: `${Math.min((coupon.usedCount / coupon.maxUses) * 100, 100)}%` }"></div>
-        </div>
-
-        <div class="coupon-actions">
-          <button @click="editCoupon(coupon)" class="btn-action btn-edit">
-            Edit
-          </button>
-          <button @click="toggleStatus(coupon)" class="btn-action btn-toggle">
-            {{ coupon.active ? 'Deactivate' : 'Activate' }}
-          </button>
-          <button @click="deleteCoupon(coupon.id)" class="btn-action btn-delete">
-            Delete
-          </button>
-        </div>
-      </div>
+            </td>
+            <td :class="{ 'text-danger': isExpired(coupon.expiryDate), 'text-warning': isExpiringSoon(coupon.expiryDate) }">
+              {{ formatDate(coupon.expiryDate) }}
+            </td>
+            <td>
+              <div class="usage-cell">
+                <span class="usage-text">{{ coupon.usedCount }} / {{ coupon.maxUses || 50 }}</span>
+                <div class="progress-bar-small" v-if="coupon.maxUses">
+                  <div class="progress-fill" :style="{ width: `${Math.min((coupon.usedCount / coupon.maxUses) * 100, 100)}%` }"></div>
+                </div>
+              </div>
+            </td>
+            <td>{{ coupon.minPurchase ? `$${coupon.minPurchase}` : '-' }}</td>
+            <td>
+              <div class="action-buttons">
+                <button @click="editCoupon(coupon)" class="btn-icon btn-edit" title="Edit">
+                  Edit
+                </button>
+                <button @click="toggleStatus(coupon)" class="btn-icon btn-toggle" title="Toggle Status">
+                  {{ coupon.active ? 'Deactivate' : 'Activate' }}
+                </button>
+                <button @click="deleteCoupon(coupon.id)" class="btn-icon btn-delete" title="Delete">
+                  Delete
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <!-- Add/Edit Modal -->
@@ -123,9 +119,11 @@
                 placeholder="e.g., SAVE20"
                 required
                 class="form-input"
+                :class="{ 'error': codeError }"
                 @input="form.code = form.code.toUpperCase()"
               />
-              <span class="form-hint">Use uppercase letters and numbers</span>
+              <span v-if="codeError" class="form-error">{{ codeError }}</span>
+              <span v-else class="form-hint">Use uppercase letters and numbers</span>
             </div>
           </div>
 
@@ -145,7 +143,7 @@
                 <input 
                   v-model.number="form.value" 
                   type="number" 
-                  :min="0"
+                  :min="1"
                   :max="form.type === 'percentage' ? 100 : undefined"
                   step="0.01"
                   required
@@ -212,7 +210,7 @@
             <button type="button" @click="closeModal" class="btn-secondary">
               Cancel
             </button>
-            <button type="submit" class="btn-primary" :disabled="!!dateError">
+            <button type="submit" class="btn-primary" :disabled="!!dateError || !!codeError">
               {{ editingCoupon ? 'Update Coupon' : 'Create Coupon' }}
             </button>
           </div>
@@ -223,8 +221,15 @@
 </template>
 
 <script>
+
+import AdminHeader from '@/components/adminHeader.vue';
+import AdminSidebar from '@/components/adminSidebar.vue';
 export default {
   name: "CouponView",
+  components: {
+    AdminHeader,
+    AdminSidebar
+  },
   data() {
     return {
       showAddModal: false,
@@ -232,7 +237,7 @@ export default {
       form: {
         code: '',
         type: 'percentage',
-        value: 0,
+        value: 1,
         expiryDate: '',
         maxUses: null,
         minPurchase: null,
@@ -266,7 +271,7 @@ export default {
           code: 'EXPIRED50',
           type: 'percentage',
           value: 50,
-          expiryDate: '2024-12-31',
+          expiryDate: '2025-12-31',
           maxUses: 50,
           usedCount: 30,
           minPurchase: 100,
@@ -289,6 +294,31 @@ export default {
       
       if (selectedDate < today) {
         return 'Expiry date cannot be in the past';
+      }
+      const diffDays = Math.ceil(
+        (selectedDate - today) / (1000 * 60 * 60 * 24)
+      );
+
+      if (diffDays < 2) {
+        return "Expiry date must be at least 2 days from today";
+      }
+
+      if (diffDays > 365) {
+        return "Expiry date cannot be more than 365 days from today";
+      }
+      
+      return '';
+    },
+    codeError() {
+      if (!this.form.code) return '';
+      
+      const duplicateCoupon = this.coupons.find(c => 
+        c.code === this.form.code && 
+        (!this.editingCoupon || c.id !== this.editingCoupon.id)
+      );
+      
+      if (duplicateCoupon) {
+        return 'This coupon code already exists';
       }
       
       return '';
@@ -314,7 +344,7 @@ export default {
       return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
     },
     saveCoupon() {
-      if (this.dateError) return;
+      if (this.dateError || this.codeError) return;
       
       if (this.editingCoupon) {
         const index = this.coupons.findIndex(c => c.id === this.editingCoupon.id);
@@ -350,7 +380,7 @@ export default {
       this.form = {
         code: '',
         type: 'percentage',
-        value: 0,
+        value: 1,
         expiryDate: '',
         maxUses: null,
         minPurchase: null,
@@ -375,7 +405,7 @@ export default {
 
 .coupon-management {
   padding: 2rem;
-  max-width: 1400px;
+  max-width: 1600px;
   margin: 0 auto;
   background: #f5f7fa;
   min-height: 100vh;
@@ -438,83 +468,115 @@ export default {
   font-weight: 700;
 }
 
-.coupons-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-.coupon-card {
+.table-container {
   background: white;
   border-radius: 12px;
-  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-  transition: all 0.3s;
-  position: relative;
   overflow: hidden;
-  border: 1px solid #e2e8f0;
 }
 
-.coupon-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.12);
+.coupons-table {
+  width: 100%;
+  border-collapse: collapse;
 }
 
-.coupon-card.expired {
-  opacity: 0.6;
+.coupons-table thead {
+  background: #f7fafc;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.coupons-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.coupons-table tbody tr {
+  border-bottom: 1px solid #e2e8f0;
+  transition: background-color 0.2s;
+}
+
+.coupons-table tbody tr:hover {
   background: #f7fafc;
 }
 
-.coupon-card.expiring-soon {
-  border: 2px solid #f56565;
+.coupons-table tbody tr.expired-row {
+  opacity: 0.6;
+  background: #fafafa;
 }
 
-.coupon-ribbon {
-  position: absolute;
-  top: 15px;
-  right: -35px;
-  background: #e53e3e;
-  color: white;
-  padding: 5px 40px;
-  transform: rotate(45deg);
-  font-size: 0.75rem;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+.coupons-table tbody tr.expiring-soon-row {
+  background: #fffaf0;
 }
 
-.coupon-ribbon.warning {
-  background: #ed8936;
+.coupons-table td {
+  padding: 1rem;
+  color: #4a5568;
+  font-size: 0.9rem;
 }
 
-.coupon-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1.5rem;
-}
-
-.code-badge {
-  background: #4299e1;
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-}
-
-.code-text {
-  color: white;
-  font-weight: 700;
-  font-size: 1.1rem;
-  letter-spacing: 1px;
-  font-family: 'Courier New', monospace;
-}
-
-.status-badge {
-  padding: 0.4rem 1rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 600;
+.code-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.code-badge {
+  
+  color: black;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  font-family: 'Courier New', monospace;
+}
+
+.badge {
+  padding: 0.25rem 0.625rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.badge-danger {
+  background: #fed7d7;
+  color: #742a2a;
+}
+
+.badge-warning {
+  background: #feebc8;
+  color: #7c2d12;
+}
+
+.discount-cell {
+  font-size: 1.1rem;
+  color: #2d3748;
+}
+
+.type-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  background: #4299e1;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
 .status-dot {
@@ -547,78 +609,23 @@ export default {
   50% { opacity: 0.5; }
 }
 
-.discount-display {
-  text-align: center;
-  padding: 1.5rem;
-  background: #f7fafc;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  border: 2px dashed #cbd5e0;
-}
-
-.discount-value {
-  font-size: 3rem;
-  font-weight: 700;
-  color: #2d3748;
-  line-height: 1;
-  margin-bottom: 0.25rem;
-}
-
-.discount-label {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #718096;
-  letter-spacing: 2px;
-}
-
-.coupon-details {
+.usage-cell {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  gap: 0.375rem;
 }
 
-.detail-item {
-  display: flex;
-  align-items: center;
-}
-
-.detail-content {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: #f7fafc;
-  border-radius: 6px;
-}
-
-.detail-label {
-  color: #718096;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.detail-value {
-  color: #2d3748;
+.usage-text {
   font-weight: 600;
-  font-size: 0.9rem;
+  color: #2d3748;
 }
 
-.text-danger {
-  color: #e53e3e !important;
-}
-
-.text-warning {
-  color: #ed8936 !important;
-}
-
-.progress-bar {
-  height: 8px;
+.progress-bar-small {
+  height: 6px;
   background: #e2e8f0;
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 1rem;
+  width: 100%;
 }
 
 .progress-fill {
@@ -627,27 +634,36 @@ export default {
   transition: width 0.3s;
 }
 
-.coupon-actions {
-  display: flex;
-  gap: 0.5rem;
+.text-danger {
+  color: #e53e3e !important;
+  font-weight: 600;
 }
 
-.btn-action {
-  flex: 1;
-  padding: 0.625rem;
+.text-warning {
+  color: #ed8936 !important;
+  font-weight: 600;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.btn-icon {
+  padding: 0.5rem 0.75rem;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   cursor: pointer;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   font-weight: 500;
-  transition: all 0.3s;
+  transition: all 0.2s;
   background: white;
-  color: #4a5568;
+  white-space: nowrap;
 }
 
-.btn-action:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+.btn-icon:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .btn-edit {
@@ -867,17 +883,14 @@ export default {
   background: #f7fafc;
   border-radius: 8px;
   transition: all 0.3s;
-  
 }
 
 .checkbox-label:hover {
   background: #edf2f7;
-  
 }
 
 .checkbox-input {
   display: none;
-  
 }
 
 .checkbox-custom {
@@ -905,7 +918,6 @@ export default {
   color: white;
   font-size: 12px;
   font-weight: 700;
-  
 }
 
 .checkbox-text {
@@ -922,6 +934,16 @@ export default {
   border-top: 1px solid #e2e8f0;
 }
 
+@media (max-width: 1200px) {
+  .table-container {
+    overflow-x: auto;
+  }
+  
+  .coupons-table {
+    min-width: 900px;
+  }
+}
+
 @media (max-width: 768px) {
   .form-row.two-col {
     grid-template-columns: 1fr;
@@ -934,10 +956,6 @@ export default {
   }
   
   .stats-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .coupons-grid {
     grid-template-columns: 1fr;
   }
 }
