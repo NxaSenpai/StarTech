@@ -113,8 +113,8 @@
 
 <script>
 import VueApexCharts from 'vue3-apexcharts';
-import AdminHeader from '@/components/AdminHeader.vue';
-import AdminSidebar from '@/components/AdminSidebar.vue';
+import AdminHeader from '@/components/adminHeader.vue';
+import AdminSidebar from '@/components/adminSidebar.vue';
 
 export default {
   name: "Dashboard",
