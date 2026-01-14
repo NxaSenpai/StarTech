@@ -178,7 +178,7 @@ function editCategory(id) {
         }
     }
 
-    // 3. Edit Total Products (MISSING ACTION ADDED)
+    // 3. Edit Total Products 
     const currentProductCount = category.productCount;
     let newProductCountInput = prompt(`Edit Total Products (Current: ${currentProductCount}):`, currentProductCount);
 
@@ -212,14 +212,12 @@ function bulkDeleteCategories() {
   if (confirm(`Are you sure you want to delete ${count} selected categories?`)) {
     categories.value = categories.value.filter(c => !selectedCategoryIds.value.includes(c.id));
     selectedCategoryIds.value = [];
-    // Removed alert(`${count} categories successfully deleted.`);
   }
 }
 </script>
 
 <style scoped>
-/* LAYOUT STYLES COPIED FROM ManageProduct.vue 
-*/
+
 .page-wrapper {
   background: #f8f9fa;
   min-height: 100vh;
@@ -367,8 +365,6 @@ function bulkDeleteCategories() {
     align-items: center;
     margin-bottom: 25px;
 }
-/* END OF LAYOUT STYLES 
-*/
 
 .category-content {
     margin-top: 25px;
@@ -416,7 +412,7 @@ function bulkDeleteCategories() {
     cursor: pointer;
 }
 
-/* Table Styles - Adjusted for Category/Supplier */
+/* Table Styles */
 .table-wrapper {
     background: white;
     border: 1px solid #eee;

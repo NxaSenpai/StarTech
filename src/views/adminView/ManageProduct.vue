@@ -188,9 +188,6 @@ const selectedProductIds = ref([]);
 
 let nextId = 3;
 
-/**
- * NEW: Computed property for Select All/Deselect All functionality.
- */
 const selectAll = computed({
   get: () => selectedProductIds.value.length === products.value.length && products.value.length > 0,
   set: (value) => {
@@ -260,13 +257,12 @@ function addProduct() {
 }
 
 /**
- * Single product deletion. Success message removed.
+ * Single product deletion.
  * @param {number} id - The ID of the product to delete.
  */
 function deleteProduct(id) {
   if (confirm('Are you sure you want to delete this product?')) {
     products.value = products.value.filter(p => p.id !== id);
-    // Success alert removed as requested.
   }
 }
 
@@ -333,8 +329,7 @@ function editProduct(id) {
 
 
 /**
- * BULK DELETE LOGIC. Success message removed.
- * Deletes all selected products after confirmation.
+ * BULK DELETE LOGIC
  */
 function bulkDeleteProducts() {
   const count = selectedProductIds.value.length;
@@ -357,9 +352,7 @@ function bulkDeleteProducts() {
 </script>
 
 <style scoped>
-/*
-  LAYOUT STYLES
-*/
+
 .page-wrapper {
   background: #f8f9fa;
   min-height: 100vh;
@@ -488,7 +481,7 @@ function bulkDeleteProducts() {
   transform: translateY(-10px);
 }
 
-/* --- Content Area Styles (Unchanged) --- */
+/* --- Content Area Styles --- */
 .content-area {
   grid-area: content;
   padding: 40px;
@@ -509,7 +502,7 @@ function bulkDeleteProducts() {
     margin-bottom: 25px;
 }
 
-/* --- PRODUCT COMPONENT STYLES (Retained Emojis in main content area) --- */
+/* --- PRODUCT COMPONENT STYLES --- */
 
 .metrics-row {
     display: flex;
@@ -616,9 +609,8 @@ function bulkDeleteProducts() {
     transition: background 0.2s;
 }
 
-/* NEW: Delete Bulk button style */
 .delete-bulk-btn {
-    background: #dc3545; /* Red color for delete action */
+    background: #dc3545; 
     color: white;
     padding: 10px 15px;
     border: none;

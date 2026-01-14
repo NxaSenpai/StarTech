@@ -152,7 +152,7 @@ function editSupplier(id) {
     
     let isUpdated = false;
 
-    // 1. Edit Company Name (MISSING ACTION 1 ADDED)
+    // 1. Edit Company Name 
     const newCompanyName = prompt(`Edit Company Name (Current: ${supplier.companyName}):`, supplier.companyName);
     if (newCompanyName && newCompanyName.trim() !== '') {
         supplier.companyName = newCompanyName.trim();
@@ -166,14 +166,14 @@ function editSupplier(id) {
         isUpdated = true;
     }
     
-    // 3. Edit Email (MISSING ACTION 2 ADDED)
+    // 3. Edit Email
     const newEmail = prompt(`Edit Email (Current: ${supplier.email}):`, supplier.email);
     if (newEmail && newEmail.trim() !== '') {
         supplier.email = newEmail.trim();
         isUpdated = true;
     }
 
-    // 4. Edit Total Products (MISSING ACTION 3 ADDED)
+    // 4. Edit Total Products 
     const currentProductCount = supplier.productCount;
     let newProductCountInput = prompt(`Edit Total Products (Current: ${currentProductCount}):`, currentProductCount);
 
@@ -207,14 +207,12 @@ function bulkDeleteSuppliers() {
   if (confirm(`Are you sure you want to delete ${count} selected suppliers?`)) {
     suppliers.value = suppliers.value.filter(s => !selectedSupplierIds.value.includes(s.id));
     selectedSupplierIds.value = [];
-    // Removed alert(`${count} suppliers successfully deleted.`);
   }
 }
 </script>
 
 <style scoped>
-/* LAYOUT STYLES COPIED FROM ManageProduct.vue 
-*/
+
 .page-wrapper {
   background: #f8f9fa;
   min-height: 100vh;
@@ -362,8 +360,6 @@ function bulkDeleteSuppliers() {
     align-items: center;
     margin-bottom: 25px;
 }
-/* END OF LAYOUT STYLES 
-*/
 
 .supplier-content {
     margin-top: 25px;
@@ -411,7 +407,7 @@ function bulkDeleteSuppliers() {
     cursor: pointer;
 }
 
-/* Table Styles - Shared with Category */
+/* Table Styles */
 .table-wrapper {
     background: white;
     border: 1px solid #eee;

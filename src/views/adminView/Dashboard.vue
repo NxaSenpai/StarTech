@@ -185,7 +185,7 @@ export default {
   margin-bottom: 25px; 
 }
 
-/* ---------- OVERVIEWS (THE CARDS) ---------- */
+/* ---------- OVERVIEWS ---------- */
 
 .cards {
   display: flex;
