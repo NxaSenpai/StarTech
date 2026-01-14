@@ -1,6 +1,5 @@
-<!-- src/components/Header.vue -->
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
@@ -12,51 +11,73 @@ const handleSearch = () => {
     searchQuery.value = ''
   }
 }
+
+const user = ref<Record<string, any>>({})
+
+const storageHandler = (e: StorageEvent) => {
+  if (e.key === 'user') {
+    try { user.value = JSON.parse(e.newValue || '{}') } catch { user.value = {} }
+  }
+}
+
+const userChangedHandler = (ev: Event) => {
+  try {
+    const detail = (ev as CustomEvent).detail
+    user.value = detail && Object.keys(detail).length ? detail : JSON.parse(localStorage.getItem('user') || '{}')
+  } catch {
+    user.value = {}
+  }
+}
+
+const initial = computed(() => {
+  const name = user.value?.name ? String(user.value.name).trim() : ''
+  if (name) return name.charAt(0).toUpperCase()
+  const email = user.value?.email ? String(user.value.email).trim() : ''
+  if (email) return email.charAt(0).toUpperCase()
+  return 'U'
+})
+
+onMounted(() => {
+  try { user.value = JSON.parse(localStorage.getItem('user') || '{}') } catch { user.value = {} }
+  window.addEventListener('storage', storageHandler)
+  window.addEventListener('user-changed', userChangedHandler as EventListener)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('storage', storageHandler)
+  window.removeEventListener('user-changed', userChangedHandler as EventListener)
+})
 </script>
 
 <template>
   <header class="header">
     <div class="main-bar">
-      <router-link to="/" class="logo">
+      <router-link to="/home" class="logo">
         <img src="/logo.png" alt="Logo" class="logo-img" />
       </router-link>
 
-      <form @submit.prevent="handleSearch" class="search-form">
-        <div class="search-wrapper">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Search products, brands..."
-            class="search-input"
-            aria-label="Search"
-          />
-          <button type="submit" class="search-btn">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8" />
-              <line x1="21" y1="21" x2="16.65" y2="16.65" />
-            </svg>
-          </button>
-        </div>
-      </form>
-
       <div class="user-section">
-        <div class="profile-avatar">
-          <div class="avatar-inner">T</div>
-        </div>
+
+        <router-link class="cart-btn" to="/wishlist">
+          <img class="cart-icon" src="/wishlistIcon.png" alt="">
+        </router-link>
+
+        <router-link class="cart-btn" to="/cart">
+          <img class="cart-icon" src="/cart.png" alt="">
+        </router-link>
+
+        <router-link to="/profile" class="profile-avatar">
+          <div class="avatar-inner">{{ initial }}</div>
+        </router-link>
       </div>
     </div>
 
     <nav class="nav-bar">
       <ul class="nav-list">
         <li><router-link to="/products" active-class="active">All Products</router-link></li>
-        <li><router-link to="/category/home" active-class="active">Home Appliances</router-link></li>
-        <li><router-link to="/category/audio" active-class="active">Audio & Video</router-link></li>
-        <li><router-link to="/category/fridge" active-class="active">Refrigerator</router-link></li>
-        <li><router-link to="/new" active-class="active">New Arrivals</router-link></li>
-        <li><router-link to="/deals" active-class="active">Today's Deal</router-link></li>
+        <li><router-link to="/eventview" active-class="active">Today Arrivals</router-link></li>
+        <li><router-link to="/best-deals" active-class="active">Best Deal</router-link></li>
         <li><router-link to="/orders" active-class="active">My Orders</router-link></li>
-        <li><router-link to="/cart" active-class="active">Cart (0)</router-link></li>
       </ul>
     </nav>
   </header>
@@ -68,7 +89,7 @@ const handleSearch = () => {
   box-shadow: 0 4px 20px rgba(0,0,0,0.08);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .main-bar {
@@ -82,7 +103,9 @@ const handleSearch = () => {
 }
 
 .user-section {
-  flex-shrink: 0;   /* prevents overlap on small screens */
+  display: flex;
+  gap: 30px;
+  flex-shrink: 0;
   z-index: 10;
 }
 
@@ -150,6 +173,21 @@ const handleSearch = () => {
 }
 
 .search-btn:active { transform: scale(0.95); }
+
+.cart-btn {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.cart-icon {
+  width: 25px;
+  height: 25px;
+  filter: brightness(0) invert(1);
+  transition: transform 0.3s;
+}
 
 .profile-avatar {
   width: 42px;
@@ -219,13 +257,12 @@ const handleSearch = () => {
 @media (max-width: 1024px) {
   .main-bar {
     flex-wrap: wrap;
-    justify-content: space-between;   /* ← This keeps logo left + avatar right */
+    justify-content: space-between;
   }
 
-  /* Push search bar to full width below, but keep logo & avatar on top row */
   .search-form {
     order: 3;
-    flex-basis: 100%;                  /* ← full width */
+    flex-basis: 100%;
     max-width: none;
     margin: 12px 0 0;
   }
@@ -234,7 +271,6 @@ const handleSearch = () => {
     height: 48px;
   }
 
-  /* Make sure avatar stays on the right even when wrapped */
   .user-section {
     margin-left: auto;                 
   }
@@ -277,7 +313,7 @@ const handleSearch = () => {
 
 @media (max-width: 768px) {
   .nav-bar {
-    justify-content: flex-start;   /* move menu to the left */
+    justify-content: flex-start;
   }
   .nav-list {
     padding-left: 0;              

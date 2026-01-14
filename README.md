@@ -25,6 +25,10 @@ See [Vite Configuration Reference](https://vite.dev/config/).
 npm install
 ```
 
+```sh
+npm install apexcharts vue3-apexcharts
+```
+
 ### Compile and Hot-Reload for Development
 
 ```sh

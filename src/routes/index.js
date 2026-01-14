@@ -4,23 +4,41 @@ import RegisterView from '@/views/RegisterView.vue'
 import ManageOrder from '@/views/adminView/ManageOrder.vue'
 import Dashboard from '@/views/adminView/Dashboard.vue'
 import ManageProduct from '@/views/adminView/ManageProduct.vue'
-import ManageCategory from '../views/adminView/ManageCategory.vue' 
+import ManageCategory from '../views/adminView/ManageCategory.vue'
 import ManageSupplier from '../views/adminView/ManageSupplier.vue'
 import ManageUser from '@/views/adminView/ManageUser.vue'
 import Cart from '@/views/clientView/Cart.vue'
 import CategoryView from '@/views/clientView/CategoryView.vue'
 import EventView from '@/views/clientView/EventView.vue'
+import BestDeal from '@/views/clientView/BestDeal.vue'
 import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
 import HomeView from '@/views/clientView/HomeView.vue'
+import Order from '@/views/clientView/Order.vue'
+import ManageAdmin from '@/views/adminView/ManageAdmin.vue'
+import Settings from '@/views/adminView/Settings.vue'
+import ProductsView from '@/views/clientView/ProductsView.vue'
+import WishlistView from '@/views/clientView/wishlistView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    }
+    if (to.hash) {
+      return {
+        el: to.hash,
+        behavior: 'smooth'
+      }
+    }
+    return { top: 0, left: 0, behavior: 'smooth' }
+  },
   routes: [
     {
       path: '/',
-      name: 'home',
-      redirect: '/login' 
+      name: 'root',
+      redirect: '/login'
     },
     {
       path: '/login',
@@ -48,24 +66,50 @@ const router = createRouter({
       component: ManageProduct
     },
     {
-      path: '/product/category',
-      name: 'categorymanagement',
-      component: ManageCategory 
-    },
-    {
-      path: '/product/supplier',
-      name: 'suppliermanagement',
-      component: ManageSupplier 
-    },
+      path: '/managecategories',
+      name: 'managecategories',
+      component: ManageCategory
+    },
+    {
+      path: '/managesupplier',
+      name: 'managesupplier',
+      component: ManageSupplier
+    },
     {
       path: '/manageuser',
       name: 'manageuser',
       component: ManageUser
     },
     {
+      path: '/manageadmin',
+      name: 'manageadmin',
+      component: ManageAdmin
+    },
+    {
+      path: '/settings',
+      name: 'settings',
+      component: Settings
+    },
+    {
       path: '/cart',
       name: 'cart',
-      component: Cart
+      component: Cart,
+      props: route =>({
+        Cart_data: route.params.Cart_data
+      })
+    },
+    {
+      path: '/orders',
+      name: 'order',
+      component: Order,
+      props: route =>({
+        order_data: route.params.order_data
+      })
+    },
+    {
+      path: '/products',
+      name: 'products',
+      component: ProductsView
     },
     {
       path: '/category',
@@ -78,9 +122,20 @@ const router = createRouter({
       component: EventView
     },
     {
-      path:'/pdetails',
-      name:'pdetails',
-      component: ProductDetails
+      path: '/best-deals',
+      name: 'BestDeals',
+      component: BestDeal
+    },
+    {
+      path: '/wishlist',
+      name: 'wishlist',
+      component: WishlistView
+    },  
+    {
+      path: '/pdetails/:id?',
+      name: 'pdetails',
+      component: ProductDetails,
+      props: true
     },
     {
       path: '/profile',
@@ -90,7 +145,12 @@ const router = createRouter({
     {
       path: '/home',
       name: 'home',
-      component:HomeView
+      component: HomeView
+    },
+    {
+      path: '/new-arrivals',
+      name: 'NewArrivals',
+      component: EventView
     }
   ]
 })

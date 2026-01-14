@@ -3,40 +3,32 @@
 
 <template>
   <footer class="footer">
-    <!-- Main Footer Content -->
     <div class="footer-main">
       <div class="container">
         <div class="footer-grid">
 
-          <!-- Brand Column -->
           <div class="footer-col brand">
-            <h2 class="footer-logo">StarTech</h2>
+            <img class="footer-logo" alt="StarTech Logo" src="/logo.png" />
             <p class="footer-desc">
               We bring you the latest in electronics, gadgets, and smart home solutions—all in one place.
             </p>
           </div>
 
-          <!-- Shop -->
           <div class="footer-col">
             <h3 class="footer-title">Shop</h3>
             <ul class="footer-links">
               <li><a href="#">Hot deals</a></li>
               <li><a href="#">Categories</a></li>
-              <li><a href="#">Brands</a></li>
-              <li><a href="#">Rebates</a></li>
               <li><a href="#">Weekly deals</a></li>
             </ul>
           </div>
 
-          <!-- Need help? -->
           <div class="footer-col">
             <h3 class="footer-title">Need help?</h3>
             <ul class="footer-links">
               <li><a href="#">About</a></li>
               <li><a href="#">Contact</a></li>
-              <li><a href="#">Order tracking</a></li>
               <li><a href="#">FAQs</a></li>
-              <li><a href="#">Return policy</a></li>
               <li><a href="#">Privacy policy</a></li>
             </ul>
           </div>
@@ -45,32 +37,15 @@
           <div class="footer-col">
             <h3 class="footer-title">Contact</h3>
             <ul class="footer-contact">
-              <li>123 Fifth Avenue, New York, NY 10160</li>
-              <li>contact@info.com</li>
-              <li>929-242-6868</li>
+              <li>123 Khan Meanchey, Phnom Penh, Cambodia</li>
+              <li>startech99@gmail.com</li>
+              <li>999-888-777</li>
             </ul>
           </div>
 
         </div>
       </div>
     </div>
-
-    <!-- Bottom Bar with Copyright + Payment Icons -->
-
-    <!-- <div class="footer-bottom">
-      <div class="container">
-        <div class="bottom-content">
-          <p>&copy; 2025 StarTech. All rights reserved.</p>
-          <div class="payment-icons">
-            <img src="https://simpleicons.org/icons/amazon.svg" alt="Amazon Pay" />
-            <img src="https://simpleicons.org/icons/discover.svg" alt="Discover" />
-            <img src="https://simpleicons.org/icons/visa.svg" alt="Visa" />
-            <img src="https://simpleicons.org/icons/mastercard.svg" alt="Mastercard" />
-            <img src="https://simpleicons.org/icons/paypal.svg" alt="PayPal" />
-          </div>
-        </div>
-      </div>
-    </div> -->
 
   </footer>
 </template>
@@ -80,7 +55,7 @@
   background: #0f172a;
   color: #cbd5e1;
   font-size: 15px;
-  margin-top: auto; /* Helps push footer down when content is short */
+  margin-top: auto;
 }
 
 .container {
@@ -89,7 +64,6 @@
   padding: 0 20px;
 }
 
-/* Main Grid */
 .footer-main {
   padding: 70px 0 50px;
   border-bottom: 1px solid #1e293b;
@@ -97,16 +71,14 @@
 
 .footer-grid {
   display: grid;
-  grid-template-columns: 2.2fr 1fr 1fr 1fr;
-  gap: 50px;
+  grid-template-columns: 2fr 2fr 1fr 1fr;
+  gap: 100px;
 }
 
 .footer-logo {
-  font-size: 30px;
-  font-weight: 900;
-  color: white;
-  margin-bottom: 16px;
-  letter-spacing: -0.5px;
+  filter: brightness(0) invert(1);
+  width: 200px;
+  margin-bottom: 20px;
 }
 
 .footer-desc {
@@ -150,13 +122,11 @@
 .footer-links a {
   color: #94a3b8;
   text-decoration: none;
-  transition: all 0.2s;
   display: inline-block;
 }
 
 .footer-links a:hover {
   color: white;
-  transform: translateX(4px);
 }
 
 .footer-contact li {
@@ -164,7 +134,6 @@
   font-weight: 500;
 }
 
-/* Bottom Bar */
 .footer-bottom {
   background: #020617;
   padding: 28px 0;
@@ -202,7 +171,6 @@
   transform: scale(1.15);
 }
 
-/* ——— MOBILE OPTIMIZATION (Beautiful on phones!) ——— */
 @media (max-width: 1024px) {
   .footer-grid {
     grid-template-columns: 1fr 1fr;

@@ -57,6 +57,7 @@
   <script setup>
   import { ref } from 'vue';
   import { useRouter } from 'vue-router';
+  import { login } from '../services/api';
 
   
   const email = ref('');
@@ -70,19 +71,40 @@
     loading.value = true;
     error.value = null;
 
-    console.log('Attempting to login with:', email.value, password.value);
-  
+    try {
+      const { status, data } = await login({
+        email: email.value,
+        password: password.value,
+      });
+      
+      if (status === 200) {
+        const name = data?.name || '';
+        const role = data?.role || 'user';
+        const userEmail = data?.email || email.value;
+        
+        const userObj = { 
+          name, 
+          email: userEmail,
+          role 
+        };
+        localStorage.setItem('user', JSON.stringify(userObj));
+        window.dispatchEvent(new CustomEvent('user-changed', { detail: userObj }));
+        
+        console.log('User logged in with role:', role);
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    if (email.value === 'test@example.com' && password.value === 'password') {
-      console.log('Mock Login Successful!');
-      localStorage.setItem('userToken', 'mock-jwt-token');
-      router.push('/');
-    } else {
-      error.value = 'Invalid email or password.';
+        if (role === 'superadmin' || role === 'admin') {
+          router.push('/dashboard');
+        } else {
+          router.push('/home');
+        }
+      }
+    } catch (e) {
+      const status = e?.status;
+      const msg = e?.data?.message;
+      error.value = msg || (status === 401 ? 'Invalid email or password.' : 'Login failed');
+    } finally {
+      loading.value = false;
     }
-    loading.value = false;
-
   };
   </script>
   
@@ -154,6 +176,7 @@
     width: 100%; 
 }
   .form-group { 
+    color:black;
     margin-bottom: 1.5rem; 
 }
   .form-group label { 

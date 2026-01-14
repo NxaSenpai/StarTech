@@ -1,23 +1,21 @@
 <script>
+import Footer from '@/components/footer.vue';
+import Header from '@/components/header.vue';
+
 export default {
-  name: 'ManageProduct',
-  data() {
-    return {
-      activeThumb: 1,
-      thumbnailImages: [
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 2.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 4.png',
-        '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms - Image 3.png'
-      ],
-      quantity: 1,
-      mainImage: '/Item → Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms.png'
-    };
-  },
-  mounted() {
-    console.log('ManageProduct component loaded');
+  name: 'ProductDetails',
+  components: {
+    Header,
+    Footer
   },
 
+  mounted() {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  },
   methods: {
     increaseQuantity() {
       this.quantity++;
@@ -27,189 +25,275 @@ export default {
         this.quantity--;
       }
     },
-    selectThumb(index) {
-      this.activeThumb = index;
-      this.mainImage = this.thumbnailImages[index - 1];
-      console.log('Selected thumbnail:', index);
-    },
     addToCart() {
-      console.log(`Added item(s) to cart`);
-      alert(`Added item(s) to cart!`);
+      alert(`Added ${this.quantity} item(s) to cart!`);
+    },
+    viewDetails(productId) {
+      this.$router.push({ 
+        name: 'pdetails', 
+        params: { id: productId } 
+      });
+      this.$nextTick(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
     }
   }
 };
 </script>
 
+
 <template>
-  <div class="container">
-    <!-- Section 1: Product Details -->
-    <div class="product-grid">
-      <div class="product-images">
-        <img :src="mainImage" alt="Air Conditioner" class="main-product-image">
-        
-        <div class="thumbnail-gallery">
-          <div 
-            v-for="index in 4" 
-            :key="index"
-            class="thumbnail"
-            :class="{ active: activeThumb === index }"
-            @click="selectThumb(index)"
-          >
-            <img :src="thumbnailImages[index - 1]" alt="">
+ <Header />
+  <div class="page-wrapper">
+    <div class="container">
+      <div class="breadcrumb">
+        <router-link to="/home">Home</router-link> 
+        <span class="separator">/</span> 
+        <router-link to="/products">Products</router-link> 
+        <span class="separator">/</span> 
+        <span class="current">Air Conditioner</span>
+      </div>
+
+      <div class="product-grid">
+        <div class="product-images">
+          <div class="main-image-wrapper">
+            <img src="/washingMachine.jpg" alt="washingMachine" class="main-product-image">
+            <div class="badge-sale">-12% OFF</div>
+          </div>
+        </div>
+
+        <div class="product-details">
+          <h1 class="product-title">Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms</h1>
+          
+          <div class="rating-section">
+            <div class="stars">★★★★★</div>
+            <span class="reviews-count">(128 reviews)</span>
+          </div>
+
+          <div class="price-section">
+            <span class="current-price">$139.00</span>
+            <span class="original-price">$159.00</span>
+            <span class="save-badge">Save $20</span>
+          </div>
+
+          <div class="product-meta">
+            <div class="meta-item">
+              <span class="meta-label">Category:</span>
+              <router-link to="/category" class="meta-value">Air Conditioner</router-link>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">SKU:</span>
+              <span class="meta-value">AC-5000-BTU-001</span>
+            </div>
+            <div class="meta-item">
+              <span class="meta-label">Availability:</span>
+              <span class="meta-value in-stock">In Stock</span>
+            </div>
+          </div>
+
+          <div class="quantity-section">
+            <div class="quantity-wrapper">
+              <label>Quantity:</label>
+              <div class="quantity-controls">
+                <button class="quantity-btn" @click="decreaseQuantity">−</button>
+                <input class="quantity-input" v-model.number="quantity" min="1">
+                <button class="quantity-btn" @click="increaseQuantity">+</button>
+              </div>
+            </div>
+            <button class="add-to-cart-btn" @click="addToCart()">
+              Add to Cart
+            </button>
+            <button class="wishlist-btn">♡</button>
+          </div>
+
+          <div class="payment-section">
+            <p class="payment-title">Guaranteed Safe & Secure Checkout</p>
+            <div class="payment-icons">
+              <img src="/pdetail/visa.jpg" class="payment-icon" alt="Visa">
+              <img src="/pdetail/aba.png" class="payment-icon" alt="ABA">
+              <img src="/pdetail/ace.png" class="payment-icon" alt="ACE">
+              <img src="/pdetail/pay.png" class="payment-icon" alt="Pay">
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="product-details">
-        <h2 class="product-title">Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms</h2>
-        
-        <div class="price-section">
-          <span class="original-price">$159.00</span>
-          <span class="current-price">$139.00</span>
-        </div>
-
-        <p class="product-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sollicitudin consequat iusto in cursus. Proin non velit quam. Etiam diam turpis, elementum in gravida maximus, efficitur quis nulla. Lorem ipsum dolor sit amet, consectetur adipiscing elit. Vivamus sit eimet interdum lorem. Mauris elementum justo id ante ornare consectetur.</p>
-
-        <div class="key-features">
-          <h3>Key Features</h3>
-          <ul class="features-list">
-            <li>Newest technology</li>
-            <li>Best in class components</li>
-            <li>Dimensions: 69.5 × 75.0 × 169.0</li>
-            <li>Maintenance free</li>
-            <li>12 years warranty</li>
-          </ul>
-        </div>
-
-        <div class="quantity-section">
-          <div class="quantity-controls">
-            <button class="quantity-btn" @click="decreaseQuantity">-</button>
-            <input type="number" class="quantity-input" v-model.number="quantity" min="1">
-            <button class="quantity-btn" @click="increaseQuantity">+</button>
-          </div>
-          <button class="add-to-cart-btn" @click="addToCart()">Add to cart</button>
-        </div>
-
-        <p class="category">Category: <a href="#">Air conditioner</a></p>
-        <hr>
-        <div class="payment-section">
-          <p class="payment-title">Guaranteed Safe Checkout</p>
-          <div class="payment-icons">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
-            <img src="/visa.jpg" class="payment-icon visa">
+      <div class="section-2">
+        <div class="tabs-section">
+          <div class="tabs">
+            <button class="tab active">Description</button>
+            <button class="tab">Reviews (128)</button>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Section 2: More About the Product -->
-    <div class="section-2">
-      <h2 class="section-title">More about the product</h2>
-      <p class="section-description">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sollicitudin consequat iusto in cursus. 
-        Proin non velit quam. Etiam diam turpis, elementum in gravida maximus, efficitur quis nulla. Lorem ipsum 
-        dolor sit amet, consectetur adipiscing elit. Vivamus sit eimet interdum lorem.
-      </p>
-
-      <div class="feature-showcase">
-        <div class="feature-image-container">
-          <img src="" alt="Product Feature" class="feature-image">
-          <div class="feature-overlay">
-            <p class="overlay-text">
-              Cras vehicula semper ex id fermentum turtor varius eget estension et malesuada fames ac ante ipsum, eget.
+        <div class="tab-content">
+          <div class="description-content">
+            <h3>Product Description</h3>
+            <p class="product-description">
+              Experience optimal comfort with our 5000 BTU air conditioner. Perfect for cooling smaller spaces like bedrooms and guest rooms. Energy-efficient design ensures lower electricity bills while maintaining ideal temperatures throughout the day.
             </p>
+            
+            <h3>Key Features</h3>
+            <ul class="features-list">
+              <li>5000 BTU cooling capacity - ideal for rooms up to 150 sq ft</li>
+              <li>Energy-efficient operation with eco-friendly refrigerant</li>
+              <li>Multiple fan speeds and cooling modes</li>
+              <li>Easy-to-use mechanical controls</li>
+              <li>Washable and reusable air filter</li>
+              <li>Compact and lightweight design</li>
+            </ul>
           </div>
         </div>
 
-        <div class="feature-content">
-          <h3 class="feature-title">Product's Features</h3>
-          <p class="feature-description">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sollicitudin consequat iusto in cursus. 
-            Proin non velit quam. Etiam diam turpis.
-          </p>
-          <ul class="feature-bullets">
-            <li>Sed ut perspiciatis unde omnis iste</li>
-            <li>Nemo enim ipsam voluptatem</li>
-            <li>Dolorem eum fugiat quo voluptas</li>
-          </ul>
-        </div>
-      </div>
+        <div class="related-section">
+          <h2 class="section-title">You May Also Like</h2>
+          <div class="related-products">
+            <div class="product-card" @click="viewDetails(1)">
+              <div class="product-card-image">
+                <img src="/washingMachine.jpg" alt="Product">
+                <span class="card-badge">NEW</span>
+              </div>
+              <div class="card-content">
+                <h4 class="product-card-title">Air Conditioner 8000 BTU</h4>
+                <div class="card-rating">★★★★☆ (64)</div>
+                <p class="product-card-price">$189.00</p>
+                <button class="card-btn">Quick View</button>
+              </div>
+            </div>
 
-      <div class="feature-showcase reverse">
-        <div class="feature-content">
-          <h3 class="feature-title">Item Blanditiis quidem praesentius tuttifes</h3>
-          <p class="feature-description">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi sollicitudin consequat iusto in cursus. 
-            Proin non velit quam. Etiam diam turpis, elementum in gravida maximus, efficitur quis nulla.
-          </p>
-        </div>
+            <div class="product-card" @click="viewDetails(2)">
+              <div class="product-card-image">
+                <img src="/washingMachine.jpg" alt="Product">
+              </div>
+              <div class="card-content">
+                <h4 class="product-card-title">Portable AC 10000 BTU</h4>
+                <div class="card-rating">★★★★★ (92)</div>
+                <p class="product-card-price">$229.00</p>
+                <button class="card-btn">Quick View</button>
+              </div>
+            </div>
 
-        <div class="feature-image-container">
-          <img src="" alt="Product Feature" class="feature-image">
+            <div class="product-card" @click="viewDetails(3)">
+              <div class="product-card-image">
+                <img src="/washingMachine.jpg" alt="Product">
+                <span class="card-badge sale">-20%</span>
+              </div>
+              <div class="card-content">
+                <h4 class="product-card-title">Window AC 6000 BTU</h4>
+                <div class="card-rating">★★★★☆ (47)</div>
+                <p class="product-card-price">$159.00</p>
+                <button class="card-btn">Quick View</button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <h2 class="section-title">Related products</h2>
-      <div class="related-products">
-        <h1>component</h1>
       </div>
     </div>
   </div>
+  <Footer/>
 </template>
 
 <style scoped>
+.page-wrapper {
+  min-height: 100vh;
+  background: #f8fafc;
+  padding: 40px 0 80px;
+}
+
 .container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  background: white;
-  padding: 30px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  padding: 0 20px;
+}
+
+.breadcrumb {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 30px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumb a {
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.breadcrumb a:hover {
+  color: #2563eb;
+}
+
+.separator {
+  color: #cbd5e1;
+}
+
+.current {
+  color: #1e293b;
+  font-weight: 500;
 }
 
 .product-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-top: 20px;
+  gap: 60px;
+  margin-bottom: 80px;
+  background: white;
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
 }
 
 .product-images {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 20px;
+}
+
+.main-image-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .main-product-image {
   width: 100%;
-  height: 550px;
-  background: #f9f9f9;
-  border-radius: 8px;
-  padding: 30px;
+  height: 500px;
   object-fit: contain;
+  padding: 20px;
+}
+
+.badge-sale {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: #ef4444;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
 
 .thumbnail-gallery {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   overflow-x: auto;
-  margin-top: 10px;
 }
 
 .thumbnail {
-  width: 128px;
-  height: 130px;
-  background: #f9f9f9;
-  border: 2px solid #e0e0e0;
-  border-radius: 4px;
+  width: 100px;
+  height: 100px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
   cursor: pointer;
-  transition: border-color 0.3s;
+  transition: all 0.3s;
   flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
 }
 
@@ -219,354 +303,492 @@ export default {
   object-fit: cover;
 }
 
-.thumbnail:hover {
-  border-color: #4CAF50;
-}
-
+.thumbnail:hover,
 .thumbnail.active {
-  border-color: #4CAF50;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .product-details {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
 }
 
 .product-title {
-  font-size: 24px;
-  color: #333;
-  font-weight: 600;
-  line-height: 1.4;
+  font-size: 28px;
+  color: #1e293b;
+  font-weight: 700;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.rating-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.stars {
+  color: #fbbf24;
+  font-size: 20px;
+  letter-spacing: 2px;
+}
+
+.reviews-count {
+  color: #64748b;
+  font-size: 15px;
 }
 
 .price-section {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.original-price {
-  color: #999;
-  text-decoration: line-through;
-  font-size: 18px;
+  gap: 16px;
+  flex-wrap: wrap;
 }
 
 .current-price {
-  color: #4CAF50;
+  background: rgb(99, 234, 99);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 30px;
+  font-weight: 800;
+}
+
+.original-price {
+  color: #94a3b8;
+  text-decoration: line-through;
   font-size: 24px;
-  font-weight: 700;
 }
 
-.product-description {
-  color: #666;
-  line-height: 1.6;
+.save-badge {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 6px 14px;
+  border-radius: 8px;
   font-size: 14px;
+  font-weight: 600;
 }
 
-.key-features {
-  margin-top: 5px;
+.product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px;
+  background: #f8fafc;
+  border-radius: 12px;
 }
 
-.key-features h3 {
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 10px;
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
 }
 
-.features-list {
-  list-style: none;
+.meta-label {
+  color: #64748b;
+  font-weight: 500;
 }
 
-.features-list li {
-  padding: 5px 0;
-  color: #666;
-  font-size: 14px;
-  position: relative;
-  padding-left: 20px;
+.meta-value {
+  color: #1e293b;
+  font-weight: 600;
+  text-decoration: none;
 }
 
-.features-list li:before {
-  content: "✓";
-  color: #4CAF50;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
+.meta-value.in-stock {
+  color: #16a34a;
 }
 
 .quantity-section {
   display: flex;
   align-items: center;
-  gap: 15px;
-  margin: 20px 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quantity-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.quantity-wrapper label {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 15px;
 }
 
 .quantity-controls {
   display: flex;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  color: black;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
   overflow: hidden;
 }
 
 .quantity-btn {
-  background: #f5f5f5;
+  background: black;
   border: none;
-  width: 35px;
-  height: 35px;
+  width: 40px;
+  height: 44px;
   cursor: pointer;
-  font-size: 18px;
-  transition: background 0.3s;
+  font-size: 20px;
+  color: #1e293b;
+  font-weight: bold;
+  transition: all 0.3s;
 }
 
 .quantity-btn:hover {
-  background: #e0e0e0;
+  background: #3b82f6;
+  color: white;
 }
 
 .quantity-input {
-  width: 50px;
+  color: #1e293b;
+  width: 60px;
   text-align: center;
   border: none;
-  border-left: 1px solid #ddd;
-  border-right: 1px solid #ddd;
-  font-size: 14px;
+  border-left: 2px solid #e2e8f0;
+  border-right: 2px solid #e2e8f0;
+  font-size: 16px;
+  font-weight: 600;
+  background: white;
 }
 
 .add-to-cart-btn {
-  background: #333;
+  background: #3b82f6;
   color: white;
   border: none;
-  padding: 10px 30px;
-  border-radius: 4px;
+  width: 160px;
+  height: 40px;
+  padding: 2px;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: background 0.3s;
+  font-size: 16px;
+  font-weight: 700;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
 }
 
 .add-to-cart-btn:hover {
-  background: #555;
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
-.category {
-  color: #666;
-  font-size: 14px;
+.wishlist-btn {
+  background: white;
+  border: 2px solid #e2e8f0;
+  width: 50px;
+  height: 44px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 24px;
+  color: #64748b;
+  transition: all 0.3s;
 }
 
-.category a {
-  color: #4CAF50;
-  text-decoration: none;
-}
-
-.category a:hover {
-  text-decoration: underline;
-}
-
-hr {
-  border: none;
-  border-top: 1px solid #e0e0e0;
-  margin: 10px 0;
+.wishlist-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: scale(1.05);
 }
 
 .payment-section {
-  background: #f9f9f9;
-  padding: 20px;
-  border-radius: 4px;
+  background: rgb(244, 238, 238);
+  padding: 25px;
+  border-radius: 12px;
+  border: 300px;
   text-align: center;
+  border-color: red;
+  margin: 5px;
 }
 
 .payment-title {
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 10px;
+  font-size: 15px;
+  color: #1e293b;
+  margin-bottom: 16px;
+  font-weight: 600;
 }
 
 .payment-icons {
   display: flex;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
 .payment-icon {
-  width: 50px;
-  height: 32px;
+  width: 60px;
+  height: 40px;
   background: white;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  object-fit: contain;
+  padding: 4px;
+  transition: all 0.3s;
 }
 
-/* Section 2 Styles */
+.payment-icon:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
 .section-2 {
+  margin-top: 60px;
+}
+
+.tabs-section {
+  margin-bottom: 30px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  background: white;
+  padding: 0 20px;
+  border-radius: 12px 12px 0 0;
+}
+
+.tab {
+  background: none;
+  border: none;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s;
+  margin-bottom: -2px;
+}
+
+.tab:hover {
+  color: #3b82f6;
+}
+
+.tab.active {
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.tab-content {
+  background: white;
+  padding: 40px;
+  border-radius: 0 0 12px 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+.description-content h3 {
+  font-size: 20px;
+  color: #1e293b;
+  margin: 0 0 16px;
+  font-weight: 700;
+}
+
+.product_description {
+  color: #64748b;
+  line-height: 1.8;
+  font-size: 15px;
+  margin-bottom: 32px;
+}
+
+.features-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.features-list li {
+  padding: 12px 12px 12px 40px;
+  color: #1e293b;
+  font-size: 15px;
+  position: relative;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+.features-list li:before {
+  content: "✓";
+  color: #3b82f6;
+  font-weight: bold;
+  position: absolute;
+  left: 12px;
+  font-size: 18px;
+}
+
+.related-section {
   margin-top: 60px;
 }
 
 .section-title {
   font-size: 28px;
-  color: #333;
-  margin-bottom: 20px;
-  font-weight: 600;
-}
-
-.section-description {
-  color: #666;
-  line-height: 1.8;
-  font-size: 14px;
-  margin-bottom: 40px;
-}
-
-.feature-showcase {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 40px;
-  margin-bottom: 60px;
-  align-items: center;
-}
-
-.feature-showcase.reverse {
-  grid-template-columns: 1fr 1fr;
-}
-
-.feature-showcase.reverse .feature-content {
-  order: 1;
-}
-
-.feature-showcase.reverse .feature-image-container {
-  order: 2;
-}
-
-.feature-image-container {
-  position: relative;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #e0e0e0;
-}
-
-.feature-image {
-  width: 100%;
-  height: 400px;
-  object-fit: cover;
-  display: block;
-}
-
-.feature-overlay {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 30px;
-}
-
-.overlay-text {
-  color: white;
-  font-size: 16px;
-  line-height: 1.6;
-  margin: 0;
-}
-
-.feature-content {
-  padding: 20px;
-}
-
-.feature-title {
-  font-size: 22px;
-  color: #333;
-  margin-bottom: 15px;
-  font-weight: 600;
-}
-
-.feature-description {
-  color: #666;
-  line-height: 1.8;
-  font-size: 14px;
-  margin-bottom: 20px;
-}
-
-.feature-bullets {
-  list-style: none;
-  padding: 0;
-}
-
-.feature-bullets li {
-  padding: 8px 0;
-  color: #666;
-  font-size: 14px;
-  position: relative;
-  padding-left: 25px;
-}
-
-.feature-bullets li:before {
-  content: "✓";
-  color: #4CAF50;
-  font-weight: bold;
-  position: absolute;
-  left: 0;
+  color: #1e293b;
+  margin-bottom: 32px;
+  font-weight: 700;
+  text-align: center;
 }
 
 .related-products {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
-  margin-top: 30px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 28px;
 }
 
 .product-card {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
   overflow: hidden;
-  transition: box-shadow 0.3s;
+  transition: all 0.3s;
+  cursor: pointer;
 }
 
 .product-card:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+  border-color: #3b82f6;
 }
 
 .product-card-image {
   width: 100%;
-  height: 200px;
-  background: #f5f5f5;
+  height: 240px;
+  background: #f8fafc;
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
+  overflow: hidden;
 }
 
 .product-card-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.product-card:hover .product-card-image img {
+  transform: scale(1.1);
+}
+
+.card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #3b82f6;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.card-badge.sale {
+  background: #ef4444;
+}
+
+.card-content {
+  padding: 20px;
 }
 
 .product-card-title {
-  padding: 15px;
+  font-size: 16px;
+  color: #1e293b;
+  font-weight: 600;
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+.card-rating {
+  color: #fbbf24;
   font-size: 14px;
-  color: #333;
-  font-weight: 500;
-  margin: 0;
+  margin-bottom: 12px;
 }
 
 .product-card-price {
-  padding: 0 15px 15px;
-  font-size: 18px;
-  color: #4CAF50;
-  font-weight: 700;
-  margin: 0;
+  font-size: 20px;
+  color: #3b82f6;
+  font-weight: 800;
+  margin: 0 0 16px;
+}
+
+.card-btn {
+  width: 100%;
+  background: rgb(114, 114, 230);
+  color: white;
+  border: none;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.card-btn:hover {
+  background: #2563eb;
+}
+
+@media (max-width: 1024px) {
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .main-product-image {
+    height: 400px;
+  }
 }
 
 @media (max-width: 768px) {
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .container {
-    padding: 15px;
+  .page-wrapper {
+    padding: 20px 0 40px;
   }
 
-  .feature-showcase {
-    grid-template-columns: 1fr;
+  .product-grid {
+    padding: 24px;
+  }
+
+  .product-title {
+    font-size: 22px;
+  }
+
+  .current-price {
+    font-size: 28px;
+  }
+
+  .quantity-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .add-to-cart-btn {
+    justify-content: center;
+    width: 100%;
   }
 
   .related-products {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 20px;
+  }
+
+  .tabs {
+    overflow-x: auto;
+  }
+
+  .tab-content {
+    padding: 24px;
   }
 }
 </style>
