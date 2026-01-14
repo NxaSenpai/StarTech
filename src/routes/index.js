@@ -17,7 +17,9 @@ import Order from '@/views/clientView/Order.vue'
 import ManageAdmin from '@/views/adminView/ManageAdmin.vue'
 import Settings from '@/views/adminView/Settings.vue'
 import ProductsView from '@/views/clientView/ProductsView.vue'
-import WishlistView from '@/views/clientView/wishlistView.vue'
+import WishlistView from '@/views/clientView/WishlistView.vue'
+import CouponView from '@/views/adminView/CouponView.vue'
+import Checkout from '@/views/clientView/Checkout.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -121,6 +123,11 @@ const router = createRouter({
       component: EventView
     },
     {
+      path: '/managecoupons',
+      name: 'manageCoupons',
+      component: CouponView
+    },
+    {
       path: '/wishlist',
       name: 'wishlist',
       component: WishlistView
@@ -145,6 +152,11 @@ const router = createRouter({
       path: '/new-arrivals',
       name: 'NewArrivals',
       component: EventView
+    },
+    {
+      path: '/checkout',
+      name: 'Checkout',
+      component: Checkout
     }
   ]
 })

@@ -1,232 +1,244 @@
 <template>
   <div class="coupon-management">
-    <div class="header">
-      <div class="header-content">
-        <h1>Coupon Management</h1>
-        <p class="subtitle">Create and manage discount coupons for your store</p>
+    <AdminHeader :userName="adminName" :notificationCount="notifications" />
+    <AdminSidebar @settings-click="handleSettingsClick" />
+    
+    <div class="main-content">
+      <div class="header">
+        <div class="header-content">
+          <h1>Coupon Management</h1>
+          <p class="subtitle">Create and manage discount coupons for your store</p>
+        </div>
+        <button @click="showAddModal = true" class="btn-primary">
+          Add New Coupon
+        </button>
       </div>
-      <button @click="showAddModal = true" class="btn-primary">
-        Add New Coupon
-      </button>
-    </div>
 
-    <!-- Stats Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-info">
-          <p class="stat-label">Total Coupons</p>
-          <p class="stat-value">{{ coupons.length }}</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-info">
-          <p class="stat-label">Active Coupons</p>
-          <p class="stat-value">{{ activeCoupons }}</p>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-info">
-          <p class="stat-label">Expiring Soon</p>
-          <p class="stat-value">{{ expiringSoon }}</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Coupons List -->
-    <div class="coupons-grid">
-      <div v-for="coupon in coupons" :key="coupon.id" 
-           :class="['coupon-card', { expired: isExpired(coupon.expiryDate), 'expiring-soon': isExpiringSoon(coupon.expiryDate) }]">
-        <div class="coupon-ribbon" v-if="isExpired(coupon.expiryDate)">
-          <span>Expired</span>
-        </div>
-        <div class="coupon-ribbon warning" v-else-if="isExpiringSoon(coupon.expiryDate)">
-          <span>Expiring Soon</span>
-        </div>
-        
-        <div class="coupon-header">
-          <div class="code-badge">
-            <span class="code-text">{{ coupon.code }}</span>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-info">
+            <p class="stat-label">Total Coupons</p>
+            <p class="stat-value">{{ coupons.length }}</p>
           </div>
-          <span :class="['status-badge', coupon.active ? 'active' : 'inactive']">
-            <span class="status-dot"></span>
-            {{ coupon.active ? 'Active' : 'Inactive' }}
-          </span>
         </div>
-        
-        <div class="discount-display">
-          <div class="discount-value">
-            {{ coupon.type === 'percentage' ? `${coupon.value}%` : `$${coupon.value}` }}
+        <div class="stat-card">
+          <div class="stat-info">
+            <p class="stat-label">Active Coupons</p>
+            <p class="stat-value">{{ activeCoupons }}</p>
           </div>
-          <div class="discount-label">OFF</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-info">
+            <p class="stat-label">Expiring Soon</p>
+            <p class="stat-value">{{ expiringSoon }}</p>
+          </div>
+        </div>
+      </div>
 
-        <div class="coupon-details">
-          <div class="detail-item">
-            <div class="detail-content">
-              <span class="detail-label">Expires</span>
-              <span class="detail-value" :class="{ 'text-danger': isExpired(coupon.expiryDate), 'text-warning': isExpiringSoon(coupon.expiryDate) }">
-                {{ formatDate(coupon.expiryDate) }}
-              </span>
-            </div>
+      <div class="coupons-grid">
+        <div v-for="coupon in coupons" :key="coupon.id" 
+             :class="['coupon-card', { expired: isExpired(coupon.expiryDate), 'expiring-soon': isExpiringSoon(coupon.expiryDate) }]">
+          <div class="coupon-ribbon" v-if="isExpired(coupon.expiryDate)">
+            <span>Expired</span>
+          </div>
+          <div class="coupon-ribbon warning" v-else-if="isExpiringSoon(coupon.expiryDate)">
+            <span>Expiring Soon</span>
           </div>
           
-          <div class="detail-item">
-            <div class="detail-content">
-              <span class="detail-label">Usage</span>
-              <span class="detail-value">
-                {{ coupon.usedCount }} / {{ coupon.maxUses || 50 }}
-              </span>
+          <div class="coupon-header">
+            <div class="code-badge">
+              <span class="code-text">{{ coupon.code }}</span>
+            </div>
+            <span :class="['status-badge', coupon.active ? 'active' : 'inactive']">
+              <span class="status-dot"></span>
+              {{ coupon.active ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+          
+          <div class="discount-display">
+            <div class="discount-value">
+              {{ coupon.type === 'percentage' ? `${coupon.value}%` : `$${coupon.value}` }}
+            </div>
+            <div class="discount-label">OFF</div>
+          </div>
+
+          <div class="coupon-details">
+            <div class="detail-item">
+              <div class="detail-content">
+                <span class="detail-label">Expires</span>
+                <span class="detail-value" :class="{ 'text-danger': isExpired(coupon.expiryDate), 'text-warning': isExpiringSoon(coupon.expiryDate) }">
+                  {{ formatDate(coupon.expiryDate) }}
+                </span>
+              </div>
+            </div>
+            
+            <div class="detail-item">
+              <div class="detail-content">
+                <span class="detail-label">Usage</span>
+                <span class="detail-value">
+                  {{ coupon.usedCount }} / {{ coupon.maxUses || 50 }}
+                </span>
+              </div>
+            </div>
+
+            <div class="detail-item" v-if="coupon.minPurchase">
+              <div class="detail-content">
+                <span class="detail-label">Min Purchase</span>
+                <span class="detail-value">${{ coupon.minPurchase }}</span>
+              </div>
             </div>
           </div>
 
-          <div class="detail-item" v-if="coupon.minPurchase">
-            <div class="detail-content">
-              <span class="detail-label">Min Purchase</span>
-              <span class="detail-value">${{ coupon.minPurchase }}</span>
-            </div>
+          <div class="progress-bar" v-if="coupon.maxUses">
+            <div class="progress-fill" :style="{ width: `${Math.min((coupon.usedCount / coupon.maxUses) * 100, 100)}%` }"></div>
           </div>
-        </div>
 
-        <div class="progress-bar" v-if="coupon.maxUses">
-          <div class="progress-fill" :style="{ width: `${Math.min((coupon.usedCount / coupon.maxUses) * 100, 100)}%` }"></div>
-        </div>
-
-        <div class="coupon-actions">
-          <button @click="editCoupon(coupon)" class="btn-action btn-edit">
-            Edit
-          </button>
-          <button @click="toggleStatus(coupon)" class="btn-action btn-toggle">
-            {{ coupon.active ? 'Deactivate' : 'Activate' }}
-          </button>
-          <button @click="deleteCoupon(coupon.id)" class="btn-action btn-delete">
-            Delete
-          </button>
+          <div class="coupon-actions">
+            <button @click="editCoupon(coupon)" class="btn-action btn-edit">
+              Edit
+            </button>
+            <button @click="toggleStatus(coupon)" class="btn-action btn-toggle">
+              {{ coupon.active ? 'Deactivate' : 'Activate' }}
+            </button>
+            <button @click="deleteCoupon(coupon.id)" class="btn-action btn-delete">
+              Delete
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Add/Edit Modal -->
-    <div v-if="showAddModal" class="modal-overlay" @click="closeModal">
-      <div class="modal" @click.stop>
-        <div class="modal-header">
-          <h2>{{ editingCoupon ? 'Edit Coupon' : 'Create New Coupon' }}</h2>
-          <button @click="closeModal" class="close-btn">&times;</button>
-        </div>
-
-        <form @submit.prevent="saveCoupon" class="coupon-form">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Coupon Code <span class="required">*</span></label>
-              <input 
-                v-model="form.code" 
-                type="text" 
-                placeholder="e.g., SAVE20"
-                required
-                class="form-input"
-                @input="form.code = form.code.toUpperCase()"
-              />
-              <span class="form-hint">Use uppercase letters and numbers</span>
-            </div>
+      <div v-if="showAddModal" class="modal-overlay" @click="closeModal">
+        <div class="modal" @click.stop>
+          <div class="modal-header">
+            <h2>{{ editingCoupon ? 'Edit Coupon' : 'Create New Coupon' }}</h2>
+            <button @click="closeModal" class="close-btn">&times;</button>
           </div>
 
-          <div class="form-row two-col">
-            <div class="form-group">
-              <label>Discount Type <span class="required">*</span></label>
-              <select v-model="form.type" required class="form-input">
-                <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed Amount ($)</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label>Discount Value <span class="required">*</span></label>
-              <div class="input-with-prefix">
-                <span class="input-prefix">{{ form.type === 'percentage' ? '%' : '$' }}</span>
+          <form @submit.prevent="saveCoupon" class="coupon-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label>Coupon Code <span class="required">*</span></label>
                 <input 
-                  v-model.number="form.value" 
-                  type="number" 
-                  :min="0"
-                  :max="form.type === 'percentage' ? 100 : undefined"
-                  step="0.01"
+                  v-model="form.code" 
+                  type="text" 
+                  placeholder="e.g., SAVE20"
                   required
-                  class="form-input with-prefix"
+                  class="form-input"
+                  @input="form.code = form.code.toUpperCase()"
                 />
+                <span class="form-hint">Use uppercase letters and numbers</span>
               </div>
             </div>
-          </div>
 
-          <div class="form-row">
-            <div class="form-group">
-              <label>Expiry Date <span class="required">*</span></label>
-              <input 
-                v-model="form.expiryDate" 
-                type="date" 
-                :min="minDate"
-                required
-                class="form-input"
-                :class="{ 'error': dateError }"
-              />
-              <span v-if="dateError" class="form-error">{{ dateError }}</span>
-              <span v-else class="form-hint">Coupon will expire at the end of this date</span>
-            </div>
-          </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>Discount Type <span class="required">*</span></label>
+                <select v-model="form.type" required class="form-input">
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount ($)</option>
+                </select>
+              </div>
 
-          <div class="form-row two-col">
-            <div class="form-group">
-              <label>Maximum Uses</label>
-              <input 
-                v-model.number="form.maxUses" 
-                type="number" 
-                min="1"
-                placeholder="enter total usages"
-                class="form-input"
-              />
-              <span class="form-hint"></span>
+              <div class="form-group">
+                <label>Discount Value <span class="required">*</span></label>
+                <div class="input-with-prefix">
+                  <span class="input-prefix">{{ form.type === 'percentage' ? '%' : '$' }}</span>
+                  <input 
+                    v-model.number="form.value" 
+                    type="number" 
+                    :min="0"
+                    :max="form.type === 'percentage' ? 100 : undefined"
+                    step="0.01"
+                    required
+                    class="form-input with-prefix"
+                  />
+                </div>
+              </div>
             </div>
 
-            <div class="form-group">
-              <label>Minimum Purchase</label>
-              <div class="input-with-prefix">
-                <span class="input-prefix">$</span>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Expiry Date <span class="required">*</span></label>
                 <input 
-                  v-model.number="form.minPurchase" 
-                  type="number" 
-                  min="0"
-                  step="0.01"
-                  placeholder="Optional"
-                  class="form-input with-prefix"
+                  v-model="form.expiryDate" 
+                  type="date" 
+                  :min="minDate"
+                  required
+                  class="form-input"
+                  :class="{ 'error': dateError }"
                 />
+                <span v-if="dateError" class="form-error">{{ dateError }}</span>
+                <span v-else class="form-hint">Coupon will expire at the end of this date</span>
               </div>
             </div>
-          </div>
 
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input v-model="form.active" type="checkbox" class="checkbox-input" />
-              <span class="checkbox-custom"></span>
-              <span class="checkbox-text">Set as Active</span>
-            </label>
-          </div>
+            <div class="form-row two-col">
+              <div class="form-group">
+                <label>Maximum Uses</label>
+                <input 
+                  v-model.number="form.maxUses" 
+                  type="number" 
+                  min="1"
+                  placeholder="enter total usages"
+                  class="form-input"
+                />
+                <span class="form-hint"></span>
+              </div>
 
-          <div class="form-actions">
-            <button type="button" @click="closeModal" class="btn-secondary">
-              Cancel
-            </button>
-            <button type="submit" class="btn-primary" :disabled="!!dateError">
-              {{ editingCoupon ? 'Update Coupon' : 'Create Coupon' }}
-            </button>
-          </div>
-        </form>
+              <div class="form-group">
+                <label>Minimum Purchase</label>
+                <div class="input-with-prefix">
+                  <span class="input-prefix">$</span>
+                  <input 
+                    v-model.number="form.minPurchase" 
+                    type="number" 
+                    min="0"
+                    step="0.01"
+                    placeholder="Optional"
+                    class="form-input with-prefix"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="checkbox-label">
+                <input v-model="form.active" type="checkbox" class="checkbox-input" />
+                <span class="checkbox-custom"></span>
+                <span class="checkbox-text">Set as Active</span>
+              </label>
+            </div>
+
+            <div class="form-actions">
+              <button type="button" @click="closeModal" class="btn-secondary">
+                Cancel
+              </button>
+              <button type="submit" class="btn-primary" :disabled="!!dateError">
+                {{ editingCoupon ? 'Update Coupon' : 'Create Coupon' }}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+
+import AdminHeader from '@/components/AdminHeader.vue';
+import AdminSidebar from '@/components/AdminSidebar.vue';
+
 export default {
   name: "CouponView",
+  components: {
+    AdminHeader,
+    AdminSidebar
+  },
   data() {
     return {
+      adminName: 'Admin',
+      notifications: 0,
       showAddModal: false,
       editingCoupon: null,
       form: {
@@ -301,6 +313,9 @@ export default {
     }
   },
   methods: {
+    handleSettingsClick() {
+      this.$router.push('/settings');
+    },
     isExpired(date) {
       const expiryDate = new Date(date);
       const today = new Date();
@@ -373,23 +388,37 @@ export default {
   box-sizing: border-box;
 }
 
+/* Add admin layout */
 .coupon-management {
-  padding: 2rem;
-  max-width: 1400px;
-  margin: 0 auto;
-  background: #f5f7fa;
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main";
+  grid-template-columns: 250px 1fr;
+  grid-template-rows: 70px 1fr;
   min-height: 100vh;
+  background: #f5f7fa;
 }
 
+/* Update header positioning */
 .header {
+  grid-area: main;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin: 2rem;
   margin-bottom: 2rem;
   background: white;
   padding: 2rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Wrap main content */
+.main-content {
+  grid-area: main;
+  padding: 2rem;
+  overflow-y: auto;
 }
 
 .header-content h1 {

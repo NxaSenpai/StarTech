@@ -47,6 +47,13 @@
             icon: '/categoryIcon.png',
             label: 'Manage Categories'
           },
+
+          {
+            path: '/managecoupons',
+            icon: '/couponIcon.png',
+            label: 'Manage Coupons'
+          },
+
           {
             path: '/managesupplier',
             icon: '/supplierIcon.png',

@@ -86,35 +86,6 @@
           </div>
         </section>
   
-        <section class="shop-by-category">
-          <div class="container">
-            <div class="section-header">
-              <div class="section-header-left">
-                <span class="section-tag">Browse</span>
-                <h2 class="section-title">Shop by Category</h2>
-              </div>
-              <a href="/category" class="view-all-link">
-                View All
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </a>
-            </div>
-            <div class="categories-grid">
-              <ShopByCategory
-                v-for="(cat, index) in categories"
-                :key="cat.title"
-                :title="cat.title"
-                :productCount="cat.count"
-                :imageUrl="cat.img"
-                :categoryLink="cat.link"
-                :style="{ animationDelay: `${index * 0.1}s` }"
-                class="category-item"
-              />
-            </div>
-          </div>
-        </section>
-  
         <section class="discounts-section">
           <div class="container">
             <div class="section-header">
@@ -549,7 +520,7 @@
   
   .load-more {
     text-align: center;
-    margin-top: 48px;
+    margin-top: 70px;
   }
   
   .load-more-btn {
