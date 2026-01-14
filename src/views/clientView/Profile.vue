@@ -1,58 +1,367 @@
 <template>
-  <div class="page">
-    <Header class="site-header" />
+  <div class="min-h-screen bg-gray-50 w-full ">
+    <Header />
 
-    <main class="main-content">
-      <div class="container">
-        <h2 class="profile-label">My Profile</h2>
-
-        <div class="profile-grid">
-          <aside class="profile-card">
-            <div class="avatar">
-              <template v-if="profile.avatar && profile.avatar.length">
-                <img :src="profile.avatar" alt="Avatar" />
-              </template>
-              <template v-else>
-                <div class="avatar-inner">{{ initial }}</div>
-              </template>
-            </div>
-            <button @click="handleEdit" class="btn btn-outline">Edit</button>
-          </aside>
-
-          <section class="profile-info">
-            <div class="info-list">
-              <div class="info-row">
-                <div class="label">Name</div>
-                <div class="value">
-                  <input v-if="isEditing" type="text" v-model="editedProfile.name" class="input" />
-                  <span v-else class="text">{{ profile.name }}</span>
-                </div>
-              </div>
-
-              <div class="info-row">
-                <div class="label">Email</div>
-                <div class="value">
-                  <input v-if="isEditing" type="email" v-model="editedProfile.email" class="input" />
-                  <span v-else class="text">{{ profile.email }}</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="actions">
-              <button v-if="isEditing" @click="handleCancel" class="btn btn-outline">Cancel</button>
-              <button v-if="isEditing" @click="handleSave" class="btn btn-primary">Save</button>
-
-              <button v-if="!isEditing" @click="handleEdit" class="btn btn-outline">Edit</button>
-              <button v-if="!isEditing" class="btn btn-primary">Save</button>
-            </div>
-          </section>
-        </div>
-
-        <div class="logout">
-          <button @click="handleLogout" class="btn btn-logout">Log out</button>
+    <!-- Stripe/Notion-style Alert -->
+    <transition
+      enter-active-class="transition ease-out duration-300"
+      enter-from-class="opacity-0 scale-95"
+      enter-to-class="opacity-100 scale-100"
+      leave-active-class="transition ease-in duration-200"
+      leave-from-class="opacity-100 scale-100"
+      leave-to-class="opacity-0 scale-95"
+    >
+      <div v-if="showAlert" class="fixed top-6 right-6 z-50">
+        <div
+          class="flex items-start gap-3 px-4 py-3 rounded-lg shadow-lg border max-w-md"
+          :class="{
+            'bg-white border-green-200': alertType === 'success',
+            'bg-white border-blue-200': alertType === 'info',
+            'bg-white border-red-200': alertType === 'error'
+          }"
+        >
+          <div class="flex-shrink-0 mt-0.5">
+            <svg v-if="alertType === 'success'" class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+            </svg>
+            <svg v-if="alertType === 'info'" class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+            </svg>
+            <svg v-if="alertType === 'error'" class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-sm font-medium text-gray-900">{{ alertMessage }}</p>
+          </div>
+          <button @click="showAlert = false" class="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
         </div>
       </div>
-    </main>
+    </transition>
+
+    <!-- Main Content -->
+    <div class="mx-auto px-90 py-12 ">
+      
+      <!-- Page Header -->
+      <div class="mb-12">
+        <h1 class="text-3xl text-gray-900" style="font-weight: 700; margin-bottom: 15px;">My Profile</h1>
+        <!-- <p class="text-sm text-gray-500">Manage your account settings and preferences</p> -->
+      </div>
+
+      <div class="flex gap-8">
+        
+        <!-- Sidebar Navigation -->
+        <aside class="w-56 flex-shrink-0">
+          <nav class="space-y-1">
+            <button
+              v-for="item in menuItems"
+              :key="item.id"
+              @click="activeTab = item.id"
+              class="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors"
+              :class="activeTab === item.id ? 'bg-[#A7CCF6]' : ' hover:text-[#A7CCF6] hover:bg-gray-100'"
+              style="font-weight: 650;"
+            >
+              <component :is="item.icon" class="w-5 h-5" />
+              {{ item.label }}
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 min-w-0">
+          
+          <!-- Profile Tab -->
+          <div v-show="activeTab === 'profile'" class="grid gap-2" >
+            <!-- Profile Header -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6 transition-transform duration-400 ease-in-out
+                    hover:scale-101 hover:shadow-lg" >
+              <div class="flex items-start gap-6">
+                <div class="relative flex-shrink-0">
+                  <img
+                    :src="isEditingBasic ? editedProfile.avatar : profile.avatar"
+                    alt="Profile"
+                    class="w-20 h-20 rounded-full object-cover border border-gray-200"
+                  />
+                  <label v-if="isEditingBasic" class="absolute -bottom-1 -right-1 w-8 h-8 bg-gray-900 text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-gray-800 transition-colors shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <input type="file" accept="image/*" @change="onAvatarChange" class="hidden" />
+                  </label>
+                </div>
+                <div class="flex-1">
+                  <h2 class="text-xl font-bold text-gray-900 mb-1">{{ profile.fullName }}</h2>
+                  <p class="text-sm text-gray-500 mb-4">{{ profile.email }}</p>
+                  <button
+                    v-if="!isEditingBasic"
+                    @click="handleEditBasic"
+                    class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-indigo-400 hover:text-white transition-colors"
+                  >
+                    Edit profile
+                  </button>
+                  <div v-else class="flex gap-2">
+                    <button @click="handleSaveBasic" class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                      Save changes
+                    </button>
+                    <button @click="handleCancelBasic" class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Personal Information -->
+            <div class="bg-white rounded-lg border border-gray-300 p-6 mb-6 transition-transform duration-400 ease-in-out
+                    hover:scale-101 hover:shadow-lg">
+              <h3 class="text-lg  text-gray-900 mb-6 font-bold ">Personal information</h3>
+              <div class="grid grid-cols-1 gap-3">
+                <div class="flex justify-between">
+                  <label class="block text-sm font-medium  mb-2">Full name</label>
+                  <input
+                    v-if="isEditingBasic"
+                    v-model="editedProfile.fullName"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  <div v-else class="text-sm text-gray-900 py-2">{{ profile.fullName }}</div>
+                </div>
+                <div class="flex justify-between">
+                  <label class="block text-sm font-medium  mb-2">Gender</label>
+                  <input
+                    v-if="isEditingBasic"
+                    v-model="editedProfile.username"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  <div v-else class="text-sm text-gray-900 py-2">{{ profile.Gender }}</div>
+                </div>
+                <div class="flex justify-between">
+                  <label class="block text-sm font-medium  mb-2">Email address</label>
+                  <input
+                    v-if="isEditingBasic"
+                    v-model="editedProfile.email"
+                    type="email"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  <div v-else class="text-sm text-gray-900 py-2">{{ profile.email }}</div>
+                </div>
+                <div class="flex justify-between">
+                  <label class="block text-sm font-medium  mb-2">Phone number</label>
+                  <input
+                    v-if="isEditingBasic"
+                    v-model="editedProfile.phone"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  <div v-else class="text-sm text-gray-900 py-2">{{ profile.phone }}</div>
+                  
+                </div>
+                <div class="flex justify-between">
+                  <label class="block text-sm font-medium  mb-2">Country</label>
+                  <input
+                    v-if="isEditingBasic"
+                    v-model="editedProfile.phone"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                  />
+                  <div v-else class="text-sm text-gray-900 py-2">{{ profile.country }}</div>
+                  
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity Stats -->
+            <div class="grid grid-cols-3 gap-4">
+              <div class="bg-white rounded-lg border border-[#0573F0] p-5
+                    transition-transform duration-400 ease-in-out
+                    hover:scale-105 hover:shadow-lg
+                    ">
+                <div class="text-2xl font-bold text-gray-900 mb-1 ">{{ orders.length }}</div>
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Total Orders</div>
+              </div>
+              <div class="bg-white rounded-lg border border-[#F79F1A] p-5 transition-transform duration-400 ease-in-out
+                    hover:scale-105 hover:shadow-lg">
+                <div class="text-2xl font-bold text-gray-900 mb-1">{{ addresses.length }}</div>
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Addresses</div>
+              </div>
+              <div class="bg-white rounded-lg border border-[#54A96A] p-5 transition-transform duration-400 ease-in-out
+                    hover:scale-105 hover:shadow-lg">
+                <div class="text-2xl font-bold text-gray-900 mb-1">5</div>
+                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide">Wishlist Items</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Orders Tab -->
+          <div v-show="activeTab === 'orders'">
+            <div class="bg-white rounded-lg border border-gray-200">
+              <div class="px-6 py-4 border-b border-gray-200">
+                <h3 class="text-lg font-bold text-gray-900">Order history</h3>
+              </div>
+              <div class="divide-y divide-gray-200">
+                <div
+                  v-for="order in orders"
+                  :key="order.id"
+                  class="px-6 py-5 hover:bg-gray-50 transition-colors cursor-pointer"
+                >
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-3 mb-2">
+                        <h4 class="text-sm font-bold text-gray-900">{{ order.id }}</h4>
+                        <span
+                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          :class="{
+                            'bg-green-100 text-green-800': order.status === 'Delivered',
+                            'bg-blue-100 text-blue-800': order.status === 'Shipped',
+                            'bg-yellow-100 text-yellow-800': order.status === 'Processing'
+                          }"
+                        >
+                          {{ order.status }}
+                        </span>
+                      </div>
+                      <p class="text-xs text-gray-500">{{ order.date }}</p>
+                    </div>
+                    <div class="flex items-center gap-6">
+                      <span class="text-lg font-bold text-gray-900">{{ order.total }}</span>
+                      <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Addresses Tab -->
+          <div v-show="activeTab === 'addresses'">
+            <div class="mb-4 flex items-center justify-between">
+              <h3 class="text-lg font-bold text-gray-900">Saved addresses</h3>
+              <button class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                Add address
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div
+                v-for="address in addresses"
+                :key="address.id"
+                class="bg-white rounded-lg border p-5 transition-all hover:shadow-md"
+                :class="address.isDefault ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-gray-200'"
+              >
+                <div class="flex items-start justify-between mb-3">
+                  <div>
+                    <h4 class="text-sm font-bold text-gray-900 mb-1">{{ address.name }}</h4>
+                    <span v-if="address.isDefault" class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-800">
+                      Default
+                    </span>
+                  </div>
+                  <div class="flex gap-2">
+                    <button class="text-sm text-gray-600 hover:text-gray-900 transition-colors">Edit</button>
+                    <button class="text-sm text-red-600 hover:text-red-800 transition-colors">Remove</button>
+                  </div>
+                </div>
+                <div class="text-sm text-gray-600 space-y-1">
+                  <p>{{ address.street }}</p>
+                  <p>{{ address.city }}, {{ address.postal }}</p>
+                  <p>{{ address.country }}</p>
+                  <p class="pt-2 text-gray-900">{{ address.phone }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Security Tab -->
+          <div v-show="activeTab === 'security'">
+            <!-- Password -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-6">Change password</h3>
+              <div class="space-y-4 max-w-md">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Current password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">New password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Confirm password</label>
+                  <input type="password" class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all" />
+                </div>
+                <button class="inline-flex items-center px-4 py-2 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                  Update password
+                </button>
+              </div>
+            </div>
+
+            <!-- Two-Factor -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6 mb-6">
+              <div class="flex items-start justify-between">
+                <div class="flex-1">
+                  <h3 class="text-lg font-bold text-gray-900 mb-2">Two-factor authentication</h3>
+                  <p class="text-sm text-gray-500 mb-4">Add an extra layer of security to your account. We'll ask for a code when you sign in.</p>
+                </div>
+                <button class="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                  Enable
+                </button>
+              </div>
+            </div>
+
+            <!-- Sessions -->
+            <div class="bg-white rounded-lg border border-gray-200 p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-6">Active sessions</h3>
+              <div class="space-y-4">
+                <div class="flex items-center justify-between pb-4 border-b border-gray-200">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">Windows PC — Chrome</div>
+                      <div class="text-xs text-gray-500">Active now · New York, US</div>
+                    </div>
+                  </div>
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                    Current
+                  </span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="text-sm font-medium text-gray-900">iPhone — Safari</div>
+                      <div class="text-xs text-gray-500">5 days ago · Los Angeles, US</div>
+                    </div>
+                  </div>
+                  <button class="inline-flex items-center px-3 py-1.5 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    Revoke
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div v-show="activeTab === 'paymentMethod'">
+            hello
+          </div>
+
+          <!-- Logout Section -->
+          <div class="mt-8 pt-6 border-t border-gray-200">
+            <button @click="handleLogout" class="text-sm text-red-600 hover:text-red-800 font-medium transition-colors">
+              Sign out of all devices
+            </button>
+          </div>
+
+        </main>
+      </div>
+    </div>
 
     <Footer />
   </div>
@@ -61,273 +370,138 @@
 <script>
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
-import { getUser, updateUser } from "@/services/api";
-
+import {CreditCardIcon,UserIcon,ShoppingCartIcon,ShieldCheckIcon,MapPinIcon} from '@heroicons/vue/24/outline';
 export default {
   name: 'UserProfile',
-  components: { Header, Footer },
+  components: {
+    Header,
+    Footer
+  },
   data() {
-    const saved = JSON.parse(localStorage.getItem('user') || '{}');
     return {
-      isEditing: false,
+      activeTab: 'profile',
+      isEditingBasic: false,
+      showAlert: false,
+      alertMessage: '',
+      alertType: 'success',
       profile: {
-        name: saved.name || 'User',
-        email: saved.email || 'unknown@example.com',
-        avatar: saved.avatar || 'smart_wifi.png',
+        fullName: 'Monirom YI',
+        Gender: 'Male',
+        email: 'moniromyi@gmail.com',
+        phone: '+1 234 567 8900',
+        country:'Cambodia',
+        avatar: 'cat_profie.png'
       },
-      editedProfile: {}
-    }
-  },
-  computed: {
-    initial() {
-      const n = (this.profile && this.profile.name) ? String(this.profile.name).trim() : '';
-      return n ? n.charAt(0).toUpperCase() : 'U';
-    }
-  },
-  mounted() {
-    const saved = JSON.parse(localStorage.getItem('user') || '{}');
-    if (saved && saved.email) {
-      getUser(saved.email)
-        .then(({ status, data }) => {
-          if (status === 200 && data) {
-            this.profile.name = data.name || this.profile.name;
-            this.profile.email = data.email || this.profile.email;
-            if (data.avatar) this.profile.avatar = data.avatar;
-            localStorage.setItem('user', JSON.stringify({
-              name: this.profile.name,
-              email: this.profile.email,
-              avatar: this.profile.avatar
-            }));
-            window.dispatchEvent(new CustomEvent('user-changed', { detail: { name: this.profile.name, email: this.profile.email, avatar: this.profile.avatar } }));
-          } else {
-            console.warn('getUser:', data?.message || 'status ' + status);
-          }
-        })
-        .catch(err => {
-          console.error('Failed to fetch user profile:', err);
-        });
+      editedProfile: {},
+      menuItems: [
+        { 
+          id: 'profile', 
+          label: 'Profile',
+          icon:UserIcon
+        },
+        { 
+          id: 'orders', 
+          label: 'Orders',
+          icon: ShoppingCartIcon
+        },
+        { 
+          id: 'addresses', 
+          label: 'Addresses',
+          icon: MapPinIcon
+        },
+        { 
+          id: 'security', 
+          label: 'Security',
+          icon: ShieldCheckIcon
+        },
+        {
+          id:'paymentMethod',
+          label:'Payment Method',
+          icon: CreditCardIcon
+        }
+      ],
+      addresses: [
+        {
+          id: 1,
+          name: 'Monirom YI',
+          phone: '+1 234 567 8900',
+          street: '123 Main Street, Apt 4B',
+          city: 'New York',
+          postal: '10001',
+          country: 'United States',
+          isDefault: true
+        },
+        {
+          id: 2,
+          name: 'Monirom YI',
+          phone: '+1 234 567 8900',
+          street: '456 Oak Avenue',
+          city: 'Los Angeles',
+          postal: '90001',
+          country: 'United States',
+          isDefault: false
+        }
+      ],
+      orders: [
+        { id: '#ORD-2024-001', date: 'December 20, 2024', status: 'Delivered', total: '$156.00' },
+        { id: '#ORD-2024-002', date: 'December 15, 2024', status: 'Shipped', total: '$89.50' },
+        { id: '#ORD-2024-003', date: 'December 10, 2024', status: 'Processing', total: '$245.00' }
+      ],
+      paymentMethod:[
+        { id: 1, name: "Credit / Debit Card", supported: ["Visa", "MasterCard"] },
+        { id: 2, name: "E-Wallet", supported: ["ABA Pay", "Wing", "TrueMoney"] },
+        { id: 3, name: "Bank Transfer", supported: ["ABA Bank", "ACLEDA Bank"] },
+        { id: 4, name: "Cash on Delivery", supported: [] }
+      ]
     }
   },
   methods: {
-    handleEdit() {
-      this.isEditing = true;
+    showAlertMessage(message, type = 'success') {
+      this.alertMessage = message;
+      this.alertType = type;
+      this.showAlert = true;
+      setTimeout(() => {
+        this.showAlert = false;
+      }, 3500);
+    },
+    handleEditBasic() {
+      this.isEditingBasic = true;
       this.editedProfile = { ...this.profile };
     },
-    async handleSave() {
-      try {
-        const { status, data } = await updateUser({ email: this.profile.email, name: this.editedProfile.name });
-        if (status === 200) {
-          this.profile = { ...this.editedProfile };
-          localStorage.setItem('user', JSON.stringify(this.profile));
-          // notify same-tab listeners
-          window.dispatchEvent(new CustomEvent('user-changed', { detail: this.profile }));
-          alert('Profile saved successfully!');
-          this.isEditing = false;
-        } else {
-          alert('Failed to update profile: ' + (data?.message || 'status ' + status));
-        }
-      } catch (err) {
-        console.error('Profile update error:', err);
-        alert(err?.data?.message || err.message || 'Failed to update profile.');
-      }
+    handleSaveBasic() {
+      this.profile = { ...this.editedProfile };
+      this.isEditingBasic = false;
+      this.showAlertMessage('Your profile has been updated successfully.', 'success');
     },
-    handleCancel() {
+    handleCancelBasic() {
       this.editedProfile = { ...this.profile };
-      this.isEditing = false;
+      this.isEditingBasic = false;
     },
     handleLogout() {
-      localStorage.removeItem('user');
-      window.dispatchEvent(new CustomEvent('user-changed', { detail: {} }));
-      this.$router.push('/login');
+      this.showAlertMessage('You have been signed out.', 'info');
+      setTimeout(() => {
+        // Add logout logic here
+      }, 1000);
+    },
+    onAvatarChange(event) {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          this.editedProfile.avatar = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
     }
   }
 }
 </script>
 
-
-<style scoped>
-.page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  background: #f3f4f6;
-  font-family: Arial, Helvetica, sans-serif;
-  color: #111827;
-}
-
-.site-header {
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  padding: 24px 16px;
-}
-
-.container {
-  width: 100%;
-  max-width: 900px;
-  padding: 0 12px;
-  box-sizing: border-box;
-}
-
-.profile-label {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  color: #1f2937;
-}
-
-.profile-grid {
-  display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 24px;
-  align-items: start;
-}
-
-@media (max-width: 720px) {
-  .profile-grid {
-    grid-template-columns: 1fr;
+<style>
+  .font-bold{
+    font-weight: 600;
   }
-}
-
-.profile-card {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-  text-align: center;
-}
-
-.avatar {
-  width: 160px;
-  height: 160px;
-  margin: 0 auto 12px;
-  border-radius: 50%;
-  overflow: hidden;
-  background: #e5e7eb;
-}
-.avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.profile-info {
-  background: #ffffff;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.04);
-}
-
-.info-list {
-  display: block;
-}
-.info-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 12px 0;
-  border-bottom: 1px solid #eef2f7;
-}
-.info-row.last {
-  border-bottom: none;
-}
-.info-row .label {
-  color: #141414;
-  font-weight: 600;
-}
-.info-row .value {
-  min-width: 220px;
-  text-align: right;
-}
-.info-row .value .text {
-  color: #5a5a5a;
-  font-weight: 500;
-}
-
-.input {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  color: #111827;
-  min-width: 180px;
-  box-sizing: border-box;
-}
-
-.btn {
-  padding: 9px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #111827;
-}
-.btn-outline {
-  background: #ffffff;
-  border-color: #d1d5db;
-}
-.btn-outline:hover {
-  background: #f8fafc;
-}
-.btn-primary {
-  background: #2563eb;
-  color: #ffffff;
-  border: none;
-}
-.btn-primary:hover {
-  background: #1e40af;
-}
-
-.actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.logout {
-  margin-top: 16px;
-}
-.btn-logout {
-  width: 100%;
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 2px solid #dc2626;
-  color: #dc2626;
-  background: #ffffff;
-  font-weight: 700;
-}
-.btn-logout:hover {
-  background: #fff5f5;
-}
-
-@media (max-width: 520px) {
-  .info-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
+  .font-medium{
+    font-weight: 500;
   }
-  .info-row .value {
-    width: 100%;
-    text-align: left;
-    min-width: 0;
-  }
-  .actions {
-    justify-content: stretch;
-    flex-direction: column;
-  }
-  .actions .btn {
-    width: 100%;
-  }
-}
-
-.avatar { width: 96px; height: 96px; border-radius: 50%; display:flex; align-items:center; justify-content:center; background:#fff; box-shadow:0 4px 12px rgba(0,0,0,0.08); font-size:36px; font-weight:700; color:#1e88e5 }
-.avatar img { width:100%; height:100%; border-radius:50%; object-fit:cover }
 </style>

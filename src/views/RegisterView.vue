@@ -73,7 +73,6 @@
           </div>
         </div>
   
-        <!-- RIGHT SIDE -->
         <div class="login-right">
           <img src="/background_log.jpg" alt="Tech Background" class="background-img" />
         </div>

@@ -1,11 +1,14 @@
 <script>
 import Footer from '@/components/footer.vue';
-import Header from '@/components/header.vue'
+import Header from '@/components/header.vue';
+import ProductCard from '@/components/productCard.vue';
+
 export default {
   name: 'HomeAppliances',
-  components:{
+  components: {
     Header,
-    Footer
+    Footer,
+    ProductCard
   },
   data() {
     return {
@@ -13,6 +16,8 @@ export default {
       maxPrice: 349,
       selectedCategory: 'all',
       sortBy: 'default',
+      isLoading: false,
+      searchQuery: '',
       
       categories: [
         { name: 'Kitchen appliances', slug: 'kitchen' },
@@ -29,7 +34,9 @@ export default {
           originalPrice: 329.00,
           category: 'kitchen',
           sale: true,
-          rating: 4
+          rating: 4,
+          reviews: 128,
+          img: '/pdetail/aba.png'
         },
         {
           id: 2,
@@ -38,7 +45,9 @@ export default {
           originalPrice: 319.00,
           category: 'kitchen',
           sale: true,
-          rating: 4
+          rating: 4,
+          reviews: 95,
+          img: '/pdetail/aba.png'
         },
         {
           id: 3,
@@ -47,7 +56,9 @@ export default {
           originalPrice: 309.00,
           category: 'kitchen',
           sale: true,
-          rating: 4
+          rating: 4,
+          reviews: 210,
+          img: '/pdetail/aba.png'
         },
         {
           id: 4,
@@ -56,7 +67,9 @@ export default {
           originalPrice: 149.00,
           category: 'smart',
           sale: true,
-          rating: 5
+          rating: 5,
+          reviews: 342,
+          img: '/pdetail/aba.png'
         },
         {
           id: 5,
@@ -65,7 +78,9 @@ export default {
           originalPrice: null,
           category: 'kitchen',
           sale: false,
-          rating: 4
+          rating: 4,
+          reviews: 156,
+          img: '/pdetail/aba.png'
         }
       ]
     };
@@ -76,7 +91,9 @@ export default {
       let filtered = this.products.filter(product => {
         const priceInRange = product.price >= this.minPrice && product.price <= this.maxPrice;
         const categoryMatch = this.selectedCategory === 'all' || product.category === this.selectedCategory;
-        return priceInRange && categoryMatch;
+        const searchMatch = this.searchQuery === '' || 
+          product.name.toLowerCase().includes(this.searchQuery.toLowerCase());
+        return priceInRange && categoryMatch && searchMatch;
       });
 
       if (this.sortBy === 'price-low') {
@@ -92,384 +109,581 @@ export default {
   },
   
   methods: {
-    renderStars(rating) {
-      return '⭐'.repeat(rating) + '☆'.repeat(5 - rating);
+    viewProduct(productId) {
+      this.$router.push(`/pdetails/${productId}`);
+    },
+    addToCart(product) {
+      console.log('Adding to cart:', product);
+      alert(`Added "${product.name}" to cart!`);
     }
   },
   
   mounted() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     console.log("HomeAppliances component loaded");
   }
 };
 </script>
 
 <template>
-<Header/>
-  <div class="page-container">
-    <div class="container">
-      <!-- Sidebar -->
-      <aside class="sidebar">
-        <div class="categories-section">
-          <h3>Categories</h3>
-          <ul class="category-list">
-            <li 
-              :class="{ active: selectedCategory === 'all' }"
-              @click="selectedCategory = 'all'"
-            >
-              All Categories
-            </li>
-            <li 
-              v-for="cat in categories" 
-              :key="cat.slug"
-              :class="{ active: selectedCategory === cat.slug }"
-              @click="selectedCategory = cat.slug"
-            >
-              {{ cat.name }}
-            </li>
-          </ul>
+  <div class="category-page">
+    <Header />
+    
+    <div class="top-section">
+      <section class="page-header">
+        <div class="container">
+          <h1 class="page-title">Browse Category</h1>
         </div>
+      </section>
 
-        <div class="price-filter-section">
-          <h3>Filter by price</h3>
-          <div class="price-inputs">
-            <div class="input-group">
-              <input type="number" v-model.number="minPrice" placeholder="$44">
-              <label>Min. Price</label>
+      <section class="filters-section">
+        <div class="container">
+          <div class="filters-wrapper">
+            <div class="search-box">
+              <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"></circle>
+                <path d="m21 21-4.35-4.35"></path>
+              </svg>
+              <input 
+                v-model="searchQuery" 
+                type="text" 
+                placeholder="Search products..." 
+                class="search-input"
+              />
             </div>
-            <div class="input-group">
-              <input type="number" v-model.number="maxPrice" placeholder="$349">
-              <label>Max. Price</label>
-            </div>
-          </div>
-        </div>
-      </aside>
-
-      <!-- Main Content -->
-      <main class="main-content">
-        <div class="header-section">
-          <h1>Home appliances</h1>
-          <p class="description">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris turpis velit, 
-            iaculis vel risus non, convallis rhoncus ligula. Vestibulum ante ipsum primis in 
-            faucibus orci luctus et ultrices posuere, malesuada eequat et, placerat quam. 
-            In hac habitasse platea dictumst. Sed bibendum porttitor sem, at sollicitudin 
-            orci placerat nec.
-          </p>
-        </div>
-
-        <div class="products-header">
-          <p class="result-count">Showing all {{ filteredProducts.length }} results</p>
-          <div class="sort-section">
-            <select v-model="sortBy" class="sort-select">
-              <option value="default">Default sorting</option>
-              <option value="price-low">Price: Low to High</option>
-              <option value="price-high">Price: High to Low</option>
-              <option value="rating">Highest Rating</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="products-grid">
-          <div 
-            v-for="product in filteredProducts" 
-            :key="product.id" 
-            class="product-card"
-          >
-            <div class="product-badge" v-if="product.sale">Sale!</div>
             
-            <div class="product-image">
-              <img src="/pdetail/aba.png" alt="">
-            </div>
+            <div class="filter-controls">
+              <select v-model="selectedCategory" class="filter-select">
+                <option value="all">All Categories</option>
+                <option v-for="cat in categories" :key="cat.slug" :value="cat.slug">
+                  {{ cat.name }}
+                </option>
+              </select>
 
-            <div class="product-info">
-              <div class="product-rating">
-                <span class="stars">{{ renderStars(product.rating) }}</span>
+              <select v-model="sortBy" class="filter-select">
+                <option value="default">Default Sorting</option>
+                <option value="price-low">Price: Low to High</option>
+                <option value="price-high">Price: High to Low</option>
+                <option value="rating">Highest Rating</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="results-info">
+            <p>Showing <strong>{{ filteredProducts.length }}</strong> products</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <main class="main-content">
+      <section class="products-section">
+        <div class="container">
+          <div class="content-grid">
+            <!-- Sidebar -->
+            <aside class="sidebar">
+              <div class="filter-card">
+                <h3 class="filter-title">Categories</h3>
+                <ul class="category-list">
+                  <li 
+                    :class="{ active: selectedCategory === 'all' }"
+                    @click="selectedCategory = 'all'"
+                  >
+                    <span class="category-name">All Categories</span>
+                    <span class="category-count">{{ products.length }}</span>
+                  </li>
+                  <li 
+                    v-for="cat in categories" 
+                    :key="cat.slug"
+                    :class="{ active: selectedCategory === cat.slug }"
+                    @click="selectedCategory = cat.slug"
+                  >
+                    <span class="category-name">{{ cat.name }}</span>
+                    <span class="category-count">
+                      {{ products.filter(p => p.category === cat.slug).length }}
+                    </span>
+                  </li>
+                </ul>
               </div>
-              
-              <h3 class="product-title">{{ product.name }}</h3>
-              
-              <div class="product-price">
-                <span class="original-price" v-if="product.originalPrice">
-                  ${{ product.originalPrice.toFixed(2) }}
-                </span>
-                <span class="current-price">${{ product.price.toFixed(2) }}</span>
+
+              <div class="filter-card">
+                <h3 class="filter-title">Filter by Price</h3>
+                <div class="price-inputs">
+                  <div class="input-group">
+                    <label>Min. Price</label>
+                    <input 
+                      type="number" 
+                      v-model.number="minPrice" 
+                      placeholder="$44"
+                      class="price-input"
+                    >
+                  </div>
+                  <div class="input-group">
+                    <label>Max. Price</label>
+                    <input 
+                      type="number" 
+                      v-model.number="maxPrice" 
+                      placeholder="$349"
+                      class="price-input"
+                    >
+                  </div>
+                </div>
+                <div class="price-range">
+                  <span class="price-value">${{ minPrice }}</span>
+                  <span class="price-separator">-</span>
+                  <span class="price-value">${{ maxPrice }}</span>
+                </div>
+              </div>
+            </aside>
+
+            <!-- Products Grid -->
+            <div class="products-area">
+              <div v-if="isLoading" class="loading-state">
+                <div class="spinner"></div>
+                <p>Loading products...</p>
+              </div>
+
+              <div v-else-if="filteredProducts.length === 0" class="empty-state">
+                <div class="empty-content">
+                  <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                  </svg>
+                  <h3>No products found</h3>
+                  <p>Try adjusting your filters or search criteria</p>
+                </div>
+              </div>
+
+              <div v-else class="products-grid">
+                <ProductCard
+                  v-for="product in filteredProducts"
+                  :key="product.id"
+                  :title="product.name"
+                  :price="product.price"
+                  :oldPrice="product.originalPrice"
+                  :rating="product.rating"
+                  :reviewCount="product.reviews"
+                  :isOnSale="product.sale"
+                  :image="product.img"
+                  :productId="product.id"
+                  @add-to-cart="addToCart(product)"
+                />
               </div>
             </div>
           </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
+
+    <Footer />
   </div>
-<Footer/>
 </template>
+
 <style scoped>
-.page-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 40px 20px;
-  background: #f5f7fa;
+.category-page {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.top-section {
+  position: sticky;
+  top: 128px;
+  z-index: 100;
+  background: #f8fafc;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.page-header {
+  padding: 40px 0 20px;
+  text-align: center;
+  background: #f8fafc;
+}
+
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.page-description {
+  font-size: 1.1rem;
+  color: #64748b;
+  margin: 0;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.filters-section {
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 20px 0;
+}
+
+.filters-wrapper {
   display: flex;
-  gap: 30px;
-}
-
-/* Sidebar Styles */
-.sidebar {
-  width: 250px;
-  flex-shrink: 0;
-}
-
-.categories-section,
-.price-filter-section {
-  background: white;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-.sidebar h3 {
-  font-size: 1.2rem;
-  font-weight: 600;
+  gap: 20px;
   margin-bottom: 16px;
-  color: #1a1a1a;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 250px;
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94a3b8;
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  color: black;
+  padding: 12px 16px 12px 48px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 14px;
+  transition: all 0.3s;
+  background: white;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.filter-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: #475569;
+}
+
+.filter-select:hover {
+  border-color: #cbd5e1;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.results-info {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.results-info strong {
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.main-content {
+  flex: 1;
+  padding: 40px 0 60px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  align-items: start;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  position: sticky;
+  top: 220px;
+}
+
+.filter-card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e2e8f0;
+}
+
+.filter-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 20px;
 }
 
 .category-list {
   list-style: none;
+  padding: 0;
+  margin: 0;
 }
 
 .category-list li {
-  padding: 10px 12px;
-  margin-bottom: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 8px;
   cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.2s;
-  color: #555;
+  border-radius: 8px;
+  transition: all 0.3s;
+  color: #64748b;
+  font-weight: 500;
 }
 
 .category-list li:hover {
-  background: #f0f4f8;
-  color: #0066cc;
+  background: #f8fafc;
+  color: #3b82f6;
 }
 
 .category-list li.active {
-  background: #0066cc;
+  background: #3b82f6;
   color: white;
-  font-weight: 500;
+  font-weight: 600;
+}
+
+.category-name {
+  flex: 1;
+}
+
+.category-count {
+  background: rgba(0, 0, 0, 0.1);
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.category-list li.active .category-count {
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .price-inputs {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin-bottom: 16px;
 }
 
 .input-group {
-  color: #000000;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 
 .input-group label {
-  font-size: 0.85rem;
-  color: #666;
-  font-weight: 500;
+  font-size: 0.875rem;
+  color: #64748b;
+  font-weight: 600;
 }
 
-.input-group input {
+.price-input {
   padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: border-color 0.2s;
-}
-
-.input-group input:focus {
-  outline: none;
-  border-color: #0066cc;
-}
-
-/* Main Content Styles */
-.main-content {
-  flex: 1;
-}
-
-.header-section h1 {
-  font-size: 2.5rem;
-  color: #0066cc;
-  margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.description {
-  color: #666;
-  line-height: 1.7;
-  margin-bottom: 32px;
-  max-width: 800px;
-}
-
-.products-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 28px;
-  padding-bottom: 16px;
-  border-bottom: 2px solid #e5e7eb;
-}
-
-.result-count {
-  color: #666;
-  font-size: 0.95rem;
-}
-
-.sort-select {
-color: #000000;
-  padding: 8px 32px 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  background: white;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.sort-select:focus {
-  outline: none;
-  border-color: #0066cc;
-}
-
-/* Products Grid */
-.products-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 28px;
-}
-
-.product-card {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
   transition: all 0.3s;
-  position: relative;
-  cursor: pointer;
+  color: #1e293b;
 }
 
-.product-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+.price-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
-.product-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: #ff4444;
-  color: white;
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  z-index: 10;
-}
-
-.product-image {
-  background: #f8f9fa;
-  height: 240px;
+.price-range {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #e5e7eb;
+  gap: 8px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #1e293b;
 }
 
-.image-placeholder {
-  font-size: 80px;
-  opacity: 0.5;
+.price-value {
+  color: #3b82f6;
+  font-size: 1.125rem;
 }
 
-.product-info {
-  padding: 20px;
+.price-separator {
+  color: #cbd5e1;
 }
 
-.product-rating {
-  margin-bottom: 10px;
+.products-area {
+  min-height: 400px;
 }
 
-.stars {
-  font-size: 0.9rem;
-  color: #fbbf24;
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
 }
 
-.product-title {
-  font-size: 1rem;
-  color: #1a1a1a;
-  margin-bottom: 14px;
-  line-height: 1.4;
-  min-height: 60px;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.product-price {
+.loading-state {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 20px;
 }
 
-.original-price {
-  text-decoration: line-through;
-  color: #999;
-  font-size: 0.95rem;
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
-.current-price {
-  font-size: 1.4rem;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.empty-state {
+  padding: 80px 20px;
+}
+
+.empty-content {
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.empty-content svg {
+  color: #cbd5e1;
+  margin-bottom: 24px;
+}
+
+.empty-content h3 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin: 0 0 12px;
   font-weight: 700;
-  color: #0066cc;
 }
 
-/* Responsive Design */
+.empty-content p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0;
+}
+
 @media (max-width: 1024px) {
-  .container {
-    flex-direction: column;
+  .content-grid {
+    grid-template-columns: 1fr;
   }
 
   .sidebar {
-    width: 100%;
+    position: static;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
   }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 28px;
+  }
 }
 
-@media (max-width: 640px) {
-  .page-container {
-    padding: 20px 12px;
+@media (max-width: 768px) {
+  .top-section {
+    top: 100px;
   }
 
-  .header-section h1 {
+  .page-title {
     font-size: 2rem;
   }
 
-  .products-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 12px;
+  .page-description {
+    font-size: 1rem;
   }
 
-  .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: 20px;
+  .filters-wrapper {
+    flex-direction: column;
+  }
+
+  .search-box {
+    min-width: 100%;
+  }
+
+  .filter-controls {
+    width: 100%;
+  }
+
+  .filter-select {
+    flex: 1;
+    min-width: 140px;
   }
 
   .sidebar {
     grid-template-columns: 1fr;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .top-section {
+    top: 100px;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
+  }
+
+  .page-header {
+    padding: 30px 0 20px;
+  }
+
+  .filter-controls {
+    flex-direction: column;
+  }
+
+  .filter-select {
+    width: 100%;
   }
 }
 </style>

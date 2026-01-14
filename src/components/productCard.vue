@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+
 defineProps<{
   image?: string
   title: string
@@ -7,11 +11,16 @@ defineProps<{
   rating?: number
   reviewCount?: number
   isOnSale?: boolean
+  productId?: string
 }>()
+
+const navigateToDetails = () => {
+  router.push({ name: 'pdetails' })
+}
 </script>
 
 <template>
-  <div class="product-card">
+  <div class="product-card" @click="navigateToDetails">
     <div 
       v-if="isOnSale" class="sale-badge">Sale!
     </div>
@@ -41,7 +50,7 @@ defineProps<{
         <span v-if="oldPrice" class="old">${{ oldPrice.toFixed(2) }}</span>
       </div>
 
-      <button class="add-btn">Add +</button>
+      <button class="add-btn" @click.stop="$emit('add-to-cart')">Add +</button>
     </div>
   </div>
 </template>
@@ -58,6 +67,7 @@ defineProps<{
   box-shadow: 0 10px 30px rgba(0,0,0,0.07);
   transition: transform 0.35s ease;
   border: 1px solid #a09f9f;
+  cursor: pointer;
 }
 
 .product-card:hover {

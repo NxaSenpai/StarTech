@@ -11,52 +11,58 @@
           <div class="breadcrumb">
             <span class="breadcrumb-item">Dashboard</span>
             <span class="breadcrumb-separator">/</span>
-            <span class="breadcrumb-item active">Manage Users</span>
+            <span class="breadcrumb-item active">Manage Admins</span>
           </div>
         </div>
 
         <div class="page-header">
           <div class="header-left">
-            <h1 class="page-title">User Management</h1>
-            <p class="page-subtitle">View and manage registered users</p>
+            <h1 class="page-title">Admin Management</h1>
+            <p class="page-subtitle">View and manage admin accounts</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" @click="showAddModal = true">
+              <img src="/addIcon.png" class="btn-icon">
+              Add Admin
+            </button>
           </div>
         </div>
 
         <section class="stats-cards">
           <div class="stat-card">
-            <div class="stat-icon blue"><img class="manage-icon" src="/userIcon.png" alt=""></div>
+            <div class="stat-icon blue"><img class="manage-icon" src="/adminIcon.png" alt=""></div>
             <div class="stat-info">
-              <p class="stat-label">Total Users</p>
-              <h3 class="stat-value">{{ totalUsers }}</h3>
+              <p class="stat-label">Total Admins</p>
+              <h3 class="stat-value">{{ totalAdmins }}</h3>
             </div>
           </div>
         </section>
 
-        <section class="user-content">
+        <section class="admin-content">
           <div class="table-controls">
             <div class="search-box">
               <img src="/searchIcon.png" class="search-icon">
               <input 
                 type="text" 
-                placeholder="Search by User ID, Name, Email..." 
+                placeholder="Search by Admin ID, Name, Email..." 
                 v-model="searchQuery"
                 class="search-input"
               >
             </div>
             <div class="filter-actions">
               <select v-model="sortBy" class="filter-select">
-                <option value="uid">Sort by UID</option>
-                <option value="recent">Recently Joined</option>
+                <option value="id">Sort by ID</option>
+                <option value="recent">Recently Added</option>
                 <option value="name">Sort by Name</option>
                 <option value="email">Sort by Email</option>
               </select>
               <button 
-                v-if="selectedUserIds.length > 0" 
+                v-if="selectedAdminIds.length > 0" 
                 class="btn btn-danger" 
-                @click="bulkDeleteUsers"
+                @click="bulkDeleteAdmins"
               >
                 <img src="/deleteIcon.png" class="btn-icon">
-                Delete Selected ({{ selectedUserIds.length }})
+                Delete Selected ({{ selectedAdminIds.length }})
               </button>
             </div>
           </div>
@@ -66,58 +72,59 @@
               <thead>
                 <tr>
                   <th class="checkbox-col">
-                    <input type="checkbox" v-model="selectAll" class="custom-checkbox">
+                    <input 
+                      type="checkbox" 
+                      class="custom-checkbox"
+                      v-model="selectAll"
+                    >
                   </th>
-                  <th>User ID</th>
-                  <th>User Info</th>
+                  <th>Admin ID</th>
+                  <th>Name</th>
                   <th>Email</th>
                   <th>Join Date</th>
                   <th class="action-col">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredUsers.length === 0">
+                <tr v-if="isLoading">
                   <td colspan="6" class="empty-state">
                     <div class="empty-content">
-                      <p>No users found</p>
+                      <p>Loading admins...</p>
                     </div>
                   </td>
                 </tr>
-                <tr v-for="user in filteredUsers" :key="user.id" class="table-row">
+                <tr v-else-if="filteredAdmins.length === 0">
+                  <td colspan="6" class="empty-state">
+                    <div class="empty-content">
+                      <p>No admins found</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-else v-for="admin in filteredAdmins" :key="admin.id" class="table-row">
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      :value="user.id" 
-                      v-model="selectedUserIds"
                       class="custom-checkbox"
+                      :value="admin.id"
+                      v-model="selectedAdminIds"
                     >
                   </td>
-                  <td class="user-id-cell">
-                    <span class="user-id">{{ user.id }}</span>
-                  </td>
-                  <td class="user-cell">
-                    <div class="user-info">
-                      <img :src="user.profile" :alt="user.name" class="user-avatar">
-                      <span class="user-name">{{ user.name }}</span>
+                  <td class="admin-id-cell">{{ admin.id }}</td>
+                  <td class="name-cell">
+                    <div class="admin-name-wrapper">
+                      <div class="avatar-placeholder">{{ getInitials(admin.name) }}</div>
+                      <span class="admin-name">{{ admin.name }}</span>
                     </div>
                   </td>
-                  <td class="email-cell">{{ user.email }}</td>
-                  <td class="date-cell">{{ user.joinSince }}</td>
-                  <td class="action-cell">
+                  <td class="email-cell">{{ admin.email }}</td>
+                  <td class="date-cell">{{ admin.joinDate }}</td>
+                  <td class="action-col">
                     <div class="action-buttons">
-                      <button 
-                        class="action-btn view-btn" 
-                        @click="viewUserDetails(user)"
-                        title="View Details"
-                      >
-                        <img class="btn-icon-black" src="/viewIcon.png" alt="">
+                      <button class="action-btn edit-btn" @click="editAdmin(admin)" title="Edit">
+                        <img src="/editIcon.png" class="btn-icon-black" alt="Edit">
                       </button>
-                      <button 
-                        class="action-btn delete-btn" 
-                        @click="deleteUser(user.id)"
-                        title="Delete"
-                      >
-                      <img class="btn-icon-black" src="/deleteIcon.png" alt="">
+                      <button class="action-btn delete-btn" @click="deleteAdmin(admin.id)" title="Delete">
+                        <img src="/deleteIcon.png" class="btn-icon-black" alt="Delete">
                       </button>
                     </div>
                   </td>
@@ -127,54 +134,70 @@
           </div>
         </section>
 
-        <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
-          <div class="modal-container">
+        <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
+          <div class="modal-container small-modal">
             <div class="modal-header">
               <div>
-                <h3>User Details</h3>
-                <p class="modal-subtitle">View user information</p>
+                <h3>{{ isEditing ? 'Edit Admin' : 'Add New Admin' }}</h3>
+                <p class="modal-subtitle">{{ isEditing ? 'Update admin information' : 'Create a new admin account' }}</p>
               </div>
-              <button class="close-btn" @click="closeDetailsModal">✕</button>
+              <button class="close-btn" @click="closeAddModal">✕</button>
             </div>
             <div class="modal-body">
-              <div class="profile-section">
-                <img :src="selectedUser.profile" :alt="selectedUser.name" class="profile-image">
-              </div>
-
-              <div class="details-section">
-                <h4 class="section-title">Personal Information</h4>
-                <div class="info-grid">
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">User ID</span>
-                      <span class="info-value">{{ selectedUser.id }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">Full Name</span>
-                      <span class="info-value">{{ selectedUser.name }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item full-width">
-                    <div class="info-content">
-                      <span class="info-label">Email Address</span>
-                      <span class="info-value">{{ selectedUser.email }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item">
-                    <div class="info-content">
-                      <span class="info-label">Join Date</span>
-                      <span class="info-value">{{ selectedUser.joinSince }}</span>
-                    </div>
-                  </div>
+              <form @submit.prevent="saveAdmin" class="admin-form">
+                <div class="form-group">
+                  <label class="form-label">Full Name <span class="required">*</span></label>
+                  <input 
+                    type="text" 
+                    v-model="formData.name" 
+                    class="form-input"
+                    placeholder="Enter full name"
+                    required
+                  >
                 </div>
-              </div>
+
+                <div class="form-group">
+                  <label class="form-label">Email Address <span class="required">*</span></label>
+                  <input 
+                    type="email" 
+                    v-model="formData.email" 
+                    class="form-input"
+                    placeholder="Enter email address"
+                    required
+                  >
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Password <span class="required">*</span></label>
+                  <div class="password-input-wrapper">
+                    <input 
+                      :type="showPassword ? 'text' : 'password'" 
+                      v-model="formData.password" 
+                      class="form-input"
+                      :placeholder="isEditing ? 'Leave blank to keep current password' : 'Enter password'"
+                      :required="!isEditing"
+                    >
+                    <button 
+                      type="button" 
+                      class="toggle-password" 
+                      @click="showPassword = !showPassword"
+                    >
+                      {{ showPassword ? 'Hide' : 'Show' }}
+                    </button>
+                  </div>
+                  <small class="form-hint">{{ isEditing ? 'Leave blank to keep current password' : 'Minimum 8 characters' }}</small>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-secondary" @click="closeAddModal">
+                    Cancel
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    {{ isEditing ? 'Update Admin' : 'Add Admin' }}
+                  </button>
+                </div>
+              </form>
             </div>
-            <div class="modal-footer"></div>
           </div>
         </div>
 
@@ -204,21 +227,33 @@ import axios from 'axios';
 const API_URL = 'http://localhost:3000';
 
 export default {
-  name: 'ManageUser',
+  name: 'ManageAdmin',
   components: {
     AdminHeader,
     AdminSidebar
   },
   setup() {
-    const adminName = ref('Admin');
+    const adminName = ref('Super Admin');
     const notifications = ref(3);
     const searchQuery = ref('');
-    const sortBy = ref('uid');
-    const showDetailsModal = ref(false);
-    const selectedUser = ref(null);
-    const users = ref([]);
-    const selectedUserIds = ref([]);
+    const sortBy = ref('id');
+    const showAddModal = ref(false);
+    const showPassword = ref(false);
+    const isEditing = ref(false);
     const isLoading = ref(false);
+
+    const admins = ref([]);
+
+    const selectedAdminIds = ref([]);
+    
+    const formData = ref({
+      id: '',
+      name: '',
+      email: '',
+      password: '',
+      joinDate: '',
+      role: 'admin'
+    });
 
     const toast = ref({
       show: false,
@@ -237,55 +272,69 @@ export default {
       }, duration);
     };
 
-    async function fetchUsers() {
+    async function fetchAdmins() {
       isLoading.value = true;
       try {
-        const response = await axios.get(`${API_URL}/users`, {
-          params: { role: 'user' }
-        });
-        console.log('Users loaded:', response.data);
+        const [adminResponse, superadminResponse] = await Promise.all([
+          axios.get(`${API_URL}/users`, { params: { role: 'admin' } }),
+          axios.get(`${API_URL}/users`, { params: { role: 'superadmin' } })
+        ]);
+
+        console.log('Admins loaded:', adminResponse.data);
+        console.log('Super admins loaded:', superadminResponse.data);
+
+        const allAdmins = [...adminResponse.data, ...superadminResponse.data];
         
-        users.value = response.data.map(user => ({
-          id: user._id || 'N/A',
-          name: user.name,
-          email: user.email,
-          joinSince: user.joinSince,
-          profile: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=0b6cf0&color=fff',
-          totalOrders: 0,
-          totalSpent: '0.00',
-          reviews: 0
+        admins.value = allAdmins.map(admin => ({
+          id: admin._id,
+          name: admin.name,
+          email: admin.email,
+          password: '********',
+          joinDate: admin.joinSince,
+          role: admin.role === 'superadmin' ? 'Super Admin' : 'Admin'
         }));
-        
-        console.log('Mapped users:', users.value);
+
+        console.log('Mapped admins:', admins.value);
       } catch (error) {
-        console.error('Failed to fetch users:', error);
-        showToast('error', 'Failed to load users. Please check your connection.');
+        console.error('Failed to fetch admins:', error);
+        showToast('error', 'Failed to load admins. Please check your connection.');
       } finally {
         isLoading.value = false;
       }
     }
 
     const selectAll = computed({
-      get: () => selectedUserIds.value.length === filteredUsers.value.length && filteredUsers.value.length > 0,
+      get: () => selectedAdminIds.value.length === filteredAdmins.value.length && filteredAdmins.value.length > 0,
       set: (value) => {
-        selectedUserIds.value = value ? filteredUsers.value.map(u => u.id) : [];
+        selectedAdminIds.value = value ? filteredAdmins.value.map(a => a.id) : [];
       }
     });
 
-    const totalUsers = computed(() => users.value.length);
+    const totalAdmins = computed(() => admins.value.length);
+    
+    const activeAdmins = computed(() => admins.value.length);
 
-    const filteredUsers = computed(() => {
-      let filtered = users.value;
+    const newThisMonth = computed(() => {
+      const currentMonth = new Date().toISOString().slice(0, 7);
+      return admins.value.filter(a => a.joinDate && a.joinDate.startsWith(currentMonth)).length;
+    });
+
+    const superAdmins = computed(() =>
+      admins.value.filter(a => a.role === 'Super Admin').length
+    );
+
+    const filteredAdmins = computed(() => {
+      let filtered = admins.value;
 
       if (searchQuery.value) {
-        filtered = filtered.filter(u => 
-          u.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+        filtered = filtered.filter(a => 
+          a.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          a.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          a.email.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
 
-      if (sortBy.value === 'uid') {
+      if (sortBy.value === 'id') {
         filtered = [...filtered].sort((a, b) => a.id.localeCompare(b.id));
       } else if (sortBy.value === 'name') {
         filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
@@ -293,54 +342,113 @@ export default {
         filtered = [...filtered].sort((a, b) => a.email.localeCompare(b.email));
       } else if (sortBy.value === 'recent') {
         filtered = [...filtered].sort((a, b) => 
-          new Date(b.joinSince) - new Date(a.joinSince)
+          new Date(b.joinDate) - new Date(a.joinDate)
         );
       }
 
       return filtered;
     });
 
-    function viewUserDetails(user) {
-      selectedUser.value = user;
-      showDetailsModal.value = true;
+    function getInitials(name) {
+      return name
+        .split(' ')
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
     }
 
-    function closeDetailsModal() {
-      showDetailsModal.value = false;
-      selectedUser.value = null;
+    function editAdmin(admin) {
+      isEditing.value = true;
+      formData.value = { ...admin, password: '' };
+      showAddModal.value = true;
     }
 
-    async function deleteUser(id) {
-      if (confirm('Are you sure you want to delete this user?')) {
+    async function saveAdmin() {
+      if (!formData.value.name.trim() || !formData.value.email.trim()) {
+        showToast('error', 'Name and email are required!');
+        return;
+      }
+
+      try {
+        if (isEditing.value) {
+          const updateData = {
+            email: formData.value.email,
+            name: formData.value.name
+          };
+
+          if (formData.value.password && formData.value.password.trim()) {
+            updateData.password = formData.value.password;
+          }
+
+          await axios.patch(`${API_URL}/user`, updateData);
+          showToast('success', 'Admin updated successfully!');
+        } else {
+          const signupData = {
+            name: formData.value.name,
+            email: formData.value.email,
+            password: formData.value.password,
+            role: formData.value.role === 'Super Admin' ? 'superadmin' : 'admin'
+          };
+
+          await axios.post(`${API_URL}/signup`, signupData);
+          showToast('success', 'Admin added successfully!');
+        }
+        
+        await fetchAdmins();
+        closeAddModal();
+      } catch (error) {
+        console.error('Save failed:', error);
+        const errorMsg = error.response?.data?.message || 'Failed to save admin. Please try again.';
+        showToast('error', errorMsg);
+      }
+    }
+
+    function closeAddModal() {
+      showAddModal.value = false;
+      isEditing.value = false;
+      showPassword.value = false;
+      formData.value = {
+        id: '',
+        name: '',
+        email: '',
+        password: '',
+        joinDate: '',
+        role: 'admin'
+      };
+    }
+
+    async function deleteAdmin(id) {
+      if (confirm('Are you sure you want to delete this admin?')) {
         try {
           await axios.delete(`${API_URL}/users/${id}`);
-          showToast('success', 'User deleted successfully!');
-          await fetchUsers();
+          showToast('success', 'Admin deleted successfully!');
+          await fetchAdmins();
         } catch (error) {
           console.error('Delete failed:', error);
-          showToast('error', 'Failed to delete user');
+          showToast('error', 'Failed to delete admin');
         }
       }
     }
 
-    async function bulkDeleteUsers() {
-      const count = selectedUserIds.value.length;
+    async function bulkDeleteAdmins() {
+      const count = selectedAdminIds.value.length;
       if (count === 0) {
-        showToast('error', 'Please select at least one user to delete.');
+        showToast('error', 'Please select at least one admin to delete.');
         return;
       }
 
-      if (confirm(`Are you sure you want to delete ${count} selected user(s)?`)) {
+      if (confirm(`Are you sure you want to delete ${count} selected admin(s)?`)) {
         try {
           await axios.post(`${API_URL}/users/bulk-delete`, {
-            ids: selectedUserIds.value
+            ids: selectedAdminIds.value
           });
-          showToast('success', `${count} user(s) deleted successfully!`);
-          selectedUserIds.value = [];
-          await fetchUsers();
+          showToast('success', `${count} admin(s) deleted successfully!`);
+          selectedAdminIds.value = [];
+          await fetchAdmins();
         } catch (error) {
           console.error('Bulk delete failed:', error);
-          showToast('error', 'Failed to delete users');
+          showToast('error', 'Failed to delete admins');
         }
       }
     }
@@ -350,8 +458,8 @@ export default {
     }
 
     onMounted(() => {
-      console.log('ManageUser mounted, fetching users...');
-      fetchUsers();
+      console.log('ManageAdmin mounted, fetching admins...');
+      fetchAdmins();
     });
 
     return {
@@ -359,19 +467,26 @@ export default {
       notifications,
       searchQuery,
       sortBy,
-      showDetailsModal,
-      selectedUser,
-      users,
-      selectedUserIds,
-      selectAll,
-      totalUsers,
-      filteredUsers,
-      isLoading,
+      showAddModal,
+      showPassword,
+      isEditing,
+      admins,
+      selectedAdminIds,
+      formData,
       toast,
-      viewUserDetails,
-      closeDetailsModal,
-      deleteUser,
-      bulkDeleteUsers,
+      selectAll,
+      totalAdmins,
+      activeAdmins,
+      newThisMonth,
+      superAdmins,
+      filteredAdmins,
+      isLoading,
+      getInitials,
+      editAdmin,
+      saveAdmin,
+      closeAddModal,
+      deleteAdmin,
+      bulkDeleteAdmins,
       handleSettingsClick
     };
   }
@@ -563,12 +678,12 @@ export default {
   margin: 0;
 }
 
-.manage-icon{
+.manage-icon {
   width: 20px;
   height: 20px;
 }
 
-.user-content {
+.admin-content {
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -599,7 +714,6 @@ export default {
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  color: #6c757d;
 }
 
 .search-input {
@@ -639,8 +753,6 @@ export default {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
 }
 
 table {
@@ -696,26 +808,31 @@ tbody {
   accent-color: #0b6cf0;
 }
 
-.user-id-cell {
+.admin-id-cell {
   font-weight: 600;
   color: #0b6cf0;
 }
 
-.user-info {
+.admin-name-wrapper {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.user-avatar {
+.avatar-placeholder {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid #e9ecef;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
 }
 
-.user-name {
+.admin-name {
   font-weight: 500;
   color: #212529;
 }
@@ -723,6 +840,15 @@ tbody {
 .email-cell {
   color: #6c757d;
   font-size: 15px;
+}
+
+.password-cell {
+  color: #6c757d;
+}
+
+.password-hidden {
+  letter-spacing: 2px;
+  font-size: 16px;
 }
 
 .date-cell {
@@ -757,7 +883,7 @@ tbody {
   height: 15px;
 }
 
-.view-btn:hover {
+.edit-btn:hover {
   border-color: #0b6cf0;
   background: #e6f0ff;
 }
@@ -807,7 +933,7 @@ tbody {
   background: white;
   border-radius: 12px;
   width: 90%;
-  max-width: 700px;
+  max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 0.3s;
@@ -868,121 +994,71 @@ tbody {
   padding: 24px;
 }
 
-.profile-section {
+.admin-form {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 20px 0;
-  border-bottom: 1px solid #e9ecef;
-  margin-bottom: 24px;
-  position: relative;
-}
-
-.profile-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid #e9ecef;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  margin-bottom: 16px;
-}
-
-.details-section {
-  margin-bottom: 30px;
-}
-
-.details-section:last-child {
-  margin-bottom: 0;
-}
-
-.section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #212529;
-  margin: 0 0 16px 0;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e9ecef;
-}
-
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
-.info-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 12px;
-  background: #f8f9fa;
-  border-radius: 8px;
-}
-
-
-.info-content {
+.form-group {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  flex: 1;
+  gap: 8px;
 }
 
-.info-label {
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #212529;
+}
+
+.required {
+  color: #dc3545;
+}
+
+.form-input {
+    width: 80%;
+  padding: 10px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.3s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #0b6cf0;
+  box-shadow: 0 0 0 3px rgba(11, 108, 240, 0.1);
+}
+
+.password-input-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  width: 50px;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 5px;
+  border-color: rgb(185, 184, 184);
+  border-radius: 5px;
+  border-width: 1px;
+}
+
+.form-hint {
   font-size: 12px;
   color: #6c757d;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
-.info-value {
-  font-size: 14px;
-  color: #212529;
-  font-weight: 500;
-}
-
-.activity-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
-}
-
-.activity-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-  background: #0b6cf0;
-  border-radius: 12px;
-  color: white;
-  text-align: center;
-}
-
-.activity-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.activity-value {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.activity-label {
-  font-size: 12px;
-  opacity: 0.9;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.modal-footer {
+.form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 24px;
-  border-top: 1px solid #e9ecef;
+  margin-top: 10px;
 }
 
 .toast {
@@ -1029,6 +1105,50 @@ tbody {
     right: 10px;
     left: 10px;
     min-width: auto;
+  }
+}
+
+@media (max-width: 1200px) {
+  .admin-layout {
+    grid-template-columns: 220px 1fr;
+  }
+}
+
+@media (max-width: 968px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .page-header {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-box {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .content-area {
+    padding: 20px;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  table {
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 12px 8px;
   }
 }
 </style>

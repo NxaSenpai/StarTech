@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
   import Header from '@/components/header.vue'
   import Footer from '@/components/footer.vue'
   import ShopByCategory from '@/components/shopByCategory.vue'
@@ -60,57 +60,28 @@
               <h1>Welcome to <span class="gradient-text">StarTech</span></h1>
               <p>Discover premium laptops, gadgets & electronics with unbeatable prices</p>
               <div class="hero-buttons">
-                <button class="shop-now-btn primary">
+                <router-link to="/products" class="shop-now-btn primary">
                   <span>Shop Now</span>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
-                </button>
-                <button class="shop-now-btn secondary">View Deals</button>
+                </router-link>
+                <router-link to="/bestdeal" class="shop-now-btn secondary">View Deals</router-link>
               </div>
               <div class="trust-badges">
                 <div class="badge">
-                  <img src="/freeshipIcon.png" class="badge-icon"></img>
+                  <img src="/freeshipIcon.png" class="badge-icon">
                   <span>Free Shipping</span>
                 </div>
                 <div class="badge">
-                  <img src="/shield.png" class="badge-icon"></img>
+                  <img src="/shield.png" class="badge-icon">
                   <span>2 Year Warranty</span>
                 </div>
                 <div class="badge">
-                  <img src="/return.png" class="badge-icon"></img>
+                  <img src="/return.png" class="badge-icon">
                   <span>Easy Returns</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-  
-        <section class="shop-by-category">
-          <div class="container">
-            <div class="section-header">
-              <div class="section-header-left">
-                <span class="section-tag">Browse</span>
-                <h2 class="section-title">Shop by Category</h2>
-              </div>
-              <a href="/categories" class="view-all-link">
-                View All
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </a>
-            </div>
-            <div class="categories-grid">
-              <ShopByCategory
-                v-for="(cat, index) in categories"
-                :key="cat.title"
-                :title="cat.title"
-                :productCount="cat.count"
-                :imageUrl="cat.img"
-                :categoryLink="cat.link"
-                :style="{ animationDelay: `${index * 0.1}s` }"
-                class="category-item"
-              />
             </div>
           </div>
         </section>
@@ -150,12 +121,6 @@
                 <span class="section-tag">Trending</span>
                 <h2 class="section-title">Featured Products</h2>
               </div>
-              <div class="filter-tabs">
-                <button class="filter-tab active">All</button>
-                <button class="filter-tab">New Arrivals</button>
-                <button class="filter-tab">Best Sellers</button>
-                <button class="filter-tab">On Sale</button>
-              </div>
             </div>
             <div class="products-grid">
               <ProductCard
@@ -173,11 +138,10 @@
               />
             </div>
             <div class="load-more">
-              <button class="load-more-btn">Load More Products</button>
+              <router-link to="/products" class="load-more-btn">Load More Products</router-link>
             </div>
           </div>
         </section>
-  
       </main>
   
       <section class="brand-deal-banner">
@@ -188,20 +152,20 @@
             <p class="desc">Limited time offer • Free delivery & installation</p>
             <div class="deal-features">
               <div class="feature">
-                <span class="feature-icon">✓</span>
+                <img src="/verifiedIcon.png" class="feature-icon">
                 <span>Free Installation</span>
               </div>
               <div class="feature">
-                <span class="feature-icon">✓</span>
+                <img src="/verifiedIcon.png" class="feature-icon">
                 <span>1 Year Warranty</span>
               </div>
             </div>
-            <a href="/category/washing-machines" class="shop-now-link">
+            <router-link to="/products" class="shop-now-link">
               Shop now
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
-            </a>
+            </router-link>
           </div>
           <div class="deal-image">
             <img 
@@ -539,33 +503,6 @@
     padding: 80px 0;
   }
   
-  .filter-tabs {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
-  
-  .filter-tab {
-    padding: 10px 20px;
-    border: none;
-    background: #f1f5f9;
-    color: #64748b;
-    font-weight: 600;
-    border-radius: 50px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-  }
-  
-  .filter-tab:hover {
-    background: #e2e8f0;
-    color: #1e293b;
-  }
-  
-  .filter-tab.active {
-    background: #1e293b;
-    color: white;
-  }
-  
   .products-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -583,7 +520,7 @@
   
   .load-more {
     text-align: center;
-    margin-top: 48px;
+    margin-top: 70px;
   }
   
   .load-more-btn {
@@ -759,12 +696,6 @@
     .section-header {
       flex-direction: column;
       align-items: flex-start;
-    }
-    
-    .filter-tabs {
-      width: 100%;
-      overflow-x: auto;
-      padding-bottom: 8px;
     }
     
     .brand-deal-inner {
