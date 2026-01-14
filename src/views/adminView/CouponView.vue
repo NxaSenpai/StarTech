@@ -1,8 +1,6 @@
 <template>
   <div class="coupon-management">
     <AdminHeader :userName="adminName" :notificationCount="notifications" />
-    <AdminSidebar @settings-click="handleSettingsClick" />
-    
     <div class="main-content">
       <div class="header">
         <div class="header-content">
@@ -226,8 +224,8 @@
 
 <script>
 
-import AdminHeader from '@/components/AdminHeader.vue';
-import AdminSidebar from '@/components/AdminSidebar.vue';
+import AdminHeader from '@/components/adminHeader.vue';
+import AdminSidebar from '@/components/adminSidebar.vue';
 
 export default {
   name: "CouponView",
