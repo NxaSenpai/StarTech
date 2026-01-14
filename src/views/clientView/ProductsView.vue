@@ -288,12 +288,13 @@ export default {
 }
 
 .main-content {
+  width: 100%;
   flex: 1;
   position: relative;
 }
 
 .container {
-  max-width: 1400px;
+  width: 100%;
   margin: 0 auto;   
   padding: 0 20px;
 }
@@ -364,7 +365,6 @@ export default {
 .filter-controls {
   display: flex;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .filter-select {

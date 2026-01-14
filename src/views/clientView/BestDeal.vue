@@ -4,7 +4,6 @@ import Header from '@/components/header.vue'
 import Footer from '@/components/footer.vue'
 import ProductCard from '@/components/productCard.vue'
 
-// --- TIMER LOGIC ---
 const timeLeft = ref({ hours: 12, minutes: 44, seconds: 49 })
 let timerInterval = null
 

@@ -117,7 +117,6 @@
                 </div>
               </div>
 
-              <!-- Single Pay Now button inside the review card -->
               <button class="pay-now" :disabled="!form.agreeTerms" @click="placeOrder">
                 Pay Now – ${{ total.toFixed(2) }}
               </button>
@@ -173,7 +172,6 @@ function placeOrder() {
 }
 
 onMounted(() => {
-  // Mock cart – replace with real API later
   cart.value = [
     { _id: '1', name: 'Wireless Headphones', price: 179.99, qty: 2 },
     { _id: '2', name: 'IronOne Desk', price: 40.00, qty: 1 }

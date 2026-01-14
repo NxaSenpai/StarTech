@@ -158,6 +158,11 @@ const router = createRouter({
       path: '/checkout',
       name: 'Checkout',
       component: Checkout
+    },
+    {
+      path: '/best-deals',
+      name: 'bestdeal',
+      component: BestDeal
     }
   ]
 })

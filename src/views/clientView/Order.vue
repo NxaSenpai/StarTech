@@ -374,11 +374,14 @@ export default {
 .main-content {
   flex: 1;
   padding: 40px 20px 80px;
+  width: 100%;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  width: 100%;
+  padding: 0 20px;
 }
 
 .page-header {
@@ -468,6 +471,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 20px;
+  width: 100%;
 }
 
 .order-item {
@@ -478,6 +482,7 @@ export default {
   cursor: pointer;
   transition: all 0.3s;
   border: 2px solid transparent;
+  width: 100%;
 }
 
 .order-item:hover {
