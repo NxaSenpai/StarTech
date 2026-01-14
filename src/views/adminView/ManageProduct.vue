@@ -38,22 +38,6 @@
           </div>
           
           <div class="metric-card">
-            <div class="metric-icon green"><img class="manage-icon" src="/benefitIcon.png" alt=""></div>
-            <div class="metric-info">
-              <p class="metric-label">Most Sold</p>
-              <h3 class="metric-value">ASUS Controller</h3>
-            </div>
-          </div>
-          
-          <div class="metric-card">
-            <div class="metric-icon red"><img class="manage-icon" src="/lostIcon.png" alt=""></div>
-            <div class="metric-info">
-              <p class="metric-label">Least Sold</p>
-              <h3 class="metric-value">Galaxy Note 9</h3>
-            </div>
-          </div>
-          
-          <div class="metric-card">
             <div class="metric-icon green"><img class="manage-icon" src="/verifiedIcon.png" alt=""></div>
             <div class="metric-info">
               <p class="metric-label">Active</p>
@@ -89,8 +73,9 @@
               </select>
               <select v-model="categoryFilter" class="filter-select">
                 <option value="all">All Categories</option>
-                <option value="Game accessory">Game Accessory</option>
-                <option value="Mobile Phone">Mobile Phone</option>
+                <option v-for="category in availableCategories" :key="category" :value="category">
+                  {{ category }}
+                </option>
               </select>
               <button 
                 v-if="selectedProductIds.length > 0" 
@@ -138,7 +123,12 @@
                   </td>
                   <td class="product-cell">
                     <div class="product-info">
-                      <img :src="product.imageSrc" :alt="product.name" class="product-image">
+                      <img 
+                        :src="product.imageSrc" 
+                        :alt="product.name" 
+                        class="product-image"
+                        @error="(e) => e.target.src = '/placeholder.png'"
+                      >
                       <div class="product-details">
                         <span class="product-name">{{ product.name }}</span>
                         <span class="product-sku">SKU: {{ product.id }}</span>
@@ -185,23 +175,8 @@
               </tbody>
             </table>
           </div>
-
-          <!-- Pagination -->
-          <div class="pagination">
-            <div class="pagination-info">
-              Showing {{ filteredProducts.length }} of {{ products.length }} products
-            </div>
-            <div class="pagination-controls">
-              <button class="page-btn" disabled>Previous</button>
-              <button class="page-btn active">1</button>
-              <button class="page-btn">2</button>
-              <button class="page-btn">3</button>
-              <button class="page-btn">Next</button>
-            </div>
-          </div>
         </section>
-
-        <!-- Add/Edit Product Modal -->
+        
         <div v-if="showProductModal" class="modal-overlay" @click.self="closeProductModal">
           <div class="modal-container large-modal">
             <div class="modal-header">
@@ -234,21 +209,26 @@
                   <label>Category <span class="required">*</span></label>
                   <select v-model="productForm.category" class="form-select">
                     <option value="">Select category</option>
-                    <option value="Game accessory">Game Accessory</option>
-                    <option value="Mobile Phone">Mobile Phone</option>
-                    <option value="Laptop">Laptop</option>
-                    <option value="Smart TV">Smart TV</option>
+                    <option v-for="category in categories" :key="category" :value="category">
+                      {{ category }}
+                    </option>
                   </select>
+                  <small v-if="categories.length === 0" class="form-hint">
+                    No active categories available. Please add categories first.
+                  </small>
                 </div>
 
                 <div class="form-group">
                   <label>Supplier <span class="required">*</span></label>
-                  <input 
-                    type="text" 
-                    v-model="productForm.supplier" 
-                    placeholder="Enter supplier"
-                    class="form-input"
-                  >
+                  <select v-model="productForm.supplier" class="form-select">
+                    <option value="">Select supplier</option>
+                    <option v-for="supplier in suppliers" :key="supplier" :value="supplier">
+                      {{ supplier }}
+                    </option>
+                  </select>
+                  <small v-if="suppliers.length === 0" class="form-hint">
+                    No active suppliers available. Please add suppliers first.
+                  </small>
                 </div>
 
                 <div class="form-group">
@@ -282,14 +262,53 @@
                   </select>
                 </div>
 
-                <div class="form-group">
-                  <label>Image URL</label>
-                  <input 
-                    type="text" 
-                    v-model="productForm.imageSrc" 
-                    placeholder="/placeholder.png"
-                    class="form-input"
+                <div class="form-group full-width">
+                  <label>Product Image <span class="required">*</span></label>
+                  <div 
+                    class="image-upload-area"
+                    :class="{ 'has-image': productForm.imageSrc !== '/placeholder.png' }"
+                    @dragover="handleDragOver"
+                    @dragleave="handleDragLeave"
+                    @drop="handleDrop"
                   >
+                    <input 
+                      type="file" 
+                      id="imageUpload"
+                      @change="handleImageUpload"
+                      accept="image/*"
+                      style="display: none;"
+                    >
+                    
+                    <div v-if="productForm.imageSrc !== '/placeholder.png'" class="image-preview">
+                      <div class="preview-container">
+                        <img 
+                          :src="productForm.imageSrc" 
+                          alt="Product preview"
+                          @error="handleImageError"
+                        >
+                      </div>
+                      <button type="button" class="remove-image-btn" @click="removeImage">
+                        Remove Image
+                      </button>
+                      <button type="button" class="change-image-btn" @click="triggerFileInput">
+                        Change Image
+                      </button>
+                    </div>
+                    
+                    <div v-else class="upload-placeholder" @click="triggerFileInput">
+                      <div v-if="isUploading" class="upload-loading">
+                        <div class="spinner"></div>
+                        <p>Uploading...</p>
+                      </div>
+                      <div v-else class="upload-content">
+                        <div class="upload-icon-wrapper">
+                          <img src="/uploadIcon.png" class="upload-icon" alt="Upload Icon">
+                        </div>
+                        <p class="upload-text">Click to upload or drag and drop</p>
+                        <p class="upload-hint">PNG, JPG, GIF up to 5MB</p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -311,16 +330,31 @@
             </div>
           </div>
         </div>
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span class="toast-icon">✓</span>
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
 
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span class="toast-icon">✕</span>
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, computed } from 'vue';
-import AdminHeader from '@/components/adminHeader.vue';
-import AdminSidebar from '@/components/adminSidebar.vue';
+import { ref, computed, onMounted } from 'vue';
+import AdminHeader from '@/components/AdminHeader.vue';
+import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ManageProduct',
@@ -337,35 +371,19 @@ export default {
     const showProductModal = ref(false);
     const isEditMode = ref(false);
     const currentEditId = ref(null);
-
-    const products = ref([
-      {
-        id: 1,
-        name: 'ASUS Controller',
-        imageSrc: '/Asus_controller.png',
-        stockAt: 'Mon, Aug 23, 2025',
-        brand: 'ASUS',
-        category: 'Game accessory',
-        inStock: 10,
-        supplier: 'Asus Company',
-        status: 'Active',
-        price: 2000
-      },
-      {
-        id: 2,
-        name: 'Samsung Galaxy Note 9',
-        imageSrc: '/Samsung_Galaxy_Note9.png',
-        stockAt: 'Mon, Aug 23, 2025',
-        brand: 'SAMSUNG',
-        category: 'Mobile Phone',
-        inStock: 8,
-        supplier: 'Samsung Company',
-        status: 'Inactive',
-        price: 6400
-      }
-    ]);
-
+    const products = ref([]);
     const selectedProductIds = ref([]);
+    const isLoading = ref(false);
+    const isUploading = ref(false);
+
+    const categories = ref([]);
+    const suppliers = ref([]);
+
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
 
     const productForm = ref({
       name: '',
@@ -378,6 +396,17 @@ export default {
       imageSrc: '/placeholder.png',
       description: ''
     });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
 
     const selectAll = computed({
       get: () => selectedProductIds.value.length === filteredProducts.value.length && filteredProducts.value.length > 0,
@@ -419,7 +448,63 @@ export default {
       return filtered;
     });
 
-    let nextId = 3;
+    const availableCategories = computed(() => {
+      const uniqueCategories = [...new Set(products.value.map(p => p.category))];
+      return uniqueCategories.filter(c => c);
+    });
+
+    async function fetchCategories() {
+      try {
+        const response = await axios.get(`${API_URL}/categories`);
+        categories.value = response.data
+          .filter(cat => cat.status === 'Active')
+          .map(cat => cat.name);
+        console.log('Categories loaded:', categories.value);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        showToast('error', 'Failed to load categories');
+      }
+    }
+
+    async function fetchSuppliers() {
+      try {
+        const response = await axios.get(`${API_URL}/suppliers`);
+        suppliers.value = response.data
+          .filter(sup => sup.status === 'Active')
+          .map(sup => sup.companyName);
+        console.log('Suppliers loaded:', suppliers.value);
+      } catch (error) {
+        console.error('Failed to fetch suppliers:', error);
+        showToast('error', 'Failed to load suppliers');
+      }
+    }
+
+    async function fetchProducts() {
+      isLoading.value = true;
+      try {
+        const response = await axios.get(`${API_URL}/products`);
+        console.log('Products loaded:', response.data);
+        
+        products.value = response.data.map(prod => ({
+          id: prod._id,
+          name: prod.name,
+          brand: prod.brand,
+          category: prod.category,
+          supplier: prod.supplier,
+          inStock: prod.inStock,
+          price: prod.price,
+          status: prod.status,
+          imageSrc: prod.imageSrc,
+          description: prod.description || '',
+          stockAt: prod.stockAt
+        }));
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        showToast('error', 'Failed to load products');
+      } finally {
+        isLoading.value = false;
+      }
+    }
 
     function getStockClass(stock) {
       if (stock <= 5) return 'low';
@@ -466,65 +551,192 @@ export default {
       currentEditId.value = null;
     }
 
-    function saveProduct() {
-      if (!productForm.value.name.trim() || !productForm.value.brand.trim()) {
-        alert('Product name and brand are required!');
+    async function handleImageUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      if (!file.type.startsWith('image/')) {
+        showToast('error', 'Please select an image file');
         return;
       }
 
-      if (isEditMode.value) {
-        const index = products.value.findIndex(p => p.id === currentEditId.value);
-        if (index !== -1) {
-          products.value[index] = {
-            ...products.value[index],
-            ...productForm.value,
-            stockAt: products.value[index].stockAt
-          };
-          alert('Product updated successfully!');
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('error', 'Image size must be less than 5MB');
+        return;
+      }
+
+      isUploading.value = true;
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await axios.post(`${API_URL}/upload-image`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        console.log('Upload response:', response.data);
+        
+        productForm.value.imageSrc = response.data.imagePath;
+        
+        showToast('success', 'Image uploaded successfully');
+      } catch (error) {
+        console.error('Image upload failed:', error);
+        showToast('error', 'Failed to upload image');
+      } finally {
+        isUploading.value = false;
+      }
+    }
+
+    function handleDragOver(event) {
+      event.preventDefault();
+      event.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(event) {
+      event.currentTarget.classList.remove('drag-over');
+    }
+
+    async function handleDrop(event) {
+      event.preventDefault();
+      event.currentTarget.classList.remove('drag-over');
+      
+      const file = event.dataTransfer.files[0];
+      if (!file) return;
+
+      const fakeEvent = {
+        target: {
+          files: [file]
         }
-      } else {
-        const newProduct = {
-          id: nextId++,
-          ...productForm.value,
-          stockAt: new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+      };
+      
+      await handleImageUpload(fakeEvent);
+    }
+
+    function triggerFileInput() {
+      document.getElementById('imageUpload').click();
+    }
+
+    function removeImage() {
+      productForm.value.imageSrc = '/placeholder.png';
+    }
+
+    async function saveProduct() {
+      if (!productForm.value.name.trim() || !productForm.value.brand.trim()) {
+        showToast('error', 'Product name and brand are required!');
+        return;
+      }
+
+      if (!productForm.value.category) {
+        showToast('error', 'Please select a category!');
+        return;
+      }
+
+      if (!productForm.value.supplier) {
+        showToast('error', 'Please select a supplier!');
+        return;
+      }
+
+      try {
+        const payload = {
+          name: productForm.value.name,
+          brand: productForm.value.brand,
+          category: productForm.value.category,
+          supplier: productForm.value.supplier,
+          inStock: parseInt(productForm.value.inStock) || 0,
+          price: parseFloat(productForm.value.price) || 0,
+          status: productForm.value.status,
+          imageSrc: productForm.value.imageSrc,
+          description: productForm.value.description || ''
         };
-        products.value.push(newProduct);
-        alert('Product added successfully!');
-      }
 
-      closeProductModal();
+        if (isEditMode.value) {
+          await axios.patch(`${API_URL}/products/${currentEditId.value}`, payload);
+          showToast('success', 'Product updated successfully!');
+        } else {
+          await axios.post(`${API_URL}/products`, payload);
+          showToast('success', 'Product added successfully!');
+        }
+
+        await fetchProducts();
+        closeProductModal();
+      } catch (error) {
+        console.error('Save failed:', error);
+        const errorMsg = error.response?.data?.message || 'Failed to save product';
+        showToast('error', errorMsg);
+      }
     }
 
-    function deleteProduct(id) {
+    async function deleteProduct(id) {
       if (confirm('Are you sure you want to delete this product?')) {
-        products.value = products.value.filter(p => p.id !== id);
+        try {
+          await axios.delete(`${API_URL}/products/${id}`);
+          showToast('success', 'Product deleted successfully!');
+          await fetchProducts();
+        } catch (error) {
+          console.error('Delete failed:', error);
+          showToast('error', 'Failed to delete product');
+        }
       }
     }
 
-    function bulkDeleteProducts() {
+    async function bulkDeleteProducts() {
       const count = selectedProductIds.value.length;
       if (count === 0) {
-        alert('Please select at least one product to delete.');
+        showToast('error', 'Please select products to delete');
         return;
       }
 
       if (confirm(`Are you sure you want to delete ${count} selected products?`)) {
-        products.value = products.value.filter(p => !selectedProductIds.value.includes(p.id));
-        selectedProductIds.value = [];
+        try {
+          await axios.post(`${API_URL}/products/bulk-delete`, {
+            ids: selectedProductIds.value
+          });
+          showToast('success', `${count} products deleted successfully!`);
+          selectedProductIds.value = [];
+          await fetchProducts();
+        } catch (error) {
+          console.error('Bulk delete failed:', error);
+          showToast('error', 'Failed to delete products');
+        }
       }
     }
 
-    function viewProduct(product) {
-      alert(`Product: ${product.name}\nBrand: ${product.brand}\nPrice: $${product.price}\nStock: ${product.inStock}`);
-    }
-
     function exportProducts() {
-      alert('Exporting products...');
+      try {
+        const dataStr = JSON.stringify(products.value, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = `products_${new Date().toISOString().split('T')[0]}.json`;
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        showToast('success', 'Products exported successfully!');
+      } catch (error) {
+        console.error('Export failed:', error);
+        showToast('error', 'Failed to export products');
+      }
     }
 
     function handleSettingsClick() {
       console.log('Settings clicked');
     }
+
+    function handleImageError(event) {
+      console.error('Failed to load image:', productForm.value.imageSrc);
+      showToast('error', 'Failed to load image preview');
+      event.target.src = '/placeholder.png';
+    }
+
+    onMounted(() => {
+      console.log('ManageProduct mounted, fetching data...');
+      Promise.all([
+        fetchCategories(),
+        fetchSuppliers(),
+        fetchProducts()
+      ]);
+    });
 
     return {
       adminName,
@@ -537,6 +749,12 @@ export default {
       products,
       selectedProductIds,
       productForm,
+      toast,
+      isLoading,
+      isUploading,
+      categories,
+      suppliers,
+      availableCategories,
       selectAll,
       activeProductsCount,
       inactiveProductsCount,
@@ -548,9 +766,15 @@ export default {
       saveProduct,
       deleteProduct,
       bulkDeleteProducts,
-      viewProduct,
       exportProducts,
-      handleSettingsClick
+      handleSettingsClick,
+      handleImageUpload,
+      handleDragOver,
+      handleDragLeave,
+      handleDrop,
+      triggerFileInput,
+      removeImage,
+      handleImageError
     };
   }
 };
@@ -580,9 +804,15 @@ export default {
   color: black;
   grid-area: content;
   padding: 30px 40px;
-  overflow-y: auto;
+  overflow: hidden;
   height: calc(100vh - 70px);
   background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+}
+
+.top-row {
+  flex-shrink: 0;
 }
 
 .breadcrumb {
@@ -611,6 +841,7 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .header-left .page-title {
@@ -691,6 +922,7 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .metric-card {
@@ -748,12 +980,21 @@ export default {
   filter: invert(1);
 }
 
+.product-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .table-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   gap: 15px;
+  flex-shrink: 0;
 }
 
 .search-box {
@@ -806,9 +1047,12 @@ export default {
   background: white;
   border: 1px solid #e9ecef;
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 table {
@@ -818,6 +1062,9 @@ table {
 
 thead {
   background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 th {
@@ -828,6 +1075,7 @@ th {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: #f8f9fa;
 }
 
 td {
@@ -835,6 +1083,10 @@ td {
   border-top: 1px solid #e9ecef;
   font-size: 14px;
   color: #495057;
+}
+
+tbody {
+  background: white;
 }
 
 .table-row:hover {
@@ -1020,26 +1272,6 @@ td {
   margin: 0;
 }
 
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-}
-
-.pagination-info {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 8px;
-}
-
 .page-btn {
   padding: 8px 12px;
   border: 1px solid #dee2e6;
@@ -1144,6 +1376,14 @@ td {
 
 .modal-body {
   padding: 24px;
+}
+
+.form-hint {
+  display: block;
+  font-size: 12px;
+  color: #f59e0b;
+  margin-top: 4px;
+  font-style: italic;
 }
 
 .form-grid {
@@ -1251,6 +1491,167 @@ td {
 
   th, td {
     padding: 12px 8px;
+  }
+}
+
+.image-upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: 12px;
+  padding: 30px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: pointer;
+  min-height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafbfc;
+}
+
+.image-upload-area:hover {
+  border-color: #0b6cf0;
+  background: #f8f9fa;
+}
+
+.image-upload-area.drag-over {
+  border-color: #0b6cf0;
+  background: #e6f0ff;
+  border-style: solid;
+}
+
+.image-upload-area.has-image {
+  background: white;
+  border-style: solid;
+  padding: 20px;
+}
+
+.upload-placeholder {
+  width: 100%;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon-wrapper {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0b6cf0;
+}
+
+.upload-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212529;
+  margin: 0;
+}
+
+.upload-hint {
+  font-size: 13px;
+  color: #6c757d;
+  margin: 0;
+}
+
+.upload-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0b6cf0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.image-preview {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+}
+
+.preview-container {
+  width: 100%;
+  max-width: 400px;
+  height: 240px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dee2e6;
+}
+
+.preview-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+}
+
+.remove-image-btn,
+.change-image-btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.remove-image-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.remove-image-btn:hover {
+  background: #c82333;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.change-image-btn {
+  background: #0b6cf0;
+  color: white;
+}
+
+.change-image-btn:hover {
+  background: #0958c9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(11, 108, 240, 0.3);
+}
+
+@media (max-width: 768px) {
+  .image-upload-area {
+    min-height: 200px;
+    padding: 20px;
+  }
+  
+  .preview-container {
+    height: 180px;
   }
 }
 </style>

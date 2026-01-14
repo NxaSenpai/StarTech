@@ -38,17 +38,17 @@
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon green"><img class="manage-icon" src="/verifiedIcon.png" alt=""></div>
-              <div class="stat-info">
-                <p class="stat-label">Active Categories</p>
-                <h3 class="stat-value">{{ activeCategoriesCount }}</h3>
-              </div>
-            </div>
-            <div class="stat-card">
               <div class="stat-icon orange"><img class="manage-icon" src="/productIcon.png" alt=""></div>
               <div class="stat-info">
                 <p class="stat-label">Total Products</p>
                 <h3 class="stat-value">{{ totalProductsCount }}</h3>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon green"><img class="manage-icon" src="/verifiedIcon.png" alt=""></div>
+              <div class="stat-info">
+                <p class="stat-label">Active Categories</p>
+                <h3 class="stat-value">{{ activeCategoriesCount }}</h3>
               </div>
             </div>
             <div class="stat-card">
@@ -81,13 +81,12 @@
                 class="btn btn-danger" 
                 @click="bulkDeleteCategories"
               >
-                <span class="btn-icon">🗑️</span>
+                <img src="/deleteIcon.png" class="btn-icon">
                 Delete Selected ({{ selectedCategoryIds.length }})
               </button>
             </div>
           </div>
-          
-          <!-- Table -->
+        
           <div class="table-wrapper">
             <table>
               <thead>
@@ -121,7 +120,6 @@
                   </td>
                   <td class="name-cell">
                     <div class="category-name">
-                      <span class="category-icon">🏷️</span>
                       <span class="name-text">{{ category.name }}</span>
                     </div>
                   </td>
@@ -142,21 +140,15 @@
                         @click="openEditModal(category)"
                         title="Edit"
                       >
-                        <span>✏️</span>
+                        <img src="/editIcon.png" class="btn-icon-black" alt="">
                       </button>
-                      <button 
-                        class="action-btn view-btn" 
-                        @click="viewCategoryDetails(category)"
-                        title="View Details"
-                      >
-                        <span>👁️</span>
-                      </button>
+
                       <button 
                         class="action-btn delete-btn" 
                         @click="deleteCategory(category.id)"
                         title="Delete"
                       >
-                        <span>🗑️</span>
+                        <img src="/deleteIcon.png" class="btn-icon-black" alt="">
                       </button>
                     </div>
                   </td>
@@ -164,20 +156,19 @@
               </tbody>
             </table>
           </div>
-
-          <div class="pagination">
-            <div class="pagination-info">
-              Showing {{ filteredCategories.length }} of {{ categories.length }} categories
-            </div>
-            <div class="pagination-controls">
-              <button class="page-btn" disabled>Previous</button>
-              <button class="page-btn active">1</button>
-              <button class="page-btn">2</button>
-              <button class="page-btn">3</button>
-              <button class="page-btn">Next</button>
-            </div>
-          </div>
         </section>
+
+        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
+
+        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+          <div class="toast-content">
+            <span>{{ toast.message }}</span>
+          </div>
+        </div>
 
         <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
           <div class="modal-container">
@@ -237,9 +228,12 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
-import AdminHeader from '@/components/adminHeader.vue';
-import AdminSidebar from '@/components/adminSidebar.vue';
+import { ref, computed, onMounted } from 'vue';
+import AdminHeader from '@/components/AdminHeader.vue';
+import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ManageCategory',
@@ -255,17 +249,15 @@ export default {
     const showModal = ref(false);
     const isEditMode = ref(false);
     const currentEditId = ref(null);
-
-    const categories = ref([
-      { id: 1, name: 'Game accessory', productCount: 45, status: 'Active', createdDate: '2024-01-15' },
-      { id: 2, name: 'Mobile Phone', productCount: 120, status: 'Active', createdDate: '2024-02-20' },
-      { id: 3, name: 'Laptops', productCount: 65, status: 'Active', createdDate: '2024-03-10' },
-      { id: 4, name: 'Software/Keys', productCount: 15, status: 'Inactive', createdDate: '2024-04-05' },
-      { id: 5, name: 'Smart TV', productCount: 32, status: 'Active', createdDate: '2024-05-12' },
-      { id: 6, name: 'Audio Equipment', productCount: 28, status: 'Active', createdDate: '2024-06-18' },
-    ]);
-
+    const categories = ref([]);
     const selectedCategoryIds = ref([]);
+    const isLoading = ref(false);
+
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
 
     const formData = ref({
       name: '',
@@ -273,6 +265,17 @@ export default {
       status: 'Active',
       description: ''
     });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = {
+        show: true,
+        type,
+        message
+      };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
+    };
 
     const selectAll = computed({
       get: () => selectedCategoryIds.value.length === filteredCategories.value.length && filteredCategories.value.length > 0,
@@ -311,7 +314,33 @@ export default {
       return filtered;
     });
 
-    let nextId = 7;
+    async function fetchCategories() {
+      isLoading.value = true;
+      try {
+        const response = await axios.get(`${API_URL}/categories`);
+        console.log('Raw API response:', response.data);
+        
+        categories.value = response.data.map(cat => {
+          console.log('Processing category:', cat);
+          return {
+            id: cat._id,
+            name: cat.name,
+            productCount: cat.productCount || 0,
+            status: cat.status,
+            createdDate: cat.createdDate || 'N/A',
+            description: cat.description || ''
+          };
+        });
+        
+        console.log('Categories loaded:', categories.value.length);
+        console.log('First category:', categories.value[0]);
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        showToast('error', 'Failed to load categories. Please check your connection.');
+      } finally {
+        isLoading.value = false;
+      }
+    }
 
     function openAddModal() {
       isEditMode.value = false;
@@ -342,61 +371,106 @@ export default {
       currentEditId.value = null;
     }
 
-    function saveCategory() {
+    async function saveCategory() {
       if (!formData.value.name.trim()) {
-        alert('Category name is required!');
+        showToast('error', 'Category name is required!');
         return;
       }
 
-      if (isEditMode.value) {
-        const index = categories.value.findIndex(c => c.id === currentEditId.value);
-        if (index !== -1) {
-          categories.value[index] = {
-            ...categories.value[index],
-            ...formData.value
-          };
-          alert('Category updated successfully!');
+      try {
+        if (isEditMode.value) {
+          await axios.patch(`${API_URL}/categories/${currentEditId.value}`, {
+            name: formData.value.name,
+            productCount: formData.value.productCount,
+            status: formData.value.status,
+            description: formData.value.description
+          });
+          showToast('success', 'Category updated successfully!');
+        } else {
+          await axios.post(`${API_URL}/categories`, {
+            name: formData.value.name,
+            productCount: formData.value.productCount || 0,
+            status: formData.value.status,
+            description: formData.value.description || ''
+          });
+          showToast('success', 'Category added successfully!');
         }
-      } else {
-        const newCategory = {
-          id: nextId++,
-          ...formData.value,
-          createdDate: new Date().toISOString().split('T')[0]
-        };
-        categories.value.push(newCategory);
-        alert('Category added successfully!');
+        
+        await fetchCategories();
+        closeModal();
+      } catch (error) {
+        console.error('Save failed:', error);
+        const errorMsg = error.response?.data?.message || 'Failed to save category. Please try again.';
+        showToast('error', errorMsg);
       }
-
-      closeModal();
     }
 
-    function deleteCategory(id) {
+    async function deleteCategory(id) {
       if (confirm('Are you sure you want to delete this category?')) {
-        categories.value = categories.value.filter(c => c.id !== id);
-        alert('Category deleted successfully!');
+        try {
+          await axios.delete(`${API_URL}/categories/${id}`);
+          showToast('success', 'Category deleted successfully!');
+          await fetchCategories();
+        } catch (error) {
+          console.error('Delete failed:', error);
+          const errorMsg = error.response?.status === 404 
+            ? 'Category not found' 
+            : 'Failed to delete category';
+          showToast('error', errorMsg);
+        }
       }
     }
 
-    function bulkDeleteCategories() {
+    async function bulkDeleteCategories() {
       const count = selectedCategoryIds.value.length;
+      if (count === 0) {
+        showToast('error', 'Please select categories to delete');
+        return;
+      }
+      
       if (confirm(`Are you sure you want to delete ${count} selected categories?`)) {
-        categories.value = categories.value.filter(c => !selectedCategoryIds.value.includes(c.id));
-        selectedCategoryIds.value = [];
-        alert(`${count} categories deleted successfully!`);
+        try {
+          await axios.post(`${API_URL}/categories/bulk-delete`, {
+            ids: selectedCategoryIds.value
+          });
+          showToast('success', `${count} categories deleted successfully!`);
+          selectedCategoryIds.value = [];
+          await fetchCategories();
+        } catch (error) {
+          console.error('Bulk delete failed:', error);
+          showToast('error', 'Failed to delete categories');
+        }
       }
     }
 
     function viewCategoryDetails(category) {
-      alert(`Viewing details for: ${category.name}\nProducts: ${category.productCount}\nStatus: ${category.status}`);
+      alert(`Viewing details for: ${category.name}\nProducts: ${category.productCount}\nStatus: ${category.status}\nDescription: ${category.description || 'N/A'}`);
     }
 
     function exportCategories() {
-      alert('Exporting categories...');
+      try {
+        const dataStr = JSON.stringify(categories.value, null, 2);
+        const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+        const exportFileDefaultName = `categories_${new Date().toISOString().split('T')[0]}.json`;
+        const linkElement = document.createElement('a');
+        linkElement.setAttribute('href', dataUri);
+        linkElement.setAttribute('download', exportFileDefaultName);
+        linkElement.click();
+        showToast('success', 'Categories exported successfully!');
+      } catch (error) {
+        console.error('Export failed:', error);
+        showToast('error', 'Failed to export categories');
+      }
     }
 
     function handleSettingsClick() {
       console.log('Settings clicked');
     }
+
+    onMounted(() => {
+      console.log('ManageCategory mounted, fetching data...');
+      fetchCategories();
+    });
 
     return {
       adminName,
@@ -408,11 +482,13 @@ export default {
       categories,
       selectedCategoryIds,
       formData,
+      toast,
       selectAll,
       activeCategoriesCount,
       inactiveCategoriesCount,
       totalProductsCount,
       filteredCategories,
+      isLoading,
       openAddModal,
       openEditModal,
       closeModal,
@@ -451,9 +527,11 @@ export default {
   color: black;
   grid-area: content;
   padding: 30px 40px;
-  overflow-y: auto;
+  overflow: hidden;
   height: calc(100vh - 70px);
   background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
 }
 
 .breadcrumb {
@@ -462,6 +540,7 @@ export default {
   gap: 8px;
   margin-bottom: 20px;
   font-size: 14px;
+  flex-shrink: 0;
 }
 
 .breadcrumb-item {
@@ -482,6 +561,7 @@ export default {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .header-left .page-title {
@@ -556,6 +636,7 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 20px;
   margin-bottom: 30px;
+  flex-shrink: 0;
 }
 
 .stat-card {
@@ -607,12 +688,21 @@ export default {
   height: 20px;
 }
 
+.category-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .table-controls {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   gap: 15px;
+  flex-shrink: 0;
 }
 
 .search-box {
@@ -661,14 +751,16 @@ export default {
   cursor: pointer;
 }
 
-
 .table-wrapper {
   background: white;
   border: 1px solid #e9ecef;
   border-radius: 12px;
-  overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-  margin-bottom: 20px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 table {
@@ -678,6 +770,9 @@ table {
 
 thead {
   background: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 th {
@@ -688,6 +783,7 @@ th {
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  background: #f8f9fa;
 }
 
 td {
@@ -695,6 +791,10 @@ td {
   border-top: 1px solid #e9ecef;
   font-size: 14px;
   color: #495057;
+}
+
+tbody {
+  background: white;
 }
 
 .table-row:hover {
@@ -722,10 +822,6 @@ td {
   gap: 10px;
   font-weight: 500;
   color: #212529;
-}
-
-.category-icon {
-  font-size: 18px;
 }
 
 .product-count {
@@ -783,6 +879,11 @@ td {
   justify-content: center;
 }
 
+.btn-icon-black {
+  width: 15px;
+  height: 15px;
+}
+
 .action-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -823,51 +924,6 @@ td {
 .empty-content p {
   color: #6c757d;
   margin: 0;
-}
-
-.pagination {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  background: white;
-  border: 1px solid #e9ecef;
-  border-radius: 12px;
-}
-
-.pagination-info {
-  color: #6c757d;
-  font-size: 14px;
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 8px;
-}
-
-.page-btn {
-  padding: 8px 12px;
-  border: 1px solid #dee2e6;
-  background: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.3s;
-}
-
-.page-btn:hover:not(:disabled) {
-  background: #f8f9fa;
-}
-
-.page-btn.active {
-  background: #0b6cf0;
-  color: white;
-  border-color: #0b6cf0;
-}
-
-.page-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .modal-overlay {
@@ -994,6 +1050,53 @@ td {
   gap: 12px;
   padding: 20px 24px;
   border-top: 1px solid #e9ecef;
+}
+
+.toast {
+  position: fixed;
+  top: 100px;
+  right: 30px;
+  z-index: 3000;
+  animation: slideIn 0.4s ease-out;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-content {
+  padding: 16px 24px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 500;
+  color: white;
+}
+
+.success-toast .toast-content {
+  background: #28a745;
+}
+
+.error-toast .toast-content {
+  background: #dc3545;
+}
+
+@media (max-width: 768px) {
+  .toast {
+    right: 10px;
+    left: 10px;
+    min-width: auto;
+  }
 }
 
 @media (max-width: 1200px) {
