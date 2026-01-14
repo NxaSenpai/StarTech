@@ -74,7 +74,7 @@
             <div class="detail-content">
               <span class="detail-label">Usage</span>
               <span class="detail-value">
-                {{ coupon.usedCount }} / {{ coupon.maxUses || '50' }}
+                {{ coupon.usedCount }} / {{ coupon.maxUses || 50 }}
               </span>
             </div>
           </div>
@@ -178,10 +178,10 @@
                 v-model.number="form.maxUses" 
                 type="number" 
                 min="1"
-                placeholder="Unlimited"
+                placeholder="enter total usages"
                 class="form-input"
               />
-              <span class="form-hint">Leave empty for unlimited</span>
+              <span class="form-hint"></span>
             </div>
 
             <div class="form-group">
@@ -246,7 +246,7 @@ export default {
           value: 20,
           expiryDate: '2026-12-31',
           maxUses: 100,
-          usedCount: 45,
+          usedCount: 100,
           minPurchase: 50,
           active: true
         },
@@ -256,9 +256,9 @@ export default {
           type: 'fixed',
           value: 10,
           expiryDate: '2026-01-20',
-          maxUses: null,
-          usedCount: 128,
-          minPurchase: null,
+          maxUses: 20,
+          usedCount: 5,
+          minPurchase: 10,
           active: true
         },
         {
@@ -867,14 +867,17 @@ export default {
   background: #f7fafc;
   border-radius: 8px;
   transition: all 0.3s;
+  
 }
 
 .checkbox-label:hover {
   background: #edf2f7;
+  
 }
 
 .checkbox-input {
   display: none;
+  
 }
 
 .checkbox-custom {
@@ -884,6 +887,8 @@ export default {
   border-radius: 4px;
   position: relative;
   transition: all 0.3s;
+  padding-left: 20px;
+  margin-right: 5px;
 }
 
 .checkbox-input:checked + .checkbox-custom {
@@ -900,6 +905,7 @@ export default {
   color: white;
   font-size: 12px;
   font-weight: 700;
+  
 }
 
 .checkbox-text {
