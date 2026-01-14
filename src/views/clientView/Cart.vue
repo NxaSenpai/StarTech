@@ -109,8 +109,8 @@
                 </div>
               </div>
 
-              <button class="checkout-btn" @click="$router.push('/checkout')">Proceed to Checkout</button>
-
+              <button class="checkout-btn" @click= "showThankYou=true">Proceed to Checkout</button>
+               <Thank v-model:show="showThankYou" />
               <div class="continue-shopping">
                 <button @click="$router.push('/products')" class="continue-btn">
                   Continue Shopping
@@ -128,12 +128,14 @@
 <script>
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
+import Thank from "@/components/Thank_u.vue";
 
 export default {
   name: "Cart",
   components: {
     Header,
-    Footer
+    Footer,
+    Thank
   },
   
   data() {
@@ -144,7 +146,8 @@ export default {
         message: ""
       },
       deletedItem: null,
-      undoTimeout: null
+      undoTimeout: null,
+      showThankYou: false
     }
   },
 

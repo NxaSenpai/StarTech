@@ -76,7 +76,7 @@ onUnmounted(() => {
       <ul class="nav-list">
         <li><router-link to="/products" active-class="active">All Products</router-link></li>
         <li><router-link to="/eventview" active-class="active">Today Arrivals</router-link></li>
-        <li><router-link to="/eventview" active-class="active">Best Deal</router-link></li>
+        <li><router-link to="/best-deals" active-class="active">Best Deal</router-link></li>
         <li><router-link to="/orders" active-class="active">My Orders</router-link></li>
       </ul>
     </nav>
