@@ -10,6 +10,7 @@ import ManageUser from '@/views/adminView/ManageUser.vue'
 import Cart from '@/views/clientView/Cart.vue'
 import CategoryView from '@/views/clientView/CategoryView.vue'
 import EventView from '@/views/clientView/EventView.vue'
+import BestDeal from '@/views/clientView/BestDeal.vue'
 import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
 import HomeView from '@/views/clientView/HomeView.vue'
@@ -119,6 +120,11 @@ const router = createRouter({
       path: '/eventview',
       name: 'eventview',
       component: EventView
+    },
+    {
+      path: '/best-deals',
+      name: 'BestDeals',
+      component: BestDeal
     },
     {
       path: '/wishlist',
