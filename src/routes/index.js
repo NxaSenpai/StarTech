@@ -18,6 +18,7 @@ import ManageAdmin from '@/views/adminView/ManageAdmin.vue'
 import Settings from '@/views/adminView/Settings.vue'
 import ProductsView from '@/views/clientView/ProductsView.vue'
 import WishlistView from '@/views/clientView/wishlistView.vue'
+import About_us from '@/views/clientView/About_us.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -145,6 +146,11 @@ const router = createRouter({
       path: '/new-arrivals',
       name: 'NewArrivals',
       component: EventView
+    },
+    {
+      path :'/about-us',
+      name :'About_us',
+      component: About_us
     }
   ]
 })
