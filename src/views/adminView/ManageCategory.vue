@@ -238,8 +238,8 @@
 
 <script>
 import { ref, computed } from 'vue';
-import AdminHeader from '@/components/AdminHeader.vue';
-import AdminSidebar from '@/components/AdminSidebar.vue';
+import AdminHeader from '@/components/adminHeader.vue';
+import AdminSidebar from '@/components/adminSidebar.vue';
 
 export default {
   name: 'ManageCategory',

@@ -14,7 +14,7 @@ import ProductDetails from '@/views/clientView/ProductDetails.vue'
 import Profile from '@/views/clientView/Profile.vue'
 import HomeView from '@/views/clientView/HomeView.vue'
 import Order from '@/views/clientView/Order.vue'
-
+import CouponView from '@/views/adminView/CouponView.vue'
 
 
 const router = createRouter({
@@ -110,6 +110,11 @@ const router = createRouter({
       path: '/new-arrivals',
       name: 'NewArrivals',
       component:EventView
+    },
+    {
+      path: '/coupon',
+      name: 'Coupon',
+      component: CouponView
     }
   ]
 })
