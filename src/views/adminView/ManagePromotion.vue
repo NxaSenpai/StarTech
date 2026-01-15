@@ -1,11 +1,9 @@
 <template>
   <div class="page-wrapper">
     <div class="admin-layout">
-      
       <AdminHeader :userName="adminName" :notificationCount="notifications" />
-      
       <AdminSidebar @settings-click="handleSettingsClick" />
-
+      
       <main class="content-area">
         <div class="top-row">
           <div class="breadcrumb">
@@ -18,19 +16,14 @@
         <div class="page-header">
           <div class="header-left">
             <h1 class="page-title">Manage Promotions</h1>
-            <p class="page-subtitle">Create and manage product discounts</p>
+            <p class="page-subtitle">Create and manage product promotions and discounts</p>
           </div>
           <div class="header-actions">
-            <button 
-              v-if="selectedPromotionIds.length > 0" 
-              @click="bulkDeletePromotions" 
-              class="btn btn-danger"
-            >
-              <img class="btn-icon" src="/deleteIcon.png" alt="">
+            <button v-if="selectedPromotionIds.length > 0" @click="bulkDeletePromotions" class="btn btn-danger">
+              <img src="/deleteIcon.png" alt="Delete" class="btn-icon" />
               Delete Selected ({{ selectedPromotionIds.length }})
             </button>
             <button @click="openAddModal" class="btn btn-primary">
-              <img class="btn-icon" src="/addIcon.png" alt="">
               Add Promotion
             </button>
           </div>
@@ -38,32 +31,31 @@
 
         <div class="stats-cards">
           <div class="stat-card">
-            <div class="stat-icon blue">
-              <img class="manage-icon" src="/discountIcon.png" alt="">
-            </div>
-            <div>
+            <div class="stat-icon blue">📊</div>
+            <div class="stat-info">
               <p class="stat-label">Total Promotions</p>
-              <h2 class="stat-value">{{ totalPromotions }}</h2>
+              <h3 class="stat-value">{{ totalPromotions }}</h3>
             </div>
           </div>
-
           <div class="stat-card">
-            <div class="stat-icon green">
-              <img class="manage-icon" src="/verifiedIcon.png" alt="">
-            </div>
-            <div>
+            <div class="stat-icon green">✅</div>
+            <div class="stat-info">
               <p class="stat-label">Active Promotions</p>
-              <h2 class="stat-value">{{ activePromotions }}</h2>
+              <h3 class="stat-value">{{ activePromotions }}</h3>
             </div>
           </div>
-
           <div class="stat-card">
-            <div class="stat-icon purple">
-              <img class="manage-icon" src="/productIcon.png" alt="">
+            <div class="stat-icon orange">💰</div>
+            <div class="stat-info">
+              <p class="stat-label">Avg. Discount</p>
+              <h3 class="stat-value">{{ averageDiscount }}%</h3>
             </div>
-            <div>
-              <p class="stat-label">Products on Sale</p>
-              <h2 class="stat-value">{{ promotedProducts }}</h2>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon purple">🎁</div>
+            <div class="stat-info">
+              <p class="stat-label">Promoted Products</p>
+              <h3 class="stat-value">{{ promotedProducts }}</h3>
             </div>
           </div>
         </div>
@@ -71,37 +63,37 @@
         <div class="promotion-content">
           <div class="table-controls">
             <div class="search-box">
-              <img class="search-icon" src="/searchIcon.png" alt="">
+              <img src="/searchIcon.png" alt="Search" class="search-icon" />
               <input 
                 v-model="searchQuery" 
                 type="text" 
-                placeholder="Search promotions..." 
-                class="search-input"
+                class="search-input" 
+                placeholder="Search by product name..."
               />
             </div>
-            
             <div class="filter-actions">
               <select v-model="statusFilter" class="filter-select">
                 <option value="all">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="Expired">Expired</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+                <option value="expired">Expired</option>
               </select>
             </div>
           </div>
 
           <div class="table-wrapper">
-            <table v-if="!isLoading && filteredPromotions.length > 0">
+            <table>
               <thead>
                 <tr>
                   <th class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      v-model="selectAll"
                       class="custom-checkbox"
+                      :checked="selectAll"
+                      @change="selectAll = !selectAll"
                     />
                   </th>
-                  <th>Product</th>
+                  <th>Product Name</th>
                   <th>Original Price</th>
                   <th>Discount</th>
                   <th>Sale Price</th>
@@ -112,172 +104,150 @@
                 </tr>
               </thead>
               <tbody>
-                <tr 
-                  v-for="promotion in filteredPromotions" 
-                  :key="promotion._id"
-                  class="table-row"
-                >
+                <tr v-if="isLoading">
+                  <td colspan="9" class="empty-state">
+                    <div class="spinner"></div>
+                    <p>Loading promotions...</p>
+                  </td>
+                </tr>
+                <tr v-else-if="filteredPromotions.length === 0">
+                  <td colspan="9" class="empty-state">
+                    <div class="empty-content">
+                      <p>No promotions found</p>
+                    </div>
+                  </td>
+                </tr>
+                <tr v-else v-for="promo in filteredPromotions" :key="promo._id" class="table-row">
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      :value="promotion._id"
-                      v-model="selectedPromotionIds"
                       class="custom-checkbox"
+                      :value="promo._id"
+                      v-model="selectedPromotionIds"
                     />
                   </td>
                   <td>
-                    <div class="product-name">{{ promotion.productName }}</div>
+                    <div class="product-name">{{ promo.productName }}</div>
                   </td>
-                  <td class="price-cell">${{ promotion.originalPrice.toFixed(2) }}</td>
+                  <td class="price-cell">${{ promo.originalPrice.toFixed(2) }}</td>
                   <td>
-                    <span class="discount-badge">-{{ promotion.discountPercentage }}%</span>
+                    <span class="discount-badge">{{ promo.discount.toFixed(0) }}% OFF</span>
                   </td>
-                  <td class="sale-price-cell">${{ promotion.discountedPrice.toFixed(2) }}</td>
-                  <td class="date-cell">{{ formatDate(promotion.startDate) }}</td>
-                  <td class="date-cell">{{ formatDate(promotion.endDate) }}</td>
+                  <td class="sale-price-cell">${{ promo.salePrice.toFixed(2) }}</td>
+                  <td class="date-cell">{{ formatDate(promo.startDate) }}</td>
+                  <td class="date-cell">{{ formatDate(promo.endDate) }}</td>
                   <td>
-                    <span 
-                      class="status-badge" 
-                      :class="getStatusClass(promotion)"
-                    >
+                    <span :class="['status-badge', getStatusClass(promo)]">
                       <span class="status-dot"></span>
-                      {{ getStatusLabel(promotion) }}
+                      {{ getStatusLabel(promo) }}
                     </span>
                   </td>
                   <td class="action-col">
                     <div class="action-buttons">
-                      <button 
-                        @click="openEditModal(promotion)" 
-                        class="action-btn edit-btn"
-                        title="Edit"
-                      >
-                        <img class="btn-icon-black" src="/editIcon.png" alt="">
+                      <button @click="openEditModal(promo)" class="action-btn edit-btn">
+                        <img src="/editIcon.png" alt="Edit" class="btn-icon-black" />
                       </button>
-                      <button 
-                        @click="deletePromotion(promotion._id)" 
-                        class="action-btn delete-btn"
-                        title="Delete"
-                      >
-                        <img class="btn-icon-black" src="/deleteIcon.png" alt="">
+                      <button @click="deletePromotion(promo._id)" class="action-btn delete-btn">
+                        <img src="/deleteIcon.png" alt="Delete" class="btn-icon-black" />
                       </button>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
-
-            <div v-else-if="isLoading" class="empty-state">
-              <div class="spinner"></div>
-              <p>Loading promotions...</p>
-            </div>
-
-            <div v-else class="empty-state">
-              <div class="empty-content">
-                <p>No promotions found</p>
-              </div>
-            </div>
           </div>
         </div>
+      </main>
+    </div>
 
-        <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
-          <div class="modal-container">
-            <div class="modal-header">
-              <h3>{{ isEditMode ? 'Edit Promotion' : 'Add New Promotion' }}</h3>
-              <button class="close-btn" @click="closeModal">✕</button>
+    <!-- Modal for Add/Edit -->
+    <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h3>{{ isEditMode ? 'Edit Promotion' : 'Add New Promotion' }}</h3>
+          <button class="close-btn" @click="closeModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <form @submit.prevent="savePromotion" class="promotion-form">
+            <div class="form-group">
+              <label>Product <span class="required">*</span></label>
+              <select v-model="formData.productId" class="form-select" required :disabled="isEditMode">
+                <option value="">Select a product</option>
+                <option v-for="product in products" :key="product._id" :value="product._id">
+                  {{ product.name }} (${{ product.price.toFixed(2) }})
+                </option>
+              </select>
             </div>
 
-            <div class="modal-body">
-              <form class="promotion-form">
-                <div class="form-group">
-                  <label>Product <span class="required">*</span></label>
-                  <select v-model="formData.productId" class="form-select" required>
-                    <option value="">Select a product</option>
-                    <option 
-                      v-for="product in products" 
-                      :key="product._id" 
-                      :value="product._id"
-                    >
-                      {{ product.name }} - ${{ product.price.toFixed(2) }}
-                    </option>
-                  </select>
-                </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Discount (%) <span class="required">*</span></label>
+                <input 
+                  v-model.number="formData.discount" 
+                  type="number" 
+                  class="form-input"
+                  min="1"
+                  max="99"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>Calculated Sale Price</label>
+                <input 
+                  :value="calculatedPrice" 
+                  type="text" 
+                  class="form-input"
+                  disabled
+                />
+              </div>
+            </div>
 
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Discount % <span class="required">*</span></label>
-                    <input 
-                      v-model.number="formData.discountPercentage" 
-                      type="number"
-                      min="1"
-                      max="99"
-                      class="form-input"
-                      placeholder="e.g., 20"
-                      required
-                    />
-                  </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label>Start Date <span class="required">*</span></label>
+                <input 
+                  v-model="formData.startDate" 
+                  type="date" 
+                  class="form-input"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label>End Date <span class="required">*</span></label>
+                <input 
+                  v-model="formData.endDate" 
+                  type="date" 
+                  class="form-input"
+                  required
+                />
+              </div>
+            </div>
 
-                  <div class="form-group">
-                    <label>Sale Price</label>
-                    <input 
-                      :value="calculatedPrice" 
-                      type="text"
-                      class="form-input"
-                      readonly
-                      disabled
-                    />
-                  </div>
-                </div>
-
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Start Date <span class="required">*</span></label>
-                    <input 
-                      v-model="formData.startDate" 
-                      type="date"
-                      class="form-input"
-                      required
-                    />
-                  </div>
-
-                  <div class="form-group">
-                    <label>End Date <span class="required">*</span></label>
-                    <input 
-                      v-model="formData.endDate" 
-                      type="date"
-                      class="form-input"
-                      :min="formData.startDate"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div class="form-group">
-                  <label>Status <span class="required">*</span></label>
-                  <select v-model="formData.status" class="form-select" required>
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
-                  </select>
-                </div>
-              </form>
+            <div class="form-group">
+              <label>Status <span class="required">*</span></label>
+              <select v-model="formData.status" class="form-select" required>
+                <option value="Active">Active</option>
+                <option value="Inactive">Inactive</option>
+              </select>
             </div>
 
             <div class="modal-footer">
-              <button @click="closeModal" class="btn btn-secondary">Cancel</button>
-              <button @click="savePromotion" class="btn btn-primary">
+              <button type="button" @click="closeModal" class="btn btn-secondary">Cancel</button>
+              <button type="submit" class="btn btn-primary">
                 {{ isEditMode ? 'Update' : 'Create' }} Promotion
               </button>
             </div>
-          </div>
+          </form>
         </div>
+      </div>
+    </div>
 
-        <!-- Toast Notification -->
-        <div v-if="toast.show" class="toast" :class="toast.type + '-toast'">
-          <div class="toast-content">
-            <span>{{ toast.message }}</span>
-          </div>
-        </div>
-
-      </main>
+    <!-- Toast Notification -->
+    <div v-if="toast.show" :class="['toast', toast.type + '-toast']">
+      <div class="toast-content">
+        <span>✓</span>
+        <span>{{ toast.message }}</span>
+      </div>
     </div>
   </div>
 </template>
@@ -317,21 +287,14 @@ export default {
 
     const formData = ref({
       productId: '',
-      productName: '',
-      originalPrice: 0,
-      discountPercentage: 0,
-      discountedPrice: 0,
+      discount: 0,
       startDate: '',
       endDate: '',
       status: 'Active'
     });
 
     const showToast = (type, message, duration = 3000) => {
-      toast.value = {
-        show: true,
-        type,
-        message
-      };
+      toast.value = { show: true, type, message };
       setTimeout(() => {
         toast.value.show = false;
       }, duration);
@@ -351,17 +314,12 @@ export default {
     const totalPromotions = computed(() => promotions.value.length);
     
     const activePromotions = computed(() => 
-      promotions.value.filter(p => {
-        const now = new Date();
-        const start = new Date(p.startDate);
-        const end = new Date(p.endDate);
-        return p.status === 'Active' && now >= start && now <= end;
-      }).length
+      promotions.value.filter(p => p.status === 'Active' && new Date(p.endDate) >= new Date()).length
     );
 
     const averageDiscount = computed(() => {
       if (promotions.value.length === 0) return 0;
-      const sum = promotions.value.reduce((acc, p) => acc + p.discountPercentage, 0);
+      const sum = promotions.value.reduce((acc, p) => acc + (p.discount || 0), 0);
       return (sum / promotions.value.length).toFixed(1);
     });
 
@@ -370,33 +328,38 @@ export default {
     );
 
     const calculatedPrice = computed(() => {
-      const selectedProduct = products.value.find(p => p._id === formData.value.productId);
-      if (!selectedProduct || !formData.value.discountPercentage) return '$0.00';
-      
-      const discount = selectedProduct.price * (formData.value.discountPercentage / 100);
-      const salePrice = selectedProduct.price - discount;
+      const product = products.value.find(p => p._id === formData.value.productId);
+      if (!product || !formData.value.discount) return '$0.00';
+      const salePrice = product.price - (product.price * formData.value.discount / 100);
       return `$${salePrice.toFixed(2)}`;
     });
 
     const filteredPromotions = computed(() => {
       let filtered = promotions.value;
-
+      
       if (searchQuery.value) {
         const query = searchQuery.value.toLowerCase();
-        filtered = filtered.filter(p =>
-          p.productName.toLowerCase().includes(query)
+        filtered = filtered.filter(p => 
+          (p.productName || '').toLowerCase().includes(query)
         );
       }
-
+      
       if (statusFilter.value !== 'all') {
         filtered = filtered.filter(p => {
-          if (statusFilter.value === 'Expired') {
-            return new Date(p.endDate) < new Date();
+          const now = new Date();
+          const endDate = new Date(p.endDate);
+          
+          if (statusFilter.value === 'active') {
+            return p.status === 'Active' && endDate >= now;
+          } else if (statusFilter.value === 'inactive') {
+            return p.status === 'Inactive';
+          } else if (statusFilter.value === 'expired') {
+            return endDate < now;
           }
-          return p.status === statusFilter.value;
+          return true;
         });
       }
-
+      
       return filtered;
     });
 
@@ -404,11 +367,41 @@ export default {
       isLoading.value = true;
       try {
         const response = await axios.get(`${API_URL}/promotions`);
-        promotions.value = response.data;
-        console.log('Promotions loaded:', promotions.value.length);
+        
+        console.log('Raw promotion data:', response.data);
+        
+        // Map the response properly - backend returns snake_case, we need camelCase
+        promotions.value = response.data.map(promo => {
+          // Extract discount value
+          const discount = parseFloat(promo.discountPercentage || promo.discount || 0);
+          const originalPrice = parseFloat(promo.originalPrice || 0);
+          
+          let salePrice = parseFloat(promo.salePrice || 0);
+          if (!salePrice && originalPrice && discount) {
+            salePrice = originalPrice - (originalPrice * discount / 100);
+          }
+          
+          return {
+            _id: promo._id || '',
+            productId: promo.productId || '',
+            productName: promo.productName || 'Unknown Product',
+            originalPrice: originalPrice,
+            discount: discount,
+            discountPercentage: discount, // Keep both for compatibility
+            salePrice: salePrice,
+            startDate: promo.startDate || '',
+            endDate: promo.endDate || '',
+            status: promo.status || 'Inactive'
+          };
+        });
+        
+        console.log('Mapped promotions:', promotions.value);
+        console.log('Total promotions:', promotions.value.length);
       } catch (error) {
         console.error('Failed to fetch promotions:', error);
+        console.error('Error response:', error.response?.data);
         showToast('error', 'Failed to load promotions');
+        promotions.value = [];
       } finally {
         isLoading.value = false;
       }
@@ -417,22 +410,24 @@ export default {
     async function fetchProducts() {
       try {
         const response = await axios.get(`${API_URL}/products`);
-        products.value = response.data;
+        products.value = response.data.map(product => ({
+          _id: product._id || '',
+          name: product.name || 'Unknown',
+          price: product.price || 0
+        }));
+        console.log('Products loaded:', products.value.length);
       } catch (error) {
         console.error('Failed to fetch products:', error);
         showToast('error', 'Failed to load products');
+        products.value = [];
       }
     }
 
     function openAddModal() {
       isEditMode.value = false;
-      currentEditId.value = null;
       formData.value = {
         productId: '',
-        productName: '',
-        originalPrice: 0,
-        discountPercentage: 0,
-        discountedPrice: 0,
+        discount: 0,
         startDate: '',
         endDate: '',
         status: 'Active'
@@ -445,10 +440,7 @@ export default {
       currentEditId.value = promotion._id;
       formData.value = {
         productId: promotion.productId,
-        productName: promotion.productName,
-        originalPrice: promotion.originalPrice,
-        discountPercentage: promotion.discountPercentage,
-        discountedPrice: promotion.discountedPrice,
+        discount: parseFloat(promotion.discount) || 0, // Ensure it's a number
         startDate: promotion.startDate.split('T')[0],
         endDate: promotion.endDate.split('T')[0],
         status: promotion.status
@@ -460,66 +452,45 @@ export default {
       showModal.value = false;
       isEditMode.value = false;
       currentEditId.value = null;
-      formData.value = {
-        productId: '',
-        productName: '',
-        originalPrice: 0,
-        discountPercentage: 0,
-        discountedPrice: 0,
-        startDate: '',
-        endDate: '',
-        status: 'Active'
-      };
     }
 
     async function savePromotion() {
-      if (!formData.value.productId || !formData.value.discountPercentage || 
-          !formData.value.startDate || !formData.value.endDate) {
-        showToast('error', 'Please fill all required fields');
-        return;
-      }
-
-      const selectedProduct = products.value.find(p => p._id === formData.value.productId);
-      if (!selectedProduct) {
-        showToast('error', 'Invalid product selected');
-        return;
-      }
-
-      const promotionData = {
-        productId: formData.value.productId,
-        productName: selectedProduct.name,
-        originalPrice: selectedProduct.price,
-        discountPercentage: formData.value.discountPercentage,
-        discountedPrice: 0, // Will be calculated by backend
-        startDate: formData.value.startDate,
-        endDate: formData.value.endDate,
-        status: formData.value.status
-      };
-
       try {
+        const payload = {
+          productId: formData.value.productId,
+          discount: formData.value.discount,
+          discountPercentage: formData.value.discount,
+          startDate: new Date(formData.value.startDate).toISOString(),
+          endDate: new Date(formData.value.endDate).toISOString(),
+          status: formData.value.status
+        };
+
         if (isEditMode.value) {
-          await axios.patch(`${API_URL}/promotions/${currentEditId.value}`, promotionData);
-          showToast('success', 'Promotion updated successfully!');
+          // For edit mode, use PATCH with ID in URL
+          await axios.patch(`${API_URL}/promotions/${currentEditId.value}`, payload);
+          showToast('success', 'Promotion updated successfully');
         } else {
-          await axios.post(`${API_URL}/promotions`, promotionData);
-          showToast('success', 'Promotion created successfully!');
+          // For create mode, use POST
+          await axios.post(`${API_URL}/promotions`, payload);
+          showToast('success', 'Promotion created successfully');
         }
-        
+
+        await fetchPromotions();
         closeModal();
-        fetchPromotions();
       } catch (error) {
         console.error('Failed to save promotion:', error);
-        showToast('error', 'Failed to save promotion');
+        console.error('Error details:', error.response?.data);
+        showToast('error', error.response?.data?.message || 'Failed to save promotion');
       }
     }
 
     async function deletePromotion(id) {
       if (!confirm('Are you sure you want to delete this promotion?')) return;
-
+      
       try {
         await axios.delete(`${API_URL}/promotions/${id}`);
-        showToast('success', 'Promotion deleted successfully!');
-        fetchPromotions();
+        showToast('success', 'Promotion deleted successfully');
+        await fetchPromotions();
       } catch (error) {
         console.error('Failed to delete promotion:', error);
         showToast('error', 'Failed to delete promotion');
@@ -527,44 +498,44 @@ export default {
     }
 
     async function bulkDeletePromotions() {
-      if (!confirm(`Delete ${selectedPromotionIds.value.length} promotions?`)) return;
-
+      if (!confirm(`Delete ${selectedPromotionIds.value.length} selected promotions?`)) return;
+      
       try {
-        await axios.post(`${API_URL}/promotions/bulk-delete`, {
-          ids: selectedPromotionIds.value
+        await axios.delete(`${API_URL}/promotions/bulk`, {
+          data: { ids: selectedPromotionIds.value }
         });
-        showToast('success', `Deleted ${selectedPromotionIds.value.length} promotions`);
+        showToast('success', `${selectedPromotionIds.value.length} promotions deleted`);
         selectedPromotionIds.value = [];
-        fetchPromotions();
+        await fetchPromotions();
       } catch (error) {
-        console.error('Failed to bulk delete:', error);
+        console.error('Failed to delete promotions:', error);
         showToast('error', 'Failed to delete promotions');
       }
     }
 
     function formatDate(dateString) {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
+      if (!dateString) return 'N/A';
+      return new Date(dateString).toLocaleDateString('en-US', {
+        year: 'numeric',
         month: 'short',
-        day: 'numeric',
-        year: 'numeric'
+        day: 'numeric'
       });
     }
 
     function getStatusClass(promotion) {
       const now = new Date();
-      const end = new Date(promotion.endDate);
+      const endDate = new Date(promotion.endDate);
       
-      if (end < now) return 'expired';
+      if (endDate < now) return 'expired';
       if (promotion.status === 'Active') return 'active';
       return 'inactive';
     }
 
     function getStatusLabel(promotion) {
       const now = new Date();
-      const end = new Date(promotion.endDate);
+      const endDate = new Date(promotion.endDate);
       
-      if (end < now) return 'Expired';
+      if (endDate < now) return 'Expired';
       return promotion.status;
     }
 
@@ -573,6 +544,7 @@ export default {
     }
 
     onMounted(() => {
+      // Load both promotions and products
       fetchPromotions();
       fetchProducts();
     });

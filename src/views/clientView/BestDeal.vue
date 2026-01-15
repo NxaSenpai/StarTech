@@ -1,46 +1,50 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import Header from '@/components/header.vue'
 import Footer from '@/components/footer.vue'
 import ProductCard from '@/components/productCard.vue'
+import axios from 'axios'
 
-const timeLeft = ref({ hours: 12, minutes: 44, seconds: 49 })
-let timerInterval = null
-
-const startTimer = () => {
-  timerInterval = setInterval(() => {
-    if (timeLeft.value.seconds > 0) timeLeft.value.seconds--
-    else {
-      if (timeLeft.value.minutes > 0) {
-        timeLeft.value.minutes--
-        timeLeft.value.seconds = 59
-      } else if (timeLeft.value.hours > 0) {
-        timeLeft.value.hours--
-        timeLeft.value.minutes = 59
-        timeLeft.value.seconds = 59
-      }
-    }
-  }, 1000)
-}
+const API_URL = 'http://localhost:3000'
 
 const calculateDiscount = (price, oldPrice) => {
   if (!oldPrice || oldPrice <= price) return 0
   return Math.round(((oldPrice - price) / oldPrice) * 100)
 }
 
-const dealProducts = [
-  { title: 'Multigroomer All-in-One Trimmer Series 3000 10-in-1', price: 44.00, oldPrice: 69.00, rating: 4.5, reviews: 235, sale: false, img: '/Asus_controller.png' },
-  { title: 'Smart Speaker with Alexa Compatibility and Premium Sound', price: 79.99, oldPrice: 119.99, rating: 4.7, reviews: 412, sale: false, img: '/Asus_controller.png' },
-  { title: 'Home Speaker 500 Smart Wireless Speaker with Alexa', price: 219.00, oldPrice: 299.00, rating: 4.6, reviews: 189, sale: false, img: '/Asus_controller.png' },
-  { title: 'Health and Fitness Smart Watch with Heart Rate Monitor', price: 249.00, oldPrice: 299.00, rating: 4.8, reviews: 567, sale: false, img: '/Asus_controller.png' },
-  { title: 'Smart Home Camera 4K UHD with Night Vision', price: 99.99, oldPrice: 149.99, rating: 4.4, reviews: 312, sale: false, img: '/Asus_controller.png' },
-  { title: 'Instant Camera with Film Pack', price: 89.00, oldPrice: 129.00, rating: 4.9, reviews: 890, sale: false, img: '/Asus_controller.png' },
-  { title: 'Smart Watch with GPS and Fitness Tracking', price: 399.00, oldPrice: 449.00, rating: 4.7, reviews: 678, sale: false, img: '/Asus_controller.png' },
-  { title: 'Vintage Gaming Console Retro Edition', price: 59.99, oldPrice: 89.99, rating: 4.5, reviews: 234, sale: false, img: '/Asus_controller.png' },
-]
+const dealProducts = ref([])
+const isLoading = ref(true)
+const error = ref(null)
 
-onMounted(() => startTimer())
-onUnmounted(() => clearInterval(timerInterval))
+const fetchActivePromotions = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    const response = await axios.get(`${API_URL}/promotions/active`)
+    dealProducts.value = response.data.map(promo => ({
+      id: promo.product_id,
+      title: promo.product_name,
+      price: promo.sale_price,
+      oldPrice: promo.original_price,
+      rating: 4.5,
+      reviews: 128,
+      sale: true,
+      img: promo.product_image || '/placeholder.png',
+      discount: promo.discount
+    }))
+    console.log('Loaded active promotions:', dealProducts.value.length)
+  } catch (err) {
+    console.error('Failed to fetch active promotions:', err)
+    error.value = 'Failed to load promotions'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  fetchActivePromotions()
+})
 </script>
 
 <template>
@@ -62,18 +66,30 @@ onUnmounted(() => clearInterval(timerInterval))
         <div class="container">
           <div class="section-header">
             <h2><span class="emoji">🔥</span> Hot Offers</h2>
-            <div class="timer">
-              Ends in: 
-              <span>{{ String(timeLeft.hours).padStart(2, '0') }}h : </span>
-              <span>{{ String(timeLeft.minutes).padStart(2, '0') }}m : </span>
-              <span>{{ String(timeLeft.seconds).padStart(2, '0') }}s</span>
-            </div>
           </div>
           
-          <div class="products-grid">
+          <!-- Loading State -->
+          <div v-if="isLoading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading deals...</p>
+          </div>
+
+          <!-- Error State -->
+          <div v-else-if="error" class="error-state">
+            <p class="error-message">{{ error }}</p>
+            <button @click="fetchActivePromotions" class="retry-btn">Try Again</button>
+          </div>
+
+          <!-- Empty State -->
+          <div v-else-if="dealProducts.length === 0" class="empty-state">
+            <p>No active promotions at the moment. Check back soon!</p>
+          </div>
+
+          <!-- Products Grid -->
+          <div v-else class="products-grid">
             <div v-for="(product, index) in dealProducts" :key="index" class="product-wrapper">
               <div class="discount-tag">
-                -{{ calculateDiscount(product.price, product.oldPrice) }}%
+                -{{ product.discount }}%
               </div>
 
               <ProductCard
@@ -84,6 +100,7 @@ onUnmounted(() => clearInterval(timerInterval))
                 :reviewCount="product.reviews"
                 :isOnSale="product.sale"
                 :image="product.img"
+                :productId="product.id"
               />
             </div>
           </div>
@@ -158,13 +175,66 @@ onUnmounted(() => clearInterval(timerInterval))
   font-weight: 800;
 }
 
-.timer {
-  background: #fff5f5;
-  color: #ff4d4f;
-  padding: 8px 16px;
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  gap: 20px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f4f6;
+  border-top: 4px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  color: #64748b;
+  font-size: 16px;
+}
+
+.error-state {
+  text-align: center;
+  padding: 80px 20px;
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.retry-btn {
+  padding: 12px 32px;
+  background: #3b82f6;
+  color: white;
+  border: none;
   border-radius: 8px;
-  font-weight: 700;
-  border: 1px solid #ffd8d8;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: #64748b;
+  font-size: 18px;
 }
 
 .products-grid {

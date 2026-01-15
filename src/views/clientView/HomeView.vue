@@ -86,34 +86,6 @@
           </div>
         </section>
   
-        <section class="discounts-section">
-          <div class="container">
-            <div class="section-header">
-              <div class="section-header-left">
-                <span class="section-tag">Hot Deals</span>
-                <h2 class="section-title">Limited Time Offers</h2>
-              </div>
-            </div>
-            <div class="discounts-grid">
-              <DiscountBanner
-                title="Wireless headphones"
-                startingPrice="$49"
-                image="/wirelessheadphone.png"
-              />
-              <DiscountBanner
-                title="Gagdets"
-                startingPrice="$39"
-                image="/kitchengadget.png"
-              />
-              <DiscountBanner
-                title="Video games"
-                startingPrice="$49"
-                image="/videogame.png"
-              />
-            </div>
-          </div>
-        </section>
-  
         <section class="products-section">
           <div class="container">
             <div class="section-header">
@@ -488,16 +460,6 @@
     opacity: 1;
   }
   
-  .discounts-section {
-    padding: 80px 0;
-    background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.03), transparent);
-  }
-  
-  .discounts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-    gap: 24px;
-  }
   
   .products-section {
     padding: 80px 0;
@@ -729,15 +691,6 @@
     
     .newsletter-btn {
       width: 100%;
-    }
-    
-    .discounts-grid {
-      grid-template-columns: 1fr;
-    }
-    
-    .countdown {
-      flex-direction: column;
-      align-items: flex-start;
     }
   }
   

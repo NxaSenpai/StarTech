@@ -21,9 +21,6 @@ const navigateToDetails = () => {
 
 <template>
   <div class="product-card" @click="navigateToDetails">
-    <div 
-      v-if="isOnSale" class="sale-badge">Sale!
-    </div>
 
     <div class="image-wrapper">
       <img
@@ -68,10 +65,6 @@ const navigateToDetails = () => {
   transition: transform 0.35s ease;
   border: 1px solid #a09f9f;
   cursor: pointer;
-}
-
-.product-card:hover {
-  transform: translateY(-8px);
 }
 
 .sale-badge {
