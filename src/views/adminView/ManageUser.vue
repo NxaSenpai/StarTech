@@ -37,18 +37,16 @@
             <div class="search-box">
               <img src="/searchIcon.png" class="search-icon">
               <input 
-                type="text" 
-                placeholder="Search by User ID, Name, Email..." 
                 v-model="searchQuery"
                 class="search-input"
+                placeholder="Search users..."
               >
             </div>
             <div class="filter-actions">
               <select v-model="sortBy" class="filter-select">
-                <option value="uid">Sort by UID</option>
-                <option value="recent">Recently Joined</option>
                 <option value="name">Sort by Name</option>
                 <option value="email">Sort by Email</option>
+                <option value="date">Sort by Date</option>
               </select>
               <button 
                 v-if="selectedUserIds.length > 0" 
@@ -62,68 +60,77 @@
           </div>
           
           <div class="table-wrapper">
-            <table>
+            <table v-if="!isLoading && filteredUsers.length > 0">
               <thead>
                 <tr>
                   <th class="checkbox-col">
-                    <input type="checkbox" v-model="selectAll" class="custom-checkbox">
+                    <input 
+                      type="checkbox" 
+                      v-model="selectAll"
+                      class="custom-checkbox"
+                    />
                   </th>
                   <th>User ID</th>
-                  <th>User Info</th>
+                  <th>Name</th>
                   <th>Email</th>
-                  <th>Join Date</th>
+                  <th>Created Date</th>
                   <th class="action-col">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="filteredUsers.length === 0">
-                  <td colspan="6" class="empty-state">
-                    <div class="empty-content">
-                      <p>No users found</p>
-                    </div>
-                  </td>
-                </tr>
                 <tr v-for="user in filteredUsers" :key="user.id" class="table-row">
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      :value="user.id" 
+                      :value="user.id"
                       v-model="selectedUserIds"
                       class="custom-checkbox"
-                    >
+                    />
                   </td>
-                  <td class="user-id-cell">
-                    <span class="user-id">{{ user.id }}</span>
+                  <td>
+                    <span class="user-id-badge">{{ formatUserId(user.id) }}</span>
                   </td>
-                  <td class="user-cell">
+                  <td>
                     <div class="user-info">
-                      <img :src="user.profile" :alt="user.name" class="user-avatar">
+                      <div class="user-avatar">{{ getInitials(user.name) }}</div>
                       <span class="user-name">{{ user.name }}</span>
                     </div>
                   </td>
                   <td class="email-cell">{{ user.email }}</td>
-                  <td class="date-cell">{{ user.joinSince }}</td>
-                  <td class="action-cell">
+                  <td class="date-cell">{{ formatDate(user.createdAt) }}</td>
+                  <td class="action-col">
                     <div class="action-buttons">
                       <button 
-                        class="action-btn view-btn" 
-                        @click="viewUserDetails(user)"
+                        @click="viewUserDetails(user)" 
+                        class="action-btn view-btn"
                         title="View Details"
                       >
                         <img class="btn-icon-black" src="/viewIcon.png" alt="">
                       </button>
                       <button 
-                        class="action-btn delete-btn" 
-                        @click="deleteUser(user.id)"
+                        @click="deleteUser(user.id)" 
+                        class="action-btn delete-btn"
                         title="Delete"
                       >
-                      <img class="btn-icon-black" src="/deleteIcon.png" alt="">
+                        <img class="btn-icon-black" src="/deleteIcon.png" alt="">
                       </button>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
+
+            <div v-else-if="isLoading" class="empty-state">
+              <div class="spinner"></div>
+              <p>Loading users...</p>
+            </div>
+
+            <div v-else class="empty-state">
+              <div class="empty-content">
+                <span class="empty-icon">👤</span>
+                <p>No users found</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -138,7 +145,9 @@
             </div>
             <div class="modal-body">
               <div class="profile-section">
-                <img :src="selectedUser.profile" :alt="selectedUser.name" class="profile-image">
+                <div class="profile-avatar-large">
+                  {{ getInitials(selectedUser?.name) }}
+                </div>
               </div>
 
               <div class="details-section">
@@ -147,34 +156,36 @@
                   <div class="info-item">
                     <div class="info-content">
                       <span class="info-label">User ID</span>
-                      <span class="info-value">{{ selectedUser.id }}</span>
+                      <span class="info-value">{{ formatUserId(selectedUser?.id) }}</span>
                     </div>
                   </div>
                   
                   <div class="info-item">
                     <div class="info-content">
                       <span class="info-label">Full Name</span>
-                      <span class="info-value">{{ selectedUser.name }}</span>
-                    </div>
-                  </div>
-                  
-                  <div class="info-item full-width">
-                    <div class="info-content">
-                      <span class="info-label">Email Address</span>
-                      <span class="info-value">{{ selectedUser.email }}</span>
+                      <span class="info-value">{{ selectedUser?.name }}</span>
                     </div>
                   </div>
                   
                   <div class="info-item">
                     <div class="info-content">
-                      <span class="info-label">Join Date</span>
-                      <span class="info-value">{{ selectedUser.joinSince }}</span>
+                      <span class="info-label">Email Address</span>
+                      <span class="info-value">{{ selectedUser?.email }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="info-item">
+                    <div class="info-content">
+                      <span class="info-label">Member Since</span>
+                      <span class="info-value">{{ formatDate(selectedUser?.createdAt) }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div class="modal-footer"></div>
+            <div class="modal-footer">
+              <button class="btn btn-secondary" @click="closeDetailsModal">Close</button>
+            </div>
           </div>
         </div>
 
@@ -213,7 +224,7 @@ export default {
     const adminName = ref('Admin');
     const notifications = ref(3);
     const searchQuery = ref('');
-    const sortBy = ref('uid');
+    const sortBy = ref('name');
     const showDetailsModal = ref(false);
     const selectedUser = ref(null);
     const users = ref([]);
@@ -246,14 +257,11 @@ export default {
         console.log('Users loaded:', response.data);
         
         users.value = response.data.map(user => ({
-          id: user._id || 'N/A',
-          name: user.name,
-          email: user.email,
-          joinSince: user.joinSince,
-          profile: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name) + '&background=0b6cf0&color=fff',
-          totalOrders: 0,
-          totalSpent: '0.00',
-          reviews: 0
+          id: user._id || user.id || 'N/A',
+          name: user.name || 'Unknown',
+          email: user.email || 'N/A',
+          createdAt: user.createdAt || new Date().toISOString(),
+          profile: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(user.name || 'User') + '&background=0b6cf0&color=fff'
         }));
         
         console.log('Mapped users:', users.value);
@@ -275,30 +283,57 @@ export default {
     const totalUsers = computed(() => users.value.length);
 
     const filteredUsers = computed(() => {
-      let filtered = users.value;
+      let filtered = [...users.value];
 
       if (searchQuery.value) {
+        const query = searchQuery.value.toLowerCase();
         filtered = filtered.filter(u => 
-          u.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          u.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+          (u.id && u.id.toLowerCase().includes(query)) ||
+          (u.name && u.name.toLowerCase().includes(query)) ||
+          (u.email && u.email.toLowerCase().includes(query))
         );
       }
 
-      if (sortBy.value === 'uid') {
-        filtered = [...filtered].sort((a, b) => a.id.localeCompare(b.id));
-      } else if (sortBy.value === 'name') {
-        filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      if (sortBy.value === 'name') {
+        filtered = filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       } else if (sortBy.value === 'email') {
-        filtered = [...filtered].sort((a, b) => a.email.localeCompare(b.email));
-      } else if (sortBy.value === 'recent') {
-        filtered = [...filtered].sort((a, b) => 
-          new Date(b.joinSince) - new Date(a.joinSince)
+        filtered = filtered.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+      } else if (sortBy.value === 'date') {
+        filtered = filtered.sort((a, b) => 
+          new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
         );
       }
 
       return filtered;
     });
+
+    function getInitials(name) {
+      if (!name) return 'U';
+      const names = name.split(' ');
+      if (names.length >= 2) {
+        return (names[0][0] + names[1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    function formatUserId(id) {
+      if (!id || id === 'N/A') return 'N/A';
+      return id.length > 8 ? `#${id.substring(0, 8)}...` : `#${id}`;
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch {
+        return 'N/A';
+      }
+    }
 
     function viewUserDetails(user) {
       selectedUser.value = user;
@@ -368,6 +403,9 @@ export default {
       filteredUsers,
       isLoading,
       toast,
+      getInitials,
+      formatUserId,
+      formatDate,
       viewUserDetails,
       closeDetailsModal,
       deleteUser,
@@ -701,6 +739,14 @@ tbody {
   color: #0b6cf0;
 }
 
+.user-id-badge {
+  color: #0b6cf0;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .user-info {
   display: flex;
   align-items: center;
@@ -708,8 +754,12 @@ tbody {
 }
 
 .user-avatar {
+  color: white;
   width: 40px;
   height: 40px;
+  text-align: center;
+  align-content: center;
+  background: #0b6cf0;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #e9ecef;
@@ -1030,5 +1080,51 @@ tbody {
     left: 10px;
     min-width: auto;
   }
+}
+
+.user-id-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  color: #0b6cf0;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0b6cf0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 64px;
+}
+
+.profile-avatar-large {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  font-weight: 700;
+  border: 4px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.full-width {
+  grid-column: 1 / -1;
 }
 </style>

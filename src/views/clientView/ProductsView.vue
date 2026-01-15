@@ -27,25 +27,23 @@
               <div class="filter-controls">
                 <select v-model="categoryFilter" class="filter-select">
                   <option value="all">All Categories</option>
-                  <option value="kitchen">Kitchen Appliances</option>
-                  <option value="pc">PCs & Laptops</option>
-                  <option value="refrigerator">Refrigerator</option>
-                  <option value="smart">Smart Home</option>
-                  <option value="audio">Audio & Video</option>
+                  <option v-for="cat in categories" :key="cat" :value="cat">
+                    {{ cat }}
+                  </option>
                 </select>
 
                 <select v-model="sortBy" class="filter-select">
                   <option value="default">Default Sorting</option>
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rating</option>
+                  <option value="name">Name: A-Z</option>
                   <option value="newest">Newest First</option>
                 </select>
               </div>
             </div>
 
             <div class="results-info">
-              <p>Showing <strong>{{ filteredProducts.length }}</strong> products</p>
+              <p>Showing <strong>{{ filteredProducts.length }}</strong> of <strong>{{ products.length }}</strong> products</p>
             </div>
           </div>
         </section>
@@ -60,6 +58,17 @@
             <p>Loading products...</p>
           </div>
 
+          <div v-else-if="error" class="error-state">
+            <div class="error-content">
+              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <h3>Failed to load products</h3>
+              <p>{{ error }}</p>
+              <button @click="fetchProducts" class="retry-btn">Try Again</button>
+            </div>
+          </div>
+
           <div v-else-if="filteredProducts.length === 0" class="empty-state">
             <div class="empty-content">
               <h3>No products found</h3>
@@ -71,13 +80,12 @@
             <ProductCard
               v-for="product in filteredProducts"
               :key="product.id"
-              :title="product.title"
+              :title="product.name"
               :price="product.price"
-              :oldPrice="product.oldPrice"
-              :rating="product.rating"
-              :reviewCount="product.reviews"
-              :isOnSale="product.sale"
-              :image="product.img"
+              :rating="4.5"
+              :reviewCount="128"
+              :isOnSale="product.status === 'Active'"
+              :image="product.imageSrc"
               :productId="product.id"
               @add-to-cart="addToCart(product)"
             />
@@ -94,6 +102,9 @@
 import Header from '@/components/header.vue';
 import Footer from '@/components/footer.vue';
 import ProductCard from '@/components/productCard.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ProductsView',
@@ -108,173 +119,135 @@ export default {
       categoryFilter: 'all',
       sortBy: 'default',
       isLoading: false,
-      products: [
-        { 
-          id: 1, 
-          title: 'Multigroomer All-in-One Trimmer Series 5000, 23 Piece Mens Grooming Kit', 
-          price: 44.00, 
-          oldPrice: 69.00, 
-          rating: 4.0, 
-          reviews: 128, 
-          sale: true, 
-          img: '/smart_wifi.png',
-          category: 'smart'
-        },
-        { 
-          id: 2, 
-          title: 'Wireless Bluetooth Headphones – Noise Cancelling', 
-          price: 89.99, 
-          oldPrice: 129.99, 
-          rating: 4.5, 
-          reviews: 342, 
-          sale: true, 
-          img: '/wirelessheadphone.png',
-          category: 'audio'
-        },
-        { 
-          id: 3, 
-          title: 'Smart LED TV 55″ 4K UHD', 
-          price: 599.00, 
-          oldPrice: 799.00, 
-          rating: 4.8, 
-          reviews: 87, 
-          sale: true, 
-          img: '/categories/2_audio.png',
-          category: 'audio'
-        },
-        { 
-          id: 4, 
-          title: 'Portable Air Conditioner 12000 BTU', 
-          price: 349.00, 
-          oldPrice: 499.00, 
-          rating: 4.3, 
-          reviews: 201, 
-          sale: true, 
-          img: '/categories/1_AC.png',
-          category: 'smart'
-        },
-        { 
-          id: 5, 
-          title: 'Gaming Laptop RTX 4070 16GB RAM', 
-          price: 1299.00, 
-          oldPrice: 1599.00, 
-          rating: 4.9, 
-          reviews: 523, 
-          sale: true, 
-          img: '/categories/6_pc.png',
-          category: 'pc'
-        },
-        { 
-          id: 6, 
-          title: 'Smart Watch Series 8 GPS + Cellular', 
-          price: 399.00, 
-          rating: 4.7, 
-          reviews: 892, 
-          sale: false, 
-          img: '/categories/3_gadget.png',
-          category: 'smart'
-        },
-        { 
-          id: 7, 
-          title: 'Coffee Maker Automatic Espresso', 
-          price: 179.00, 
-          oldPrice: 249.00, 
-          rating: 4.6, 
-          reviews: 176, 
-          sale: true, 
-          img: '/categories/5_oven.png',
-          category: 'kitchen'
-        },
-        { 
-          id: 8, 
-          title: 'Robot Vacuum Cleaner with Mop', 
-          price: 299.00, 
-          oldPrice: 399.00, 
-          rating: 4.4, 
-          reviews: 412, 
-          sale: true, 
-          img: '/categories/4_wash.png',
-          category: 'kitchen'
-        },
-        { 
-          id: 9, 
-          title: 'French Door Refrigerator 25 cu ft', 
-          price: 1899.00, 
-          oldPrice: 2199.00, 
-          rating: 4.7, 
-          reviews: 234, 
-          sale: true, 
-          img: '/categories/7_fridge.png',
-          category: 'refrigerator'
-        },
-        { 
-          id: 10, 
-          title: 'Microwave Oven 1.5 cu ft Stainless Steel', 
-          price: 199.00, 
-          rating: 4.5, 
-          reviews: 156, 
-          sale: false, 
-          img: '/categories/5_oven.png',
-          category: 'kitchen'
-        },
-        { 
-          id: 11, 
-          title: 'Smart Home Security Camera System', 
-          price: 249.00, 
-          oldPrice: 349.00, 
-          rating: 4.6, 
-          reviews: 287, 
-          sale: true, 
-          img: '/categories/8_smart.png',
-          category: 'smart'
-        },
-        { 
-          id: 12, 
-          title: 'Laptop Stand Adjustable Aluminum', 
-          price: 39.99, 
-          rating: 4.8, 
-          reviews: 567, 
-          sale: false, 
-          img: '/categories/6_pc.png',
-          category: 'pc'
-        }
-      ]
+      error: null,
+      products: [],
+      categories: []
     };
   },
   computed: {
     filteredProducts() {
-      let filtered = this.products;
+      let filtered = [...this.products];
+      
+      // Filter by search query
       if (this.searchQuery) {
+        const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(product =>
-          product.title.toLowerCase().includes(this.searchQuery.toLowerCase())
+          product.name.toLowerCase().includes(query) ||
+          product.brand.toLowerCase().includes(query) ||
+          product.category.toLowerCase().includes(query)
         );
       }
+      
+      // Filter by category
       if (this.categoryFilter !== 'all') {
         filtered = filtered.filter(product => 
           product.category === this.categoryFilter
         );
       }
+      
+      // Sort products
       if (this.sortBy === 'price-low') {
-        filtered = [...filtered].sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.price - b.price);
       } else if (this.sortBy === 'price-high') {
-        filtered = [...filtered].sort((a, b) => b.price - a.price);
-      } else if (this.sortBy === 'rating') {
-        filtered = [...filtered].sort((a, b) => b.rating - a.rating);
+        filtered.sort((a, b) => b.price - a.price);
+      } else if (this.sortBy === 'name') {
+        filtered.sort((a, b) => a.name.localeCompare(b.name));
       } else if (this.sortBy === 'newest') {
-        filtered = [...filtered].reverse();
+        filtered.sort((a, b) => {
+          const dateA = new Date(a.stockAt || 0);
+          const dateB = new Date(b.stockAt || 0);
+          return dateB - dateA;
+        });
       }
+      
       return filtered;
     }
   },
   methods: {
+    async fetchProducts() {
+      this.isLoading = true;
+      this.error = null;
+      
+      try {
+        const response = await axios.get(`${API_URL}/products`);
+        
+        // Map backend response to frontend format
+        this.products = response.data.map(product => ({
+          id: product._id,
+          name: product.name,
+          brand: product.brand,
+          category: product.category,
+          supplier: product.supplier,
+          inStock: product.inStock,
+          price: product.price,
+          status: product.status,
+          imageSrc: product.imageSrc || '/placeholder.png',
+          description: product.description || '',
+          stockAt: product.stockAt
+        }));
+        
+        // Extract unique categories
+        const uniqueCategories = [...new Set(this.products.map(p => p.category))];
+        this.categories = uniqueCategories.sort();
+        
+        console.log('Products loaded:', this.products.length);
+      } catch (error) {
+        console.error('Failed to fetch products:', error);
+        this.error = error.response?.data?.message || 'Unable to connect to server. Please try again later.';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    
     addToCart(product) {
-      console.log('Adding to cart:', product);
-      alert(`Added "${product.title}" to cart!`);
+      // Get existing cart from localStorage
+      let cart = [];
+      try {
+        const cartData = localStorage.getItem('cart');
+        if (cartData) {
+          cart = JSON.parse(cartData);
+        }
+      } catch (error) {
+        console.error('Error reading cart:', error);
+      }
+      
+      // Check if product already exists in cart
+      const existingIndex = cart.findIndex(item => item.id === product.id);
+      
+      if (existingIndex !== -1) {
+        // Increase quantity if already in cart
+        cart[existingIndex].qty = (cart[existingIndex].qty || 1) + 1;
+        alert(`Increased quantity of "${product.name}" in cart!`);
+      } else {
+        // Add new product to cart
+        cart.push({
+          id: product.id,
+          name: product.name,
+          image: product.imageSrc,
+          price: product.price,
+          qty: 1
+        });
+        alert(`Added "${product.name}" to cart!`);
+      }
+      
+      // Save updated cart to localStorage
+      try {
+        localStorage.setItem('cart', JSON.stringify(cart));
+        
+        // Emit custom event for cart update
+        window.dispatchEvent(new CustomEvent('cart-updated', { 
+          detail: { itemCount: cart.reduce((sum, item) => sum + item.qty, 0) }
+        }));
+      } catch (error) {
+        console.error('Error saving cart:', error);
+        alert('Failed to add item to cart. Please try again.');
+      }
     }
   },
   mounted() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    console.log('ProductsView mounted');
+    this.fetchProducts();
+    console.log('ProductsView mounted - fetching from backend');
   }
 };
 </script>
@@ -434,6 +407,51 @@ export default {
 .loading-state p {
   color: #64748b;
   font-size: 16px;
+}
+
+.error-state {
+  padding: 80px 20px;
+}
+
+.error-content {
+  text-align: center;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.error-content svg {
+  color: #ef4444;
+  margin-bottom: 24px;
+}
+
+.error-content h3 {
+  font-size: 1.5rem;
+  color: #1e293b;
+  margin: 0 0 12px;
+}
+
+.error-content p {
+  color: #64748b;
+  font-size: 1rem;
+  margin: 0 0 24px;
+}
+
+.retry-btn {
+  padding: 12px 32px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
 .empty-state {

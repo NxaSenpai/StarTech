@@ -17,183 +17,245 @@
 
         <div class="page-header">
           <div class="header-left">
-            <h1 class="page-title">Admin Management</h1>
-            <p class="page-subtitle">View and manage admin accounts</p>
+            <h1 class="page-title">Manage Admins</h1>
+            <p class="page-subtitle">Manage system administrators and their permissions</p>
           </div>
           <div class="header-actions">
-            <button class="btn btn-primary" @click="showAddModal = true">
-              <img src="/addIcon.png" class="btn-icon">
+            <button 
+              v-if="selectedAdminIds.length > 0" 
+              @click="bulkDeleteAdmins" 
+              class="btn btn-danger"
+            >
+              <img class="btn-icon" src="/deleteIcon.png" alt="">
+              Delete Selected ({{ selectedAdminIds.length }})
+            </button>
+            <button @click="showAddModal = true" class="btn btn-primary">
+              <img class="btn-icon" src="/addIcon.png" alt="">
               Add Admin
             </button>
           </div>
         </div>
 
-        <section class="stats-cards">
+        <div class="stats-cards">
           <div class="stat-card">
-            <div class="stat-icon blue"><img class="manage-icon" src="/adminIcon.png" alt=""></div>
-            <div class="stat-info">
+            <div class="stat-icon blue">
+              <img class="manage-icon" src="/adminIcon.png" alt="">
+            </div>
+            <div>
               <p class="stat-label">Total Admins</p>
-              <h3 class="stat-value">{{ totalAdmins }}</h3>
+              <h2 class="stat-value">{{ totalAdmins }}</h2>
             </div>
           </div>
-        </section>
 
-        <section class="admin-content">
+          <div class="stat-card">
+            <div class="stat-icon green">
+              <img class="manage-icon" src="/verifiedIcon.png" alt="">
+            </div>
+            <div>
+              <p class="stat-label">Active Admins</p>
+              <h2 class="stat-value">{{ activeAdmins }}</h2>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon orange">
+              <img class="manage-icon" src="/userIcon.png" alt="">
+            </div>
+            <div>
+              <p class="stat-label">New This Month</p>
+              <h2 class="stat-value">{{ newThisMonth }}</h2>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon purple">
+              <img class="manage-icon" src="/settingIcon.png" alt="">
+            </div>
+            <div>
+              <p class="stat-label">Super Admins</p>
+              <h2 class="stat-value">{{ superAdmins }}</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="admin-content">
           <div class="table-controls">
             <div class="search-box">
-              <img src="/searchIcon.png" class="search-icon">
+              <img class="search-icon" src="/searchIcon.png" alt="">
               <input 
+                v-model="searchQuery" 
                 type="text" 
-                placeholder="Search by Admin ID, Name, Email..." 
-                v-model="searchQuery"
+                placeholder="Search admins..." 
                 class="search-input"
-              >
+              />
             </div>
+            
             <div class="filter-actions">
               <select v-model="sortBy" class="filter-select">
-                <option value="id">Sort by ID</option>
-                <option value="recent">Recently Added</option>
                 <option value="name">Sort by Name</option>
                 <option value="email">Sort by Email</option>
+                <option value="role">Sort by Role</option>
               </select>
-              <button 
-                v-if="selectedAdminIds.length > 0" 
-                class="btn btn-danger" 
-                @click="bulkDeleteAdmins"
-              >
-                <img src="/deleteIcon.png" class="btn-icon">
-                Delete Selected ({{ selectedAdminIds.length }})
-              </button>
             </div>
           </div>
-          
+
           <div class="table-wrapper">
-            <table>
+            <table v-if="!isLoading && filteredAdmins.length > 0">
               <thead>
                 <tr>
                   <th class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      class="custom-checkbox"
                       v-model="selectAll"
-                    >
+                      class="custom-checkbox"
+                    />
                   </th>
-                  <th>Admin ID</th>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Join Date</th>
+                  <th>Role</th>
+                  <th>Created Date</th>
                   <th class="action-col">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-if="isLoading">
-                  <td colspan="6" class="empty-state">
-                    <div class="empty-content">
-                      <p>Loading admins...</p>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-else-if="filteredAdmins.length === 0">
-                  <td colspan="6" class="empty-state">
-                    <div class="empty-content">
-                      <p>No admins found</p>
-                    </div>
-                  </td>
-                </tr>
-                <tr v-else v-for="admin in filteredAdmins" :key="admin.id" class="table-row">
+                <tr 
+                  v-for="admin in filteredAdmins" 
+                  :key="admin.email"
+                  class="table-row"
+                >
                   <td class="checkbox-col">
                     <input 
                       type="checkbox" 
-                      class="custom-checkbox"
-                      :value="admin.id"
+                      :value="admin.email"
                       v-model="selectedAdminIds"
-                    >
+                      class="custom-checkbox"
+                    />
                   </td>
-                  <td class="admin-id-cell">{{ admin.id }}</td>
-                  <td class="name-cell">
+                  <td>
                     <div class="admin-name-wrapper">
-                      <div class="avatar-placeholder">{{ getInitials(admin.name) }}</div>
-                      <span class="admin-name">{{ admin.name }}</span>
+                      <div class="avatar-placeholder">
+                        {{ getInitials(admin.name) }}
+                      </div>
+                      <span class="admin-name">{{ admin.name || 'N/A' }}</span>
                     </div>
                   </td>
                   <td class="email-cell">{{ admin.email }}</td>
-                  <td class="date-cell">{{ admin.joinDate }}</td>
+                  <td>
+                    <span 
+                      class="role-badge" 
+                      :class="admin.role === 'superadmin' ? 'super' : 'regular'"
+                    >
+                      {{ admin.role === 'superadmin' ? 'Super Admin' : 'Admin' }}
+                    </span>
+                  </td>
+                  <td class="date-cell">{{ formatDate(admin.createdAt) }}</td>
                   <td class="action-col">
                     <div class="action-buttons">
-                      <button class="action-btn edit-btn" @click="editAdmin(admin)" title="Edit">
-                        <img src="/editIcon.png" class="btn-icon-black" alt="Edit">
+                      <button 
+                        @click="editAdmin(admin)" 
+                        class="action-btn edit-btn"
+                        title="Edit"
+                      >
+                        <img class="btn-icon-black" src="/editIcon.png" alt="">
                       </button>
-                      <button class="action-btn delete-btn" @click="deleteAdmin(admin.id)" title="Delete">
-                        <img src="/deleteIcon.png" class="btn-icon-black" alt="Delete">
+                      <button 
+                        @click="deleteAdmin(admin.email)" 
+                        class="action-btn delete-btn"
+                        title="Delete"
+                      >
+                        <img class="btn-icon-black" src="/deleteIcon.png" alt="">
                       </button>
                     </div>
                   </td>
                 </tr>
               </tbody>
             </table>
-          </div>
-        </section>
 
+            <div v-else-if="isLoading" class="empty-state">
+              <div class="spinner"></div>
+              <p>Loading admins...</p>
+            </div>
+
+            <div v-else class="empty-state">
+              <div class="empty-content">
+                <span class="empty-icon">👤</span>
+                <p>No admins found</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add/Edit Modal -->
         <div v-if="showAddModal" class="modal-overlay" @click.self="closeAddModal">
-          <div class="modal-container small-modal">
+          <div class="modal-container">
             <div class="modal-header">
               <div>
                 <h3>{{ isEditing ? 'Edit Admin' : 'Add New Admin' }}</h3>
-                <p class="modal-subtitle">{{ isEditing ? 'Update admin information' : 'Create a new admin account' }}</p>
+                <p class="modal-subtitle">{{ isEditing ? 'Update admin information' : 'Create a new administrator account' }}</p>
               </div>
               <button class="close-btn" @click="closeAddModal">✕</button>
             </div>
+
             <div class="modal-body">
               <form @submit.prevent="saveAdmin" class="admin-form">
                 <div class="form-group">
-                  <label class="form-label">Full Name <span class="required">*</span></label>
+                  <label class="form-label">Name <span class="required">*</span></label>
                   <input 
-                    type="text" 
                     v-model="formData.name" 
+                    type="text"
                     class="form-input"
-                    placeholder="Enter full name"
+                    placeholder="Enter admin name"
                     required
-                  >
+                  />
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Email Address <span class="required">*</span></label>
+                  <label class="form-label">Email <span class="required">*</span></label>
                   <input 
-                    type="email" 
                     v-model="formData.email" 
+                    type="email"
                     class="form-input"
                     placeholder="Enter email address"
+                    :disabled="isEditing"
                     required
-                  >
+                  />
                 </div>
 
-                <div class="form-group">
+                <div class="form-group" v-if="!isEditing">
                   <label class="form-label">Password <span class="required">*</span></label>
                   <div class="password-input-wrapper">
                     <input 
-                      :type="showPassword ? 'text' : 'password'" 
                       v-model="formData.password" 
+                      :type="showPassword ? 'text' : 'password'"
                       class="form-input"
-                      :placeholder="isEditing ? 'Leave blank to keep current password' : 'Enter password'"
-                      :required="!isEditing"
-                    >
+                      placeholder="Enter password"
+                      required
+                    />
                     <button 
-                      type="button" 
-                      class="toggle-password" 
+                      type="button"
+                      class="toggle-password"
                       @click="showPassword = !showPassword"
                     >
                       {{ showPassword ? 'Hide' : 'Show' }}
                     </button>
                   </div>
-                  <small class="form-hint">{{ isEditing ? 'Leave blank to keep current password' : 'Minimum 8 characters' }}</small>
+                  <p class="form-hint">Minimum 3 characters</p>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Role <span class="required">*</span></label>
+                  <select v-model="formData.role" class="form-input" required>
+                    <option value="admin">Admin</option>
+                    <option value="superadmin">Super Admin</option>
+                  </select>
                 </div>
 
                 <div class="form-actions">
-                  <button type="button" class="btn btn-secondary" @click="closeAddModal">
+                  <button type="button" @click="closeAddModal" class="btn btn-secondary">
                     Cancel
                   </button>
                   <button type="submit" class="btn btn-primary">
-                    {{ isEditing ? 'Update Admin' : 'Add Admin' }}
+                    {{ isEditing ? 'Update Admin' : 'Create Admin' }}
                   </button>
                 </div>
               </form>
@@ -201,13 +263,8 @@
           </div>
         </div>
 
-        <div v-if="toast.show && toast.type === 'success'" class="toast success-toast">
-          <div class="toast-content">
-            <span>{{ toast.message }}</span>
-          </div>
-        </div>
-
-        <div v-if="toast.show && toast.type === 'error'" class="toast error-toast">
+        <!-- Toast Notification -->
+        <div v-if="toast.show" class="toast" :class="toast.type + '-toast'">
           <div class="toast-content">
             <span>{{ toast.message }}</span>
           </div>
@@ -236,22 +293,19 @@ export default {
     const adminName = ref('Super Admin');
     const notifications = ref(3);
     const searchQuery = ref('');
-    const sortBy = ref('id');
+    const sortBy = ref('name');
     const showAddModal = ref(false);
     const showPassword = ref(false);
     const isEditing = ref(false);
     const isLoading = ref(false);
 
     const admins = ref([]);
-
     const selectedAdminIds = ref([]);
     
     const formData = ref({
-      id: '',
       name: '',
       email: '',
       password: '',
-      joinDate: '',
       role: 'admin'
     });
 
@@ -275,29 +329,30 @@ export default {
     async function fetchAdmins() {
       isLoading.value = true;
       try {
-        const [adminResponse, superadminResponse] = await Promise.all([
+        const [adminResponse, superAdminResponse] = await Promise.all([
           axios.get(`${API_URL}/users`, { params: { role: 'admin' } }),
           axios.get(`${API_URL}/users`, { params: { role: 'superadmin' } })
         ]);
 
-        console.log('Admins loaded:', adminResponse.data);
-        console.log('Super admins loaded:', superadminResponse.data);
+        admins.value = [
+          ...adminResponse.data.map(admin => ({
+            name: admin.name || 'N/A',
+            email: admin.email || '',
+            role: 'admin',
+            createdAt: new Date().toISOString()
+          })),
+          ...superAdminResponse.data.map(admin => ({
+            name: admin.name || 'N/A',
+            email: admin.email || '',
+            role: 'superadmin',
+            createdAt: new Date().toISOString()
+          }))
+        ];
 
-        const allAdmins = [...adminResponse.data, ...superadminResponse.data];
-        
-        admins.value = allAdmins.map(admin => ({
-          id: admin._id,
-          name: admin.name,
-          email: admin.email,
-          password: '********',
-          joinDate: admin.joinSince,
-          role: admin.role === 'superadmin' ? 'Super Admin' : 'Admin'
-        }));
-
-        console.log('Mapped admins:', admins.value);
+        console.log('Admins loaded:', admins.value.length);
       } catch (error) {
         console.error('Failed to fetch admins:', error);
-        showToast('error', 'Failed to load admins. Please check your connection.');
+        showToast('error', 'Failed to load admins');
       } finally {
         isLoading.value = false;
       }
@@ -306,7 +361,11 @@ export default {
     const selectAll = computed({
       get: () => selectedAdminIds.value.length === filteredAdmins.value.length && filteredAdmins.value.length > 0,
       set: (value) => {
-        selectedAdminIds.value = value ? filteredAdmins.value.map(a => a.id) : [];
+        if (value) {
+          selectedAdminIds.value = filteredAdmins.value.map(a => a.email);
+        } else {
+          selectedAdminIds.value = [];
+        }
       }
     });
 
@@ -314,92 +373,119 @@ export default {
     
     const activeAdmins = computed(() => admins.value.length);
 
+    const currentMonth = new Date().toISOString().substring(0, 7);
     const newThisMonth = computed(() => {
-      const currentMonth = new Date().toISOString().slice(0, 7);
-      return admins.value.filter(a => a.joinDate && a.joinDate.startsWith(currentMonth)).length;
+      return admins.value.filter(a => {
+        if (!a.createdAt) return false;
+        return a.createdAt.startsWith(currentMonth);
+      }).length;
     });
 
     const superAdmins = computed(() =>
-      admins.value.filter(a => a.role === 'Super Admin').length
+      admins.value.filter(a => a.role === 'superadmin').length
     );
 
     const filteredAdmins = computed(() => {
-      let filtered = admins.value;
+      let filtered = [...admins.value];
 
       if (searchQuery.value) {
-        filtered = filtered.filter(a => 
-          a.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          a.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          a.email.toLowerCase().includes(searchQuery.value.toLowerCase())
+        const query = searchQuery.value.toLowerCase();
+        filtered = filtered.filter(a =>
+          (a.name && a.name.toLowerCase().includes(query)) ||
+          (a.email && a.email.toLowerCase().includes(query))
         );
       }
 
-      if (sortBy.value === 'id') {
-        filtered = [...filtered].sort((a, b) => a.id.localeCompare(b.id));
-      } else if (sortBy.value === 'name') {
-        filtered = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
+      if (sortBy.value === 'name') {
+        filtered.sort((a, b) => {
+          const nameA = a.name || '';
+          const nameB = b.name || '';
+          return nameA.localeCompare(nameB);
+        });
       } else if (sortBy.value === 'email') {
-        filtered = [...filtered].sort((a, b) => a.email.localeCompare(b.email));
-      } else if (sortBy.value === 'recent') {
-        filtered = [...filtered].sort((a, b) => 
-          new Date(b.joinDate) - new Date(a.joinDate)
-        );
+        filtered.sort((a, b) => {
+          const emailA = a.email || '';
+          const emailB = b.email || '';
+          return emailA.localeCompare(emailB);
+        });
+      } else if (sortBy.value === 'role') {
+        filtered.sort((a, b) => {
+          const roleA = a.role || '';
+          const roleB = b.role || '';
+          return roleB.localeCompare(roleA);
+        });
       }
 
       return filtered;
     });
 
     function getInitials(name) {
-      return name
-        .split(' ')
-        .map(word => word[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2);
+      if (!name) return 'A';
+      const names = name.split(' ');
+      if (names.length >= 2) {
+        return (names[0][0] + names[1][0]).toUpperCase();
+      }
+      return name.substring(0, 2).toUpperCase();
+    }
+
+    function formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        });
+      } catch {
+        return 'N/A';
+      }
     }
 
     function editAdmin(admin) {
       isEditing.value = true;
-      formData.value = { ...admin, password: '' };
+      formData.value = {
+        name: admin.name,
+        email: admin.email,
+        password: '',
+        role: admin.role
+      };
       showAddModal.value = true;
     }
 
     async function saveAdmin() {
-      if (!formData.value.name.trim() || !formData.value.email.trim()) {
-        showToast('error', 'Name and email are required!');
+      if (!formData.value.name || !formData.value.email) {
+        showToast('error', 'Please fill all required fields');
+        return;
+      }
+
+      if (!isEditing.value && formData.value.password.length < 3) {
+        showToast('error', 'Password must be at least 3 characters');
         return;
       }
 
       try {
         if (isEditing.value) {
-          const updateData = {
+          await axios.patch(`${API_URL}/user`, {
             email: formData.value.email,
             name: formData.value.name
-          };
-
-          if (formData.value.password && formData.value.password.trim()) {
-            updateData.password = formData.value.password;
-          }
-
-          await axios.patch(`${API_URL}/user`, updateData);
+          });
           showToast('success', 'Admin updated successfully!');
         } else {
-          const signupData = {
+          await axios.post(`${API_URL}/signup`, {
             name: formData.value.name,
             email: formData.value.email,
             password: formData.value.password,
-            role: formData.value.role === 'Super Admin' ? 'superadmin' : 'admin'
-          };
-
-          await axios.post(`${API_URL}/signup`, signupData);
-          showToast('success', 'Admin added successfully!');
+            role: formData.value.role
+          });
+          showToast('success', 'Admin created successfully!');
         }
         
-        await fetchAdmins();
         closeAddModal();
+        fetchAdmins();
       } catch (error) {
-        console.error('Save failed:', error);
-        const errorMsg = error.response?.data?.message || 'Failed to save admin. Please try again.';
+        console.error('Failed to save admin:', error);
+        const errorMsg = error.response?.data?.message || 'Failed to save admin';
         showToast('error', errorMsg);
       }
     }
@@ -409,47 +495,41 @@ export default {
       isEditing.value = false;
       showPassword.value = false;
       formData.value = {
-        id: '',
         name: '',
         email: '',
         password: '',
-        joinDate: '',
         role: 'admin'
       };
     }
 
-    async function deleteAdmin(id) {
-      if (confirm('Are you sure you want to delete this admin?')) {
-        try {
-          await axios.delete(`${API_URL}/users/${id}`);
-          showToast('success', 'Admin deleted successfully!');
-          await fetchAdmins();
-        } catch (error) {
-          console.error('Delete failed:', error);
-          showToast('error', 'Failed to delete admin');
-        }
+    async function deleteAdmin(email) {
+      if (!confirm('Are you sure you want to delete this admin?')) return;
+
+      try {
+        await axios.delete(`${API_URL}/user/${email}`);
+        showToast('success', 'Admin deleted successfully!');
+        fetchAdmins();
+      } catch (error) {
+        console.error('Failed to delete admin:', error);
+        showToast('error', 'Failed to delete admin');
       }
     }
 
     async function bulkDeleteAdmins() {
-      const count = selectedAdminIds.value.length;
-      if (count === 0) {
-        showToast('error', 'Please select at least one admin to delete.');
-        return;
-      }
+      if (!confirm(`Delete ${selectedAdminIds.value.length} admins?`)) return;
 
-      if (confirm(`Are you sure you want to delete ${count} selected admin(s)?`)) {
-        try {
-          await axios.post(`${API_URL}/users/bulk-delete`, {
-            ids: selectedAdminIds.value
-          });
-          showToast('success', `${count} admin(s) deleted successfully!`);
-          selectedAdminIds.value = [];
-          await fetchAdmins();
-        } catch (error) {
-          console.error('Bulk delete failed:', error);
-          showToast('error', 'Failed to delete admins');
-        }
+      try {
+        await Promise.all(
+          selectedAdminIds.value.map(email => 
+            axios.delete(`${API_URL}/user/${email}`)
+          )
+        );
+        showToast('success', `Deleted ${selectedAdminIds.value.length} admins`);
+        selectedAdminIds.value = [];
+        fetchAdmins();
+      } catch (error) {
+        console.error('Failed to bulk delete:', error);
+        showToast('error', 'Failed to delete admins');
       }
     }
 
@@ -458,7 +538,6 @@ export default {
     }
 
     onMounted(() => {
-      console.log('ManageAdmin mounted, fetching admins...');
       fetchAdmins();
     });
 
@@ -470,6 +549,7 @@ export default {
       showAddModal,
       showPassword,
       isEditing,
+      isLoading,
       admins,
       selectedAdminIds,
       formData,
@@ -480,8 +560,8 @@ export default {
       newThisMonth,
       superAdmins,
       filteredAdmins,
-      isLoading,
       getInitials,
+      formatDate,
       editAdmin,
       saveAdmin,
       closeAddModal,
@@ -1150,5 +1230,41 @@ tbody {
   th, td {
     padding: 12px 8px;
   }
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.role-badge.super {
+  background: #e6f0ff;
+  color: #0b6cf0;
+}
+
+.role-badge.regular {
+  background: #f3e5f5;
+  color: #8b5cf6;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #0b6cf0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.empty-icon {
+  font-size: 48px;
 }
 </style>

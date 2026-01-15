@@ -66,7 +66,7 @@
                     <path d="M5 12h14M12 5l7 7-7 7"/>
                   </svg>
                 </router-link>
-                <router-link to="/bestdeal" class="shop-now-btn secondary">View Deals</router-link>
+                <router-link to="/best-deals" class="shop-now-btn secondary">View Deals</router-link>
               </div>
               <div class="trust-badges">
                 <div class="badge">

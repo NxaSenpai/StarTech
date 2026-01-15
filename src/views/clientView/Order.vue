@@ -512,9 +512,9 @@ export default {
 }
 
 .id-value {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: #1e293b;
+  font-size: 0.875rem;
+  color: #265ddf;
+  font-weight: 500;
 }
 
 .status-badge {

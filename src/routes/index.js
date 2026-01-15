@@ -21,6 +21,7 @@ import ProductsView from '@/views/clientView/ProductsView.vue'
 import WishlistView from '@/views/clientView/WishlistView.vue'
 import CouponView from '@/views/adminView/CouponView.vue'
 import Checkout from '@/views/clientView/Checkout.vue'
+import ManagePromotion from '@/views/adminView/ManagePromotion.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -163,6 +164,11 @@ const router = createRouter({
       path: '/best-deals',
       name: 'bestdeal',
       component: BestDeal
+    },
+    {
+      path: '/managepromotions',
+      name: 'managepromotions',
+      component: ManagePromotion
     }
   ]
 })

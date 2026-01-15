@@ -128,7 +128,6 @@
 
             <div v-if="coupons.length === 0" class="empty-state">
               <div class="empty-content">
-                <span class="empty-icon">🎟️</span>
                 <p>No coupons found</p>
               </div>
             </div>
@@ -788,11 +787,6 @@ tbody {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-}
-
-.empty-icon {
-  font-size: 48px;
-  opacity: 0.5;
 }
 
 .empty-content p {

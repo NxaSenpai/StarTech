@@ -1427,6 +1427,7 @@ tbody {
 }
 
 .btn-danger {
+  width: 500px;
   background: #dc3545;
   color: white;
 }

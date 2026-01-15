@@ -49,6 +49,12 @@
           },
 
           {
+            path: '/managepromotions',
+            icon: '/discountIcon.png',
+            label: 'Manage Promotions'
+          },
+
+          {
             path: '/managecoupons',
             icon: '/couponIcon.png',
             label: 'Manage Coupons'

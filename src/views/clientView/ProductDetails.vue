@@ -8,7 +8,54 @@ export default {
     Header,
     Footer
   },
-
+  data() {
+    return {
+      quantity: 1,
+      selectedImage: 0,
+      images: [
+        '/washingMachine.jpg',
+        '/washingMachine.jpg',
+        '/washingMachine.jpg',
+        '/washingMachine.jpg'
+      ],
+      relatedProducts: [
+        {
+          id: 1,
+          name: 'Smart Refrigerator 25 cu ft',
+          price: 1299.00,
+          oldPrice: 1499.00,
+          image: '/categories/7_fridge.png',
+          rating: 4.7,
+          badge: 'Sale'
+        },
+        {
+          id: 2,
+          name: 'Microwave Oven 1.5 cu ft',
+          price: 199.00,
+          image: '/categories/5_oven.png',
+          rating: 4.5,
+          badge: 'New'
+        },
+        {
+          id: 3,
+          name: 'Coffee Maker Automatic',
+          price: 179.00,
+          oldPrice: 249.00,
+          image: '/categories/5_oven.png',
+          rating: 4.6,
+          badge: 'Sale'
+        },
+        {
+          id: 4,
+          name: 'Air Purifier Smart',
+          price: 299.00,
+          image: '/categories/1_AC.png',
+          rating: 4.8,
+          badge: null
+        }
+      ]
+    };
+  },
   mounted() {
     window.scrollTo({
       top: 0,
@@ -17,6 +64,9 @@ export default {
     });
   },
   methods: {
+    selectImage(index) {
+      this.selectedImage = index;
+    },
     increaseQuantity() {
       this.quantity++;
     },
@@ -27,6 +77,9 @@ export default {
     },
     addToCart() {
       alert(`Added ${this.quantity} item(s) to cart!`);
+    },
+    addToWishlist() {
+      alert('Added to wishlist!');
     },
     viewDetails(productId) {
       this.$router.push({ 
@@ -41,162 +94,169 @@ export default {
 };
 </script>
 
-
 <template>
- <Header />
-  <div class="page-wrapper">
-    <div class="container">
-      <div class="breadcrumb">
-        <router-link to="/home">Home</router-link> 
-        <span class="separator">/</span> 
-        <router-link to="/products">Products</router-link> 
-        <span class="separator">/</span> 
-        <span class="current">Air Conditioner</span>
+  <div class="product-details-page">
+    <Header />
+    
+    <main class="main-content">
+      <div class="container">
+        <div class="breadcrumb">
+          <router-link to="/home">Home</router-link> 
+          <span class="separator">/</span> 
+          <router-link to="/products">Products</router-link> 
+          <span class="separator">/</span> 
+          <span class="current">Air Conditioner</span>
+        </div>
+
+        <div class="product-section">
+          <div class="product-grid">
+            <div class="product-images">
+              <div class="main-image-wrapper">
+                <img src="/washingMachine.jpg" alt="Product" class="main-product-image">
+                <div class="badge-sale">-12% OFF</div>
+              </div>
+            </div>
+
+            <div class="product-details">
+              <h1 class="product-title">Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms</h1>
+              
+              <div class="rating-section">
+                <div class="stars">★★★★★</div>
+                <span class="reviews-count">(128 reviews)</span>
+              </div>
+
+              <div class="price-section">
+                <span class="current-price">$139.00</span>
+                <span class="original-price">$159.00</span>
+                <span class="save-badge">Save $20</span>
+              </div>
+
+              <div class="product-meta">
+                <div class="meta-item">
+                  <span class="meta-label">Brand:</span>
+                  <span class="meta-value">CoolAir</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">SKU:</span>
+                  <span class="meta-value">AC-5000-2024</span>
+                </div>
+                <div class="meta-item">
+                  <span class="meta-label">Availability:</span>
+                  <span class="meta-value in-stock">In Stock (24 units)</span>
+                </div>
+              </div>
+
+              <div class="quantity-section">
+                <div class="quantity-wrapper">
+                  <label>Quantity:</label>
+                  <div class="quantity-controls">
+                    <button class="quantity-btn" @click="decreaseQuantity">−</button>
+                    <input type="number" v-model.number="quantity" class="quantity-input" min="1" readonly>
+                    <button class="quantity-btn" @click="increaseQuantity">+</button>
+                  </div>
+                </div>
+                <button class="add-to-cart-btn" @click="addToCart">
+                  <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49c.08-.14.12-.31.12-.48 0-.55-.45-1-1-1H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
+                  </svg>
+                  Add to Cart
+                </button>
+                <button class="wishlist-btn" @click="addToWishlist">
+                  <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="payment-section">
+                <p class="payment-title">Guaranteed Safe & Secure Checkout</p>
+                <div class="payment-icons">
+                  <img src="/pdetail/visa.jpg" alt="Visa" class="payment-icon">
+                  <img src="/pdetail/aba.png" alt="ABA" class="payment-icon">
+                  <img src="/pdetail/ace.png" alt="ACE" class="payment-icon">
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="details-tabs-section">
+            <div class="tabs">
+              <button class="tab active">Description</button>
+              <button class="tab">Specifications</button>
+              <button class="tab">Reviews</button>
+            </div>
+
+            <div class="tab-content">
+              <div class="description-content">
+                <h3>Product Description</h3>
+                <p class="product-description">
+                  Experience efficient cooling with our 5000 BTU Air Conditioner, perfect for smaller spaces like bedrooms and guest rooms. 
+                  This compact unit delivers powerful cooling performance while maintaining energy efficiency. Features include multiple 
+                  fan speeds, adjustable thermostat, and easy-to-use controls.
+                </p>
+
+                <h3>Key Features</h3>
+                <ul class="features-list">
+                  <li>5000 BTU cooling capacity for rooms up to 150 sq ft</li>
+                  <li>Energy-efficient operation saves on electricity bills</li>
+                  <li>Multiple fan speeds for customized comfort</li>
+                  <li>Easy installation with included window kit</li>
+                  <li>Washable and reusable air filter</li>
+                  <li>Compact and lightweight design</li>
+                  <li>Quiet operation for peaceful sleep</li>
+                  <li>Auto-restart function after power outage</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="related-section">
+            <h2 class="section-title">You May Also Like</h2>
+            <div class="related-products">
+              <div 
+                v-for="product in relatedProducts" 
+                :key="product.id"
+                class="product-card"
+                @click="viewDetails(product.id)"
+              >
+                <div class="product-card-image">
+                  <img :src="product.image" :alt="product.name">
+                  <div v-if="product.badge" class="card-badge" :class="product.badge.toLowerCase()">
+                    {{ product.badge }}
+                  </div>
+                </div>
+                <div class="card-content">
+                  <h4 class="product-card-title">{{ product.name }}</h4>
+                  <div class="card-rating">
+                    ★★★★★ <span>({{ product.rating }})</span>
+                  </div>
+                  <div class="price-row">
+                    <p class="product-card-price">${{ product.price.toFixed(2) }}</p>
+                    <p v-if="product.oldPrice" class="old-price">${{ product.oldPrice.toFixed(2) }}</p>
+                  </div>
+                  <button class="card-btn" @click.stop="addToCart">Add to Cart</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
+    </main>
 
-      <div class="product-grid">
-        <div class="product-images">
-          <div class="main-image-wrapper">
-            <img src="/washingMachine.jpg" alt="washingMachine" class="main-product-image">
-            <div class="badge-sale">-12% OFF</div>
-          </div>
-        </div>
-
-        <div class="product-details">
-          <h1 class="product-title">Air Conditioner 5000 BTU, Efficient Cooling for Smaller Areas Like Bedrooms and Guest Rooms</h1>
-          
-          <div class="rating-section">
-            <div class="stars">★★★★★</div>
-            <span class="reviews-count">(128 reviews)</span>
-          </div>
-
-          <div class="price-section">
-            <span class="current-price">$139.00</span>
-            <span class="original-price">$159.00</span>
-            <span class="save-badge">Save $20</span>
-          </div>
-
-          <div class="product-meta">
-            <div class="meta-item">
-              <span class="meta-label">Category:</span>
-              <router-link to="/category" class="meta-value">Air Conditioner</router-link>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">SKU:</span>
-              <span class="meta-value">AC-5000-BTU-001</span>
-            </div>
-            <div class="meta-item">
-              <span class="meta-label">Availability:</span>
-              <span class="meta-value in-stock">In Stock</span>
-            </div>
-          </div>
-
-          <div class="quantity-section">
-            <div class="quantity-wrapper">
-              <label>Quantity:</label>
-              <div class="quantity-controls">
-                <button class="quantity-btn" @click="decreaseQuantity">−</button>
-                <input class="quantity-input" v-model.number="quantity" min="1">
-                <button class="quantity-btn" @click="increaseQuantity">+</button>
-              </div>
-            </div>
-            <button class="add-to-cart-btn" @click="addToCart()">
-              Add to Cart
-            </button>
-            <button class="wishlist-btn">♡</button>
-          </div>
-
-          <div class="payment-section">
-            <p class="payment-title">Guaranteed Safe & Secure Checkout</p>
-            <div class="payment-icons">
-              <img src="/pdetail/visa.jpg" class="payment-icon" alt="Visa">
-              <img src="/pdetail/aba.png" class="payment-icon" alt="ABA">
-              <img src="/pdetail/ace.png" class="payment-icon" alt="ACE">
-              <img src="/pdetail/pay.png" class="payment-icon" alt="Pay">
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section-2">
-        <div class="tabs-section">
-          <div class="tabs">
-            <button class="tab active">Description</button>
-            <button class="tab">Reviews (128)</button>
-          </div>
-        </div>
-
-        <div class="tab-content">
-          <div class="description-content">
-            <h3>Product Description</h3>
-            <p class="product-description">
-              Experience optimal comfort with our 5000 BTU air conditioner. Perfect for cooling smaller spaces like bedrooms and guest rooms. Energy-efficient design ensures lower electricity bills while maintaining ideal temperatures throughout the day.
-            </p>
-            
-            <h3>Key Features</h3>
-            <ul class="features-list">
-              <li>5000 BTU cooling capacity - ideal for rooms up to 150 sq ft</li>
-              <li>Energy-efficient operation with eco-friendly refrigerant</li>
-              <li>Multiple fan speeds and cooling modes</li>
-              <li>Easy-to-use mechanical controls</li>
-              <li>Washable and reusable air filter</li>
-              <li>Compact and lightweight design</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="related-section">
-          <h2 class="section-title">You May Also Like</h2>
-          <div class="related-products">
-            <div class="product-card" @click="viewDetails(1)">
-              <div class="product-card-image">
-                <img src="/washingMachine.jpg" alt="Product">
-                <span class="card-badge">NEW</span>
-              </div>
-              <div class="card-content">
-                <h4 class="product-card-title">Air Conditioner 8000 BTU</h4>
-                <div class="card-rating">★★★★☆ (64)</div>
-                <p class="product-card-price">$189.00</p>
-                <button class="card-btn">Quick View</button>
-              </div>
-            </div>
-
-            <div class="product-card" @click="viewDetails(2)">
-              <div class="product-card-image">
-                <img src="/washingMachine.jpg" alt="Product">
-              </div>
-              <div class="card-content">
-                <h4 class="product-card-title">Portable AC 10000 BTU</h4>
-                <div class="card-rating">★★★★★ (92)</div>
-                <p class="product-card-price">$229.00</p>
-                <button class="card-btn">Quick View</button>
-              </div>
-            </div>
-
-            <div class="product-card" @click="viewDetails(3)">
-              <div class="product-card-image">
-                <img src="/washingMachine.jpg" alt="Product">
-                <span class="card-badge sale">-20%</span>
-              </div>
-              <div class="card-content">
-                <h4 class="product-card-title">Window AC 6000 BTU</h4>
-                <div class="card-rating">★★★★☆ (47)</div>
-                <p class="product-card-price">$159.00</p>
-                <button class="card-btn">Quick View</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <Footer />
   </div>
-  <Footer/>
 </template>
 
 <style scoped>
-.page-wrapper {
+.product-details-page {
   min-height: 100vh;
   background: #f8fafc;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
   padding: 40px 0 80px;
 }
 
@@ -234,15 +294,19 @@ export default {
   font-weight: 500;
 }
 
+.product-section {
+  background: white;
+  border-radius: 16px;
+  padding: 40px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 40px;
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 60px;
-  margin-bottom: 80px;
-  background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  margin-bottom: 60px;
 }
 
 .product-images {
@@ -348,12 +412,9 @@ export default {
 }
 
 .current-price {
-  background: rgb(99, 234, 99);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  font-size: 30px;
+  font-size: 36px;
   font-weight: 800;
+  color: #164be9;
 }
 
 .original-price {
@@ -395,7 +456,6 @@ export default {
 .meta-value {
   color: #1e293b;
   font-weight: 600;
-  text-decoration: none;
 }
 
 .meta-value.in-stock {
@@ -404,9 +464,7 @@ export default {
 
 .quantity-section {
   display: flex;
-  align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
 }
 
 .quantity-wrapper {
@@ -422,15 +480,12 @@ export default {
 }
 
 .quantity-controls {
-  display: flex;
-  color: black;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  overflow: hidden;
 }
 
 .quantity-btn {
-  background: black;
+  background: white;
   border: none;
   width: 40px;
   height: 44px;
@@ -462,9 +517,7 @@ export default {
   background: #3b82f6;
   color: white;
   border: none;
-  width: 160px;
-  height: 40px;
-  padding: 2px;
+  padding: 12px 32px;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
@@ -473,7 +526,6 @@ export default {
   display: flex;
   align-items: center;
   gap: 8px;
-  justify-content: center;
 }
 
 .add-to-cart-btn:hover {
@@ -486,12 +538,14 @@ export default {
   background: white;
   border: 2px solid #e2e8f0;
   width: 50px;
-  height: 44px;
+  height: 50px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 24px;
   color: #64748b;
   transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .wishlist-btn:hover {
@@ -501,17 +555,15 @@ export default {
 }
 
 .payment-section {
-  background: rgb(244, 238, 238);
-  padding: 25px;
+  background: #f8fafc;
+  padding: 20px;
   border-radius: 12px;
-  border: 300px;
   text-align: center;
-  border-color: red;
-  margin: 5px;
+  border: 2px solid #e2e8f0;
 }
 
 .payment-title {
-  font-size: 15px;
+  font-size: 14px;
   color: #1e293b;
   margin-bottom: 16px;
   font-weight: 600;
@@ -540,21 +592,15 @@ export default {
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
-.section-2 {
-  margin-top: 60px;
-}
-
-.tabs-section {
-  margin-bottom: 30px;
+.details-tabs-section {
+  margin-bottom: 60px;
 }
 
 .tabs {
   display: flex;
   gap: 8px;
   border-bottom: 2px solid #e2e8f0;
-  background: white;
-  padding: 0 20px;
-  border-radius: 12px 12px 0 0;
+  margin-bottom: 30px;
 }
 
 .tab {
@@ -580,10 +626,7 @@ export default {
 }
 
 .tab-content {
-  background: white;
-  padding: 40px;
-  border-radius: 0 0 12px 12px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  padding: 20px 0;
 }
 
 .description-content h3 {
@@ -593,7 +636,7 @@ export default {
   font-weight: 700;
 }
 
-.product_description {
+.product-description {
   color: #64748b;
   line-height: 1.8;
   font-size: 15px;
@@ -698,6 +741,10 @@ export default {
   background: #ef4444;
 }
 
+.card-badge.new {
+  background: #10b981;
+}
+
 .card-content {
   padding: 20px;
 }
@@ -716,16 +763,35 @@ export default {
   margin-bottom: 12px;
 }
 
+.card-rating span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
 .product-card-price {
   font-size: 20px;
   color: #3b82f6;
   font-weight: 800;
-  margin: 0 0 16px;
+  margin: 0;
+}
+
+.old-price {
+  font-size: 16px;
+  color: #94a3b8;
+  text-decoration: line-through;
+  margin: 0;
 }
 
 .card-btn {
   width: 100%;
-  background: rgb(114, 114, 230);
+  background: #3b82f6;
   color: white;
   border: none;
   padding: 12px;
@@ -752,11 +818,11 @@ export default {
 }
 
 @media (max-width: 768px) {
-  .page-wrapper {
+  .main-content {
     padding: 20px 0 40px;
   }
 
-  .product-grid {
+  .product-section {
     padding: 24px;
   }
 
@@ -786,9 +852,20 @@ export default {
   .tabs {
     overflow-x: auto;
   }
+}
 
-  .tab-content {
-    padding: 24px;
+@media (max-width: 480px) {
+  .product-title {
+    font-size: 20px;
+  }
+
+  .current-price {
+    font-size: 24px;
+  }
+
+  .related-products {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 16px;
   }
 }
 </style>
