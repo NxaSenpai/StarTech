@@ -171,27 +171,56 @@
               </select>
             </div>
 
-            <div class="form-row">
-              <div class="form-group">
-                <label>Discount (%) <span class="required">*</span></label>
-                <input 
-                  v-model.number="formData.discount" 
-                  type="number" 
-                  class="form-input"
-                  min="1"
-                  max="99"
-                  required
-                />
+            <div class="form-group">
+              <label>Product Image</label>
+              <div 
+                class="image-upload-area"
+                @dragover="handleDragOver"
+                @dragleave="handleDragLeave"
+                @drop="handleDrop"
+              >
+                <div v-if="imagePreview" class="image-preview">
+                  <img :src="imagePreview" alt="Preview" />
+                  <button 
+                    type="button" 
+                    @click="imagePreview = ''; imageFile = null"
+                    class="remove-image-btn"
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+                <div v-else class="upload-placeholder">
+                  <img src="/uploadIcon.png" alt="Upload" class="upload-icon" />
+                  <p>Drag and drop image here or click to browse</p>
+                  <input 
+                    type="file" 
+                    @change="handleImageUpload"
+                    accept="image/*"
+                    class="file-input"
+                  />
+                </div>
               </div>
-              <div class="form-group">
-                <label>Calculated Sale Price</label>
-                <input 
-                  :value="calculatedPrice" 
-                  type="text" 
-                  class="form-input"
-                  disabled
-                />
-              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Discount (%) <span class="required">*</span></label>
+              <input 
+                v-model.number="formData.discount" 
+                type="number" 
+                class="form-input"
+                min="1"
+                max="99"
+                required
+              />
+            </div>
+            <div class="form-group">
+              <label>Calculated Sale Price</label>
+              <input 
+                :value="calculatedPrice" 
+                type="text" 
+                class="form-input"
+                disabled
+              />
             </div>
 
             <div class="form-row">
@@ -282,6 +311,9 @@ export default {
       endDate: '',
       status: 'Active'
     });
+
+    const imagePreview = ref('');
+    const imageFile = ref(null);
 
     const showToast = (type, message, duration = 3000) => {
       toast.value = { show: true, type, message };
@@ -499,6 +531,63 @@ export default {
       }
     }
 
+    const handleImageUpload = async (event) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      
+      // Show preview immediately
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        imagePreview.value = e.target?.result;
+      };
+      reader.readAsDataURL(file);
+      
+      imageFile.value = file;
+      
+      // Upload to server
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      try {
+        const response = await axios.post(`${API_URL}/upload`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        formData.value.imageSrc = response.data.url;
+        showToast('success', 'Image uploaded successfully');
+      } catch (error) {
+        console.error('Image upload failed:', error);
+        showToast('error', 'Failed to upload image');
+        imagePreview.value = '';
+        imageFile.value = null;
+      }
+    };
+
+    const handleDragOver = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.add('drag-over');
+    };
+
+    const handleDragLeave = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.remove('drag-over');
+    };
+
+    const handleDrop = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      event.currentTarget.classList.remove('drag-over');
+      
+      const files = event.dataTransfer?.files;
+      if (files?.length > 0) {
+        handleImageUpload({ target: { files } });
+      }
+    };
+
     function formatDate(dateString) {
       if (!dateString) return 'N/A';
       return new Date(dateString).toLocaleDateString('en-US', {
@@ -547,6 +636,12 @@ export default {
       isLoading,
       toast,
       formData,
+      imagePreview,
+      imageFile,
+      handleImageUpload,
+      handleDragOver,
+      handleDragLeave,
+      handleDrop,
       selectAll,
       totalPromotions,
       activePromotions,
@@ -1200,6 +1295,84 @@ tbody {
 
 .error-toast .toast-content {
   background: #dc3545;
+}
+
+.image-upload-area {
+  border: 2px dashed #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  position: relative;
+}
+
+.image-upload-area:hover {
+  border-color: #0b6cf0;
+  background: #f8f9fa;
+}
+
+.image-upload-area.drag-over {
+  border-color: #0b6cf0;
+  background: #e6f0ff;
+}
+
+.upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.upload-icon {
+  width: 40px;
+  height: 40px;
+  filter: opacity(0.6);
+}
+
+.upload-placeholder p {
+  color: #6c757d;
+  margin: 0;
+  font-size: 14px;
+}
+
+.file-input {
+  display: none;
+}
+
+.image-preview {
+  position: relative;
+  display: inline-block;
+}
+
+.image-preview img {
+  max-width: 200px;
+  max-height: 200px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.remove-image-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+}
+
+.remove-image-btn:hover {
+  background: #c82333;
+  transform: scale(1.1);
 }
 
 @media (max-width: 1200px) {

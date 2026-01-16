@@ -567,6 +567,41 @@ export default {
       currentEditId.value = null;
     }
 
+    const handleDragOver = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.add('drag-over');
+      }
+    };
+
+    const handleDragLeave = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+      }
+    };
+
+    const handleDrop = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+      }
+      
+      const files = event.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        // Create a synthetic event object
+        handleImageUpload({ target: { files } });
+      }
+    };
+
     async function handleImageUpload(event) {
       const file = event?.target?.files?.[0];
       if (!file) return;
@@ -807,7 +842,11 @@ export default {
       triggerFileInput,
       removeImage,
       handleImageError,
-      getImageUrl
+      getImageUrl,
+      handleImageUpload,
+      handleDragOver,
+      handleDragLeave,
+      handleDrop
     };
   }
 };
