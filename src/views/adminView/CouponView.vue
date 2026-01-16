@@ -19,7 +19,7 @@
             <p class="page-subtitle">Create and manage discount coupons for your store</p>
           </div>
           <div class="header-actions">
-            <button @click="showAddModal = true" class="btn btn-primary">
+            <button @click="openAddModal" class="btn btn-primary">
               <img class="btn-icon" src="/addIcon.png" alt="Add">
               Add Coupon
             </button>
@@ -33,7 +33,7 @@
             </div>
             <div class="stat-info">
               <p class="stat-label">Total Coupons</p>
-              <h2 class="stat-value">{{ coupons.length }}</h2>
+              <h2 class="stat-value">{{ totalCoupons }}</h2>
             </div>
           </div>
 
@@ -63,7 +63,17 @@
             <table>
               <thead>
                 <tr>
-                  <th>Coupon Code</th>
+                  <th>
+                    <label class="checkbox-label">
+                      <input 
+                        type="checkbox" 
+                        class="checkbox-input"
+                        v-model="selectAll"
+                      >
+                      <span class="checkbox-custom"></span>
+                      Coupon Code
+                    </label>
+                  </th>
                   <th>Discount</th>
                   <th>Type</th>
                   <th>Expiry Date</th>
@@ -76,7 +86,16 @@
                 <tr v-for="coupon in coupons" :key="coupon.id" class="table-row">
                   <td>
                     <div class="coupon-code-cell">
-                      <span class="code-badge">{{ coupon.code }}</span>
+                      <label class="checkbox-label">
+                        <input 
+                          type="checkbox" 
+                          class="checkbox-input"
+                          v-model="selectedCouponIds"
+                          :value="coupon._id"
+                        >
+                        <span class="checkbox-custom"></span>
+                        <span class="code-badge">{{ coupon.code }}</span>
+                      </label>
                     </div>
                   </td>
                   <td>
@@ -104,10 +123,15 @@
                     </div>
                   </td>
                   <td>
-                    <span class="status-badge" :class="coupon.active ? 'active' : 'inactive'">
+                    <div 
+                      @click.stop="toggleStatus(coupon)" 
+                      :class="['status-badge', coupon.active ? 'active' : 'inactive']"
+                      style="cursor: pointer; user-select: none;"
+                      :title="`Click to ${coupon.active ? 'deactivate' : 'activate'}`"
+                    >
                       <span class="status-dot"></span>
                       {{ coupon.active ? 'Active' : 'Inactive' }}
-                    </span>
+                    </div>
                   </td>
                   <td>
                     <div class="action-buttons">
@@ -117,7 +141,7 @@
                       <button @click="toggleStatus(coupon)" class="action-btn" title="Toggle Status">
                         <img class="btn-icon-black" :src="coupon.active ? '/pauseIcon.png' : '/playIcon.png'" alt="Toggle">
                       </button>
-                      <button @click="deleteCoupon(coupon.id)" class="action-btn delete-btn" title="Delete">
+                      <button @click="deleteCoupon(coupon._id)" class="action-btn delete-btn" title="Delete">
                         <img class="btn-icon-black" src="/deleteIcon.png" alt="Delete">
                       </button>
                     </div>
@@ -221,6 +245,17 @@
                     >
                   </div>
                 </div>
+
+                <div class="form-group">
+                  <label>Notes</label>
+                  <textarea 
+                    v-model="form.notes" 
+                    class="form-input"
+                    rows="3"
+                    placeholder="Optional notes about the coupon"
+                  ></textarea>
+                </div>
+
                 <div class="form-actions">
                   <button type="button" class="btn btn-secondary" @click="closeModal">
                     Cancel
@@ -233,14 +268,24 @@
             </div>
           </div>
         </div>
+
+        <div v-if="toast.show" class="toast" :class="`toast-${toast.type}`">
+          <div class="toast-content">
+            {{ toast.message }}
+          </div>
+        </div>
       </main>
     </div>
   </div>
 </template>
 
 <script>
+import { ref, computed, onMounted } from 'vue';
 import AdminHeader from '@/components/AdminHeader.vue';
 import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: "CouponView",
@@ -248,67 +293,48 @@ export default {
     AdminHeader,
     AdminSidebar
   },
-  data() {
-    return {
-      adminName: 'Admin',
-      notifications: 0,
-      showAddModal: false,
-      editingCoupon: null,
-      form: {
-        code: '',
-        type: 'percentage',
-        value: 0,
-        expiryDate: '',
-        maxUses: null,
-        minPurchase: null,
-        active: true
-      },
-      coupons: [
-        {
-          id: 1,
-          code: 'SUMMER25',
-          type: 'percentage',
-          value: 25,
-          expiryDate: '2026-02-28',
-          maxUses: 100,
-          usedCount: 45,
-          minPurchase: 50,
-          active: true
-        },
-        {
-          id: 2,
-          code: 'WELCOME10',
-          type: 'fixed',
-          value: 10,
-          expiryDate: '2026-12-31',
-          maxUses: null,
-          usedCount: 230,
-          minPurchase: 30,
-          active: true
-        },
-        {
-          id: 3,
-          code: 'FLASH50',
-          type: 'percentage',
-          value: 50,
-          expiryDate: '2026-01-20',
-          maxUses: 50,
-          usedCount: 48,
-          minPurchase: 100,
-          active: true
-        }
-      ]
+  setup() {
+    const adminName = ref('Admin');
+    const notifications = ref(0);
+    const showAddModal = ref(false);
+    const editingCoupon = ref(null);
+    const coupons = ref([]);
+    const selectedCouponIds = ref([]);
+    const isLoading = ref(false);
+
+    const toast = ref({
+      show: false,
+      type: 'success',
+      message: ''
+    });
+
+    const form = ref({
+      code: '',
+      type: 'percentage',
+      value: 0,
+      expiryDate: '',
+      maxUses: null,
+      minPurchase: null,
+      active: true,
+      notes: ''
+    });
+
+    const showToast = (type, message, duration = 3000) => {
+      toast.value = { show: true, type, message };
+      setTimeout(() => {
+        toast.value.show = false;
+      }, duration);
     };
-  },
-  computed: {
-    minDate() {
+
+    const minDate = computed(() => {
       const today = new Date();
       return today.toISOString().split('T')[0];
-    },
-    dateError() {
-      if (!this.form.expiryDate) return '';
+    });
+
+    const dateError = computed(() => {
+      if (!form.value.expiryDate) return '';
       
-      const selectedDate = new Date(this.form.expiryDate);
+      const selectedDate = new Date(form.value.expiryDate);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
@@ -317,86 +343,262 @@ export default {
       }
       
       return '';
-    },
-    activeCoupons() {
-      return this.coupons.filter(c => c.active && !this.isExpired(c.expiryDate)).length;
-    },
-    expiringSoon() {
-      return this.coupons.filter(c => this.isExpiringSoon(c.expiryDate) && !this.isExpired(c.expiryDate)).length;
-    }
-  },
-  methods: {
-    handleSettingsClick() {
-      this.$router.push('/settings');
-    },
-    isExpired(date) {
-      const expiryDate = new Date(date);
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      return expiryDate < today;
-    },
-    isExpiringSoon(date) {
-      const expiryDate = new Date(date);
-      const today = new Date();
-      const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-      return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
-    },
-    saveCoupon() {
-      if (this.dateError) return;
-      
-      if (this.editingCoupon) {
-        const index = this.coupons.findIndex(c => c.id === this.editingCoupon.id);
-        this.coupons[index] = {
-          ...this.editingCoupon,
-          ...this.form,
-          code: this.form.code.toUpperCase()
-        };
-      } else {
-        this.coupons.push({
-          id: Date.now(),
-          ...this.form,
-          code: this.form.code.toUpperCase(),
-          usedCount: 0
-        });
+    });
+
+    const valueError = computed(() => {
+      if (form.value.value <= 0) {
+        return 'Value must be greater than 0';
       }
-      this.closeModal();
-    },
-    editCoupon(coupon) {
-      this.editingCoupon = coupon;
-      this.form = { ...coupon };
-      this.showAddModal = true;
-    },
-    deleteCoupon(id) {
-      if (confirm('Are you sure you want to delete this coupon?')) {
-        const index = this.coupons.findIndex(c => c.id === id);
-        if (index !== -1) {
-          this.coupons.splice(index, 1);
+      if (form.value.type === 'percentage' && form.value.value > 100) {
+        return 'Percentage cannot exceed 100%';
+      }
+      return '';
+    });
+
+    const activeCoupons = computed(() => 
+      coupons.value.filter(c => c.active && !isExpired(c.expiryDate)).length
+    );
+
+    const expiringSoon = computed(() => 
+      coupons.value.filter(c => isExpiringSoon(c.expiryDate) && !isExpired(c.expiryDate)).length
+    );
+
+    const totalCoupons = computed(() => coupons.value.length);
+
+    const selectAll = computed({
+      get: () => selectedCouponIds.value.length === coupons.value.length && coupons.value.length > 0,
+      set: (value) => {
+        if (value) {
+          selectedCouponIds.value = coupons.value.map(c => c._id);
+        } else {
+          selectedCouponIds.value = [];
         }
       }
-    },
-    toggleStatus(coupon) {
-      coupon.active = !coupon.active;
-    },
-    closeModal() {
-      this.showAddModal = false;
-      this.editingCoupon = null;
-      this.form = {
+    });
+
+    async function fetchCoupons() {
+      isLoading.value = true;
+      try {
+        const response = await axios.get(`${API_URL}/coupons`);
+        coupons.value = response.data;
+        console.log('Loaded coupons:', coupons.value.length);
+      } catch (error) {
+        console.error('Failed to fetch coupons:', error);
+        showToast('error', 'Failed to load coupons');
+      } finally {
+        isLoading.value = false;
+      }
+    }
+
+    function openAddModal() {
+      editingCoupon.value = null;
+      form.value = {
         code: '',
         type: 'percentage',
         value: 0,
         expiryDate: '',
         maxUses: null,
         minPurchase: null,
-        active: true
+        active: true,
+        notes: ''
       };
-    },
-    formatDate(date) {
+      showAddModal.value = true;
+    }
+
+    function editCoupon(coupon) {
+      editingCoupon.value = coupon;
+      form.value = {
+        code: coupon.code,
+        type: coupon.type,
+        value: coupon.value,
+        expiryDate: coupon.expiryDate.split('T')[0],
+        maxUses: coupon.maxUses,
+        minPurchase: coupon.minPurchase,
+        active: coupon.active,
+        notes: coupon.notes || ''
+      };
+      showAddModal.value = true;
+    }
+
+    async function saveCoupon() {
+      if (dateError.value || valueError.value) {
+        showToast('error', dateError.value || valueError.value);
+        return;
+      }
+
+      if (!form.value.code.trim()) {
+        showToast('error', 'Coupon code is required');
+        return;
+      }
+
+      try {
+        const payload = {
+          code: form.value.code.toUpperCase().trim(),
+          type: form.value.type,
+          value: parseFloat(form.value.value),
+          expiryDate: form.value.expiryDate,
+          maxUses: form.value.maxUses ? parseInt(form.value.maxUses) : null,
+          minPurchase: form.value.minPurchase ? parseFloat(form.value.minPurchase) : null,
+          active: form.value.active,
+          notes: form.value.notes || null
+        };
+
+        if (editingCoupon.value) {
+          await axios.patch(`${API_URL}/coupons`, {
+            _id: editingCoupon.value._id,
+            ...payload
+          });
+          showToast('success', 'Coupon updated successfully');
+        } else {
+          await axios.post(`${API_URL}/coupons`, payload);
+          showToast('success', 'Coupon created successfully');
+        }
+
+        closeModal();
+        await fetchCoupons();
+      } catch (error) {
+        console.error('Failed to save coupon:', error);
+        const message = error.response?.data?.message || 'Failed to save coupon';
+        showToast('error', message);
+      }
+    }
+
+    async function deleteCoupon(id) {
+      if (!confirm('Are you sure you want to delete this coupon?')) return;
+
+      try {
+        await axios.delete(`${API_URL}/coupons/${id}`);
+        showToast('success', 'Coupon deleted successfully');
+        await fetchCoupons();
+      } catch (error) {
+        console.error('Failed to delete coupon:', error);
+        showToast('error', 'Failed to delete coupon');
+      }
+    }
+
+    async function bulkDeleteCoupons() {
+      if (selectedCouponIds.value.length === 0) {
+        showToast('error', 'Please select coupons to delete');
+        return;
+      }
+
+      if (!confirm(`Delete ${selectedCouponIds.value.length} coupons?`)) return;
+
+      try {
+        await axios.post(`${API_URL}/coupons/bulk-delete`, {
+          ids: selectedCouponIds.value
+        });
+        showToast('success', `Deleted ${selectedCouponIds.value.length} coupons`);
+        selectedCouponIds.value = [];
+        await fetchCoupons();
+      } catch (error) {
+        console.error('Failed to bulk delete:', error);
+        showToast('error', 'Failed to delete coupons');
+      }
+    }
+
+    async function toggleStatus(coupon) {
+      const previousStatus = coupon.active;
+      
+      coupon.active = !coupon.active;
+      
+      try {
+        await axios.patch(`${API_URL}/coupons`, {
+          _id: coupon._id,
+          code: coupon.code,
+          type: coupon.type,
+          value: coupon.value,
+          expiryDate: coupon.expiryDate.split('T')[0],
+          maxUses: coupon.maxUses,
+          minPurchase: coupon.minPurchase,
+          active: coupon.active,
+          notes: coupon.notes
+        });
+        
+        showToast('success', `Coupon ${coupon.active ? 'activated' : 'deactivated'} successfully`);
+        
+        await fetchCoupons();
+      } catch (error) {
+        coupon.active = previousStatus;
+        console.error('Failed to toggle coupon status:', error);
+        showToast('error', 'Failed to update coupon status');
+      }
+    }
+
+    function closeModal() {
+      showAddModal.value = false;
+      editingCoupon.value = null;
+      form.value = {
+        code: '',
+        type: 'percentage',
+        value: 0,
+        expiryDate: '',
+        maxUses: null,
+        minPurchase: null,
+        active: true,
+        notes: ''
+      };
+    }
+
+    function formatDate(date) {
       return new Date(date).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
         day: 'numeric'
       });
     }
+
+    function isExpired(date) {
+      const expiryDate = new Date(date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      return expiryDate < today;
+    }
+
+    function isExpiringSoon(date) {
+      const expiryDate = new Date(date);
+      const today = new Date();
+      const daysUntilExpiry = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+      return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
+    }
+
+    function handleSettingsClick() {
+      console.log('Settings clicked');
+    }
+
+    onMounted(() => {
+      fetchCoupons();
+    });
+
+    return {
+      adminName,
+      notifications,
+      showAddModal,
+      editingCoupon,
+      form,
+      coupons,
+      selectedCouponIds,
+      isLoading,
+      toast,
+      minDate,
+      dateError,
+      valueError,
+      activeCoupons,
+      expiringSoon,
+      totalCoupons,
+      selectAll,
+      openAddModal,
+      saveCoupon,
+      editCoupon,
+      deleteCoupon,
+      bulkDeleteCoupons,
+      toggleStatus,
+      closeModal,
+      formatDate,
+      isExpired,
+      isExpiringSoon,
+      handleSettingsClick
+    };
   }
 };
 </script>
@@ -1011,5 +1213,31 @@ tbody {
   gap: 12px;
   justify-content: flex-end;
   margin-top: 10px;
+}
+
+.toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 3000;
+  transition: all 0.3s;
+}
+
+.toast-success {
+  border-left: 4px solid #28a745;
+}
+
+.toast-error {
+  border-left: 4px solid #dc3545;
+}
+
+.toast-content {
+  color: #212529;
+  font-size: 14px;
+  font-weight: 500;
 }
 </style>

@@ -32,6 +32,12 @@
                   </option>
                 </select>
 
+                <select v-model="statusFilter" class="filter-select">
+                  <option value="all">All Products</option>
+                  <option value="available">Available Only</option>
+                  <option value="unavailable">Out of Stock</option>
+                </select>
+
                 <select v-model="sortBy" class="filter-select">
                   <option value="default">Default Sorting</option>
                   <option value="price-low">Price: Low to High</option>
@@ -77,18 +83,39 @@
           </div>
 
           <div v-else class="products-grid">
-            <ProductCard
+            <div 
               v-for="product in filteredProducts"
               :key="product.id"
-              :title="product.name"
-              :price="product.price"
-              :rating="4.5"
-              :reviewCount="128"
-              :isOnSale="product.status === 'Active'"
-              :image="product.imageSrc"
-              :productId="product.id"
-              @add-to-cart="addToCart(product)"
-            />
+              class="product-wrapper"
+              :class="{ 'out-of-stock': !product.isAvailable }"
+            >
+              <!-- Discount Badge (only show if product has promotion) -->
+              <div v-if="product.hasPromotion" class="discount-badge">
+                -{{ product.discount.toFixed(0) }}%
+              </div>
+              
+              <!-- Out of Stock Badge -->
+              <div v-if="!product.isAvailable" class="stock-badge out-of-stock-badge">
+                Out of Stock
+              </div>
+              
+              <!-- Low Stock Badge (only if available and low stock) -->
+              <div v-else-if="product.inStock < 10" class="stock-badge low-stock-badge">
+                Only {{ product.inStock }} left
+              </div>
+
+              <ProductCard
+                :title="product.name"
+                :price="product.displayPrice"
+                :oldPrice="product.originalPrice"
+                :rating="4.5"
+                :reviewCount="128"
+                :isOnSale="product.hasPromotion && product.isAvailable"
+                :image="product.imageSrc"
+                :productId="product.id"
+                @add-to-cart="addToCart(product)"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -118,9 +145,11 @@ export default {
       searchQuery: '',
       categoryFilter: 'all',
       sortBy: 'default',
+      statusFilter: 'all',
       isLoading: false,
       error: null,
       products: [],
+      promotions: [], // Add promotions array
       categories: []
     };
   },
@@ -145,11 +174,18 @@ export default {
         );
       }
       
+      // Filter by availability status
+      if (this.statusFilter === 'available') {
+        filtered = filtered.filter(product => product.inStock > 0);
+      } else if (this.statusFilter === 'unavailable') {
+        filtered = filtered.filter(product => product.inStock === 0);
+      }
+      
       // Sort products
       if (this.sortBy === 'price-low') {
-        filtered.sort((a, b) => a.price - b.price);
+        filtered.sort((a, b) => a.displayPrice - b.displayPrice);
       } else if (this.sortBy === 'price-high') {
-        filtered.sort((a, b) => b.price - a.price);
+        filtered.sort((a, b) => b.displayPrice - a.displayPrice);
       } else if (this.sortBy === 'name') {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
       } else if (this.sortBy === 'newest') {
@@ -169,28 +205,71 @@ export default {
       this.error = null;
       
       try {
-        const response = await axios.get(`${API_URL}/products`);
+        // Fetch products
+        const productsResponse = await axios.get(`${API_URL}/products`);
         
-        // Map backend response to frontend format
-        this.products = response.data.map(product => ({
-          id: product._id,
-          name: product.name,
-          brand: product.brand,
-          category: product.category,
-          supplier: product.supplier,
-          inStock: product.inStock,
-          price: product.price,
-          status: product.status,
-          imageSrc: product.imageSrc || '/placeholder.png',
-          description: product.description || '',
-          stockAt: product.stockAt
-        }));
+        // Fetch active promotions
+        const promotionsResponse = await axios.get(`${API_URL}/promotions/active`);
+        this.promotions = promotionsResponse.data;
+        
+        console.log('Active promotions:', this.promotions);
+        
+        // Map products and apply promotions
+        this.products = productsResponse.data.map(product => {
+          const productId = product._id;
+          
+          // Find if this product has an active promotion
+          const promotion = this.promotions.find(promo => 
+            promo.product_id === productId || promo.productId === productId
+          );
+          
+          let displayPrice = product.price;
+          let originalPrice = null;
+          let discount = 0;
+          let hasPromotion = false;
+          
+          if (promotion) {
+            // Product has a promotion
+            originalPrice = product.price;
+            displayPrice = promotion.sale_price || promotion.salePrice || product.price;
+            discount = promotion.discount || promotion.discountPercentage || 0;
+            hasPromotion = true;
+            
+            console.log(`Product "${product.name}" has promotion:`, {
+              originalPrice,
+              displayPrice,
+              discount
+            });
+          }
+          
+          return {
+            id: productId,
+            name: product.name,
+            brand: product.brand,
+            category: product.category,
+            supplier: product.supplier,
+            inStock: product.inStock || 0,
+            price: product.price, // Keep original price
+            displayPrice: displayPrice, // Price to show (discounted or original)
+            originalPrice: originalPrice, // Only set if there's a promotion
+            discount: discount,
+            hasPromotion: hasPromotion,
+            status: product.status,
+            imageSrc: product.imageSrc || '/placeholder.png',
+            description: product.description || '',
+            stockAt: product.stockAt,
+            isAvailable: (product.inStock || 0) > 0
+          };
+        });
         
         // Extract unique categories
         const uniqueCategories = [...new Set(this.products.map(p => p.category))];
         this.categories = uniqueCategories.sort();
         
         console.log('Products loaded:', this.products.length);
+        console.log('Products with promotions:', this.products.filter(p => p.hasPromotion).length);
+        console.log('Available products:', this.products.filter(p => p.isAvailable).length);
+        console.log('Unavailable products:', this.products.filter(p => !p.isAvailable).length);
       } catch (error) {
         console.error('Failed to fetch products:', error);
         this.error = error.response?.data?.message || 'Unable to connect to server. Please try again later.';
@@ -200,6 +279,12 @@ export default {
     },
     
     addToCart(product) {
+      // Check if product is available before adding to cart
+      if (!product.isAvailable) {
+        alert(`Sorry, "${product.name}" is currently out of stock.`);
+        return;
+      }
+
       // Get existing cart from localStorage
       let cart = [];
       try {
@@ -215,17 +300,24 @@ export default {
       const existingIndex = cart.findIndex(item => item.id === product.id);
       
       if (existingIndex !== -1) {
+        // Check if we can add more
+        if (cart[existingIndex].qty >= product.inStock) {
+          alert(`Cannot add more. Only ${product.inStock} items available in stock.`);
+          return;
+        }
         // Increase quantity if already in cart
         cart[existingIndex].qty = (cart[existingIndex].qty || 1) + 1;
         alert(`Increased quantity of "${product.name}" in cart!`);
       } else {
-        // Add new product to cart
+        // Add new product to cart with the display price (discounted or original)
         cart.push({
           id: product.id,
           name: product.name,
           image: product.imageSrc,
-          price: product.price,
-          qty: 1
+          price: product.displayPrice, // Use display price (discounted if available)
+          originalPrice: product.originalPrice, // Store original price if there's a discount
+          qty: 1,
+          maxStock: product.inStock
         });
         alert(`Added "${product.name}" to cart!`);
       }
@@ -474,6 +566,54 @@ export default {
   color: #64748b;
   font-size: 1rem;
   margin: 0;
+}
+
+.product-wrapper {
+  position: relative;
+}
+
+.product-wrapper.out-of-stock {
+  opacity: 0.7;
+}
+
+.discount-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: #ef4444;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+}
+
+.stock-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.out-of-stock-badge {
+  background: #ef4444;
+  color: white;
+}
+
+.low-stock-badge {
+  background: #f59e0b;
+  color: white;
 }
 
 @media (max-width: 1024px) {

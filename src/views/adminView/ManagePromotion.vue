@@ -31,28 +31,21 @@
 
         <div class="stats-cards">
           <div class="stat-card">
-            <div class="stat-icon blue">📊</div>
+            <div class="stat-icon blue"><img class="stats-icon" src="/discountIcon.png" alt=""></div>
             <div class="stat-info">
               <p class="stat-label">Total Promotions</p>
               <h3 class="stat-value">{{ totalPromotions }}</h3>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon green">✅</div>
+            <div class="stat-icon green"><img class="stats-icon" src="/verifiedIcon.png" alt=""></div>
             <div class="stat-info">
               <p class="stat-label">Active Promotions</p>
               <h3 class="stat-value">{{ activePromotions }}</h3>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon orange">💰</div>
-            <div class="stat-info">
-              <p class="stat-label">Avg. Discount</p>
-              <h3 class="stat-value">{{ averageDiscount }}%</h3>
-            </div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-icon purple">🎁</div>
+            <div class="stat-icon purple"><img class="stats-icon" src="/productIcon.png" alt=""></div>
             <div class="stat-info">
               <p class="stat-label">Promoted Products</p>
               <h3 class="stat-value">{{ promotedProducts }}</h3>
@@ -160,7 +153,6 @@
       </main>
     </div>
 
-    <!-- Modal for Add/Edit -->
     <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
       <div class="modal-container">
         <div class="modal-header">
@@ -242,10 +234,8 @@
       </div>
     </div>
 
-    <!-- Toast Notification -->
     <div v-if="toast.show" :class="['toast', toast.type + '-toast']">
       <div class="toast-content">
-        <span>✓</span>
         <span>{{ toast.message }}</span>
       </div>
     </div>
@@ -370,9 +360,7 @@ export default {
         
         console.log('Raw promotion data:', response.data);
         
-        // Map the response properly - backend returns snake_case, we need camelCase
         promotions.value = response.data.map(promo => {
-          // Extract discount value
           const discount = parseFloat(promo.discountPercentage || promo.discount || 0);
           const originalPrice = parseFloat(promo.originalPrice || 0);
           
@@ -387,7 +375,7 @@ export default {
             productName: promo.productName || 'Unknown Product',
             originalPrice: originalPrice,
             discount: discount,
-            discountPercentage: discount, // Keep both for compatibility
+            discountPercentage: discount,
             salePrice: salePrice,
             startDate: promo.startDate || '',
             endDate: promo.endDate || '',
@@ -440,7 +428,7 @@ export default {
       currentEditId.value = promotion._id;
       formData.value = {
         productId: promotion.productId,
-        discount: parseFloat(promotion.discount) || 0, // Ensure it's a number
+        discount: parseFloat(promotion.discount) || 0,
         startDate: promotion.startDate.split('T')[0],
         endDate: promotion.endDate.split('T')[0],
         status: promotion.status
@@ -466,11 +454,9 @@ export default {
         };
 
         if (isEditMode.value) {
-          // For edit mode, use PATCH with ID in URL
           await axios.patch(`${API_URL}/promotions/${currentEditId.value}`, payload);
           showToast('success', 'Promotion updated successfully');
         } else {
-          // For create mode, use POST
           await axios.post(`${API_URL}/promotions`, payload);
           showToast('success', 'Promotion created successfully');
         }
@@ -544,7 +530,6 @@ export default {
     }
 
     onMounted(() => {
-      // Load both promotions and products
       fetchPromotions();
       fetchProducts();
     });
@@ -749,6 +734,11 @@ export default {
   align-items: center;
   justify-content: center;
   font-size: 24px;
+}
+
+.stats-icon {
+  width: 20px;
+  height: 20px;
 }
 
 .stat-icon.blue { background: #e6f0ff; }
