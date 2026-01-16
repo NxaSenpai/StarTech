@@ -57,7 +57,7 @@ onMounted(() => {
           <div class="hero-content">
             <div class="top-badge">LIMITED TIME ONLY</div>
             <h1>Best Deals of the Week</h1>
-            <p>Save up to 60% OFF on top-rated electronics</p>
+            <p>Save up you money by buying products from STARTECH</p>
           </div>
         </div>
       </section>
@@ -249,16 +249,18 @@ onMounted(() => {
 
 .discount-tag {
   position: absolute;
-  top: 15px;
-  left: 15px;
-  background: #ff5a5a;
+  top: 12px;
+  left: 12px;
+  background: #ef4444;
   color: white;
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 8px;
-  font-weight: 800;
-  font-size: 0.8rem;
-  z-index: 5;
-  box-shadow: 0 4px 10px rgba(255, 90, 90, 0.3);
+  font-size: 12px;
+  font-weight: 700;
+  z-index: 10;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
 }
 
 :deep(.add-button), 

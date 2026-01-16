@@ -124,14 +124,14 @@
                   <td class="product-cell">
                     <div class="product-info">
                       <img 
-                        :src="product.imageSrc" 
+                        :src="getImageUrl(product.imageSrc)" 
                         :alt="product.name" 
                         class="product-image"
-                        @error="(e) => e.target.src = '/placeholder.png'"
+                        @error="handleImageError"
                       >
                       <div class="product-details">
-                        <span class="product-name">{{ product.name }}</span>
-                        <span class="product-sku">SKU: {{ product.id }}</span>
+                        <div class="product-name">{{ product.name }}</div>
+                        <div class="product-sku">{{ product.category }}</div>
                       </div>
                     </div>
                   </td>
@@ -266,33 +266,47 @@
                   <label>Product Image <span class="required">*</span></label>
                   <div 
                     class="image-upload-area"
-                    :class="{ 'has-image': productForm.imageSrc !== '/placeholder.png' }"
+                    :class="{ 'has-image': !!productForm.imageSrc }"
                     @dragover="handleDragOver"
                     @dragleave="handleDragLeave"
                     @drop="handleDrop"
                   >
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       id="imageUpload"
+                      ref="imageInput"
                       @change="handleImageUpload"
                       accept="image/*"
                       style="display: none;"
                     >
                     
-                    <div v-if="productForm.imageSrc !== '/placeholder.png'" class="image-preview">
+                    <div v-if="!!productForm.imageSrc" class="image-preview">
                       <div class="preview-container">
                         <img 
-                          :src="productForm.imageSrc" 
+                          :src="getImageUrl(productForm.imageSrc)" 
                           alt="Product preview"
                           @error="handleImageError"
                         >
                       </div>
-                      <button type="button" class="remove-image-btn" @click="removeImage">
-                        Remove Image
-                      </button>
-                      <button type="button" class="change-image-btn" @click="triggerFileInput">
-                        Change Image
-                      </button>
+                      <div style="display: flex; gap: 12px;">
+                        <button
+                          type="button"
+                          class="change-image-btn"
+                          @click="triggerFileInput"
+                        >
+                          <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/>
+                          </svg>
+                          Change Image
+                        </button>
+                        <button
+                          type="button"
+                          class="remove-image-btn"
+                          @click="removeImage"
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                     
                     <div v-else class="upload-placeholder" @click="triggerFileInput">
@@ -375,6 +389,7 @@ export default {
     const selectedProductIds = ref([]);
     const isLoading = ref(false);
     const isUploading = ref(false);
+    const imageInput = ref(null);
 
     const categories = ref([]);
     const suppliers = ref([]);
@@ -393,7 +408,7 @@ export default {
       inStock: 0,
       price: 0,
       status: 'Active',
-      imageSrc: '/placeholder.png',
+      imageSrc: '',
       description: ''
     });
 
@@ -514,6 +529,7 @@ export default {
 
     function openAddProductModal() {
       isEditMode.value = false;
+      currentEditId.value = null;
       productForm.value = {
         name: '',
         brand: '',
@@ -522,7 +538,7 @@ export default {
         inStock: 0,
         price: 0,
         status: 'Active',
-        imageSrc: '/placeholder.png',
+        imageSrc: '',
         description: ''
       };
       showProductModal.value = true;
@@ -539,7 +555,7 @@ export default {
         inStock: product.inStock,
         price: product.price,
         status: product.status,
-        imageSrc: product.imageSrc,
+        imageSrc: product.imageSrc || '',
         description: product.description || ''
       };
       showProductModal.value = true;
@@ -551,75 +567,93 @@ export default {
       currentEditId.value = null;
     }
 
+    const handleDragOver = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.add('drag-over');
+      }
+    };
+
+    const handleDragLeave = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+      }
+    };
+
+    const handleDrop = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const uploadArea = event.currentTarget;
+      if (uploadArea) {
+        uploadArea.classList.remove('drag-over');
+      }
+      
+      const files = event.dataTransfer?.files;
+      if (files && files.length > 0) {
+        const file = files[0];
+        // Create a synthetic event object
+        handleImageUpload({ target: { files } });
+      }
+    };
+
     async function handleImageUpload(event) {
-      const file = event.target.files[0];
+      const file = event?.target?.files?.[0];
       if (!file) return;
 
       if (!file.type.startsWith('image/')) {
         showToast('error', 'Please select an image file');
+        if (event?.target) event.target.value = '';
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
         showToast('error', 'Image size must be less than 5MB');
+        if (event?.target) event.target.value = '';
         return;
       }
 
-      isUploading.value = true;
-      const formData = new FormData();
-      formData.append('image', file);
+      const formDataUpload = new FormData();
+      formDataUpload.append('image', file);
 
       try {
-        const response = await axios.post(`${API_URL}/upload-image`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
+        isUploading.value = true;
+
+        const response = await axios.post(`${API_URL}/upload`, formDataUpload, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+          timeout: 30000
         });
-        
-        console.log('Upload response:', response.data);
-        
-        productForm.value.imageSrc = response.data.imagePath;
-        
-        showToast('success', 'Image uploaded successfully');
+
+        if (response.data?.url) {
+          productForm.value.imageSrc = response.data.url;
+          showToast('success', 'Image uploaded successfully!');
+        } else {
+          throw new Error('No URL in response');
+        }
       } catch (error) {
-        console.error('Image upload failed:', error);
-        showToast('error', 'Failed to upload image');
+        const errorMsg =
+          error.response?.data?.message ||
+          error.message ||
+          'Failed to upload image';
+        showToast('error', errorMsg);
       } finally {
         isUploading.value = false;
+        if (event?.target) event.target.value = '';
       }
     }
 
-    function handleDragOver(event) {
-      event.preventDefault();
-      event.currentTarget.classList.add('drag-over');
-    }
-
-    function handleDragLeave(event) {
-      event.currentTarget.classList.remove('drag-over');
-    }
-
-    async function handleDrop(event) {
-      event.preventDefault();
-      event.currentTarget.classList.remove('drag-over');
-      
-      const file = event.dataTransfer.files[0];
-      if (!file) return;
-
-      const fakeEvent = {
-        target: {
-          files: [file]
-        }
-      };
-      
-      await handleImageUpload(fakeEvent);
-    }
-
     function triggerFileInput() {
-      document.getElementById('imageUpload').click();
+      imageInput.value?.click();
     }
 
     function removeImage() {
-      productForm.value.imageSrc = '/placeholder.png';
+      productForm.value.imageSrc = '';
+      if (imageInput.value) imageInput.value.value = '';
     }
 
     async function saveProduct() {
@@ -723,10 +757,46 @@ export default {
       console.log('Settings clicked');
     }
 
+    function getImageUrl(imageSrc) {
+      console.log("This is image url : " + imageSrc)
+      if (!imageSrc) {
+        return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect width="200" height="200" fill="%23f1f5f9"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="16" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
+      }
+      
+      // If it's already a full URL, return it
+      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) {
+        return imageSrc;
+      }
+      
+      // If it's a data URL, return it
+      if (imageSrc.startsWith('data:')) {
+        return imageSrc;
+      }
+      
+      // If it's a relative path starting with /uploads/, return with API_URL
+      if (imageSrc.startsWith('/uploads/')) {
+        return `${API_URL}${imageSrc}`;
+      }
+      
+      // If it's just a filename, add the /uploads/ prefix
+      if (!imageSrc.startsWith('/')) {
+        return `${API_URL}/uploads/${imageSrc}`;
+      }
+      
+      return imageSrc;
+    }
+
     function handleImageError(event) {
-      console.error('Failed to load image:', productForm.value.imageSrc);
-      showToast('error', 'Failed to load image preview');
-      event.target.src = '/placeholder.png';
+      // Prevent infinite loop by checking if we've already set placeholder
+      if (event.target.src.includes('placeholder.png')) {
+        console.warn('Placeholder image also failed to load');
+        return;
+      }
+      
+      console.warn('Failed to load image:', event.target.src);
+      
+      // Use a data URL as fallback instead of another file path
+      event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect width="200" height="200" fill="%23f1f5f9"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="16" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
     }
 
     onMounted(() => {
@@ -752,6 +822,7 @@ export default {
       toast,
       isLoading,
       isUploading,
+      imageInput,
       categories,
       suppliers,
       availableCategories,
@@ -768,13 +839,14 @@ export default {
       bulkDeleteProducts,
       exportProducts,
       handleSettingsClick,
+      triggerFileInput,
+      removeImage,
+      handleImageError,
+      getImageUrl,
       handleImageUpload,
       handleDragOver,
       handleDragLeave,
-      handleDrop,
-      triggerFileInput,
-      removeImage,
-      handleImageError
+      handleDrop
     };
   }
 };
