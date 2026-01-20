@@ -24,6 +24,7 @@
               Delete Selected ({{ selectedPromotionIds.length }})
             </button>
             <button @click="openAddModal" class="btn btn-primary">
+              <img class="add-icon" src="/addIcon.png" alt="">
               Add Promotion
             </button>
           </div>
@@ -169,37 +170,6 @@
                   {{ product.name }} (${{ product.price.toFixed(2) }})
                 </option>
               </select>
-            </div>
-
-            <div class="form-group">
-              <label>Product Image</label>
-              <div 
-                class="image-upload-area"
-                @dragover="handleDragOver"
-                @dragleave="handleDragLeave"
-                @drop="handleDrop"
-              >
-                <div v-if="imagePreview" class="image-preview">
-                  <img :src="imagePreview" alt="Preview" />
-                  <button 
-                    type="button" 
-                    @click="imagePreview = ''; imageFile = null"
-                    class="remove-image-btn"
-                  >
-                    ✕ Remove
-                  </button>
-                </div>
-                <div v-else class="upload-placeholder">
-                  <img src="/uploadIcon.png" alt="Upload" class="upload-icon" />
-                  <p>Drag and drop image here or click to browse</p>
-                  <input 
-                    type="file" 
-                    @change="handleImageUpload"
-                    accept="image/*"
-                    class="file-input"
-                  />
-                </div>
-              </div>
             </div>
 
             <div class="form-group">
@@ -519,8 +489,8 @@ export default {
       if (!confirm(`Delete ${selectedPromotionIds.value.length} selected promotions?`)) return;
       
       try {
-        await axios.delete(`${API_URL}/promotions/bulk`, {
-          data: { ids: selectedPromotionIds.value }
+        await axios.post(`${API_URL}/promotions/bulk-delete`, {
+          ids: selectedPromotionIds.value
         });
         showToast('success', `${selectedPromotionIds.value.length} promotions deleted`);
         selectedPromotionIds.value = [];
@@ -792,6 +762,12 @@ export default {
 }
 
 .btn-icon {
+  width: 15px;
+  height: 15px;
+  filter: invert(1);
+}
+
+.add-icon {
   width: 15px;
   height: 15px;
   filter: invert(1);
