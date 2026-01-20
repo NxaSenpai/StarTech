@@ -359,13 +359,11 @@ export default {
       const file = event.target.files[0];
       if (!file) return;
 
-      // Validate file type
       if (!file.type.startsWith('image/')) {
         this.showAlertMessage('Please select an image file', 'error');
         return;
       }
 
-      // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
         this.showAlertMessage('Image size should be less than 5MB', 'error');
         return;
@@ -408,7 +406,6 @@ export default {
           name: this.editedProfile.name.trim()
         };
 
-        // Only include profileImage if it was changed
         if (this.editedProfile.profileImage !== this.profile.profileImage) {
           updateData.profileImage = this.editedProfile.profileImage;
         }
@@ -524,6 +521,7 @@ export default {
   max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
+  overflow: hidden;
 }
 
 .breadcrumb {

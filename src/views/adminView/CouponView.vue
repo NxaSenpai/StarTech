@@ -433,8 +433,9 @@ export default {
 
       try {
         const payload = {
+          _id: editingCoupon.value?._id, // <-- use _id for update
           code: form.value.code.toUpperCase().trim(),
-          type: form.value.type,
+          type: form.value.type, // <-- keep as 'type'
           value: parseFloat(form.value.value),
           expiryDate: form.value.expiryDate,
           maxUses: form.value.maxUses ? parseInt(form.value.maxUses) : null,
@@ -444,10 +445,7 @@ export default {
         };
 
         if (editingCoupon.value) {
-          await axios.patch(`${API_URL}/coupons`, {
-            _id: editingCoupon.value._id,
-            ...payload
-          });
+          await axios.patch(`${API_URL}/coupons/${editingCoupon.value._id}`, payload);
           showToast('success', 'Coupon updated successfully');
         } else {
           await axios.post(`${API_URL}/coupons`, payload);
@@ -499,14 +497,12 @@ export default {
 
     async function toggleStatus(coupon) {
       const previousStatus = coupon.active;
-      
       coupon.active = !coupon.active;
-      
       try {
-        await axios.patch(`${API_URL}/coupons`, {
-          _id: coupon._id,
+        await axios.patch(`${API_URL}/coupons/${coupon._id}`, {
+          _id: coupon._id, // <-- use _id
           code: coupon.code,
-          type: coupon.type,
+          type: coupon.type, // <-- keep as 'type'
           value: coupon.value,
           expiryDate: coupon.expiryDate.split('T')[0],
           maxUses: coupon.maxUses,
@@ -514,9 +510,7 @@ export default {
           active: coupon.active,
           notes: coupon.notes
         });
-        
         showToast('success', `Coupon ${coupon.active ? 'activated' : 'deactivated'} successfully`);
-        
         await fetchCoupons();
       } catch (error) {
         coupon.active = previousStatus;

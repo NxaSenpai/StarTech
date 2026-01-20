@@ -194,18 +194,6 @@ export default {
                   This compact unit delivers powerful cooling performance while maintaining energy efficiency. Features include multiple 
                   fan speeds, adjustable thermostat, and easy-to-use controls.
                 </p>
-
-                <h3>Key Features</h3>
-                <ul class="features-list">
-                  <li>5000 BTU cooling capacity for rooms up to 150 sq ft</li>
-                  <li>Energy-efficient operation saves on electricity bills</li>
-                  <li>Multiple fan speeds for customized comfort</li>
-                  <li>Easy installation with included window kit</li>
-                  <li>Washable and reusable air filter</li>
-                  <li>Compact and lightweight design</li>
-                  <li>Quiet operation for peaceful sleep</li>
-                  <li>Auto-restart function after power outage</li>
-                </ul>
               </div>
             </div>
           </div>
