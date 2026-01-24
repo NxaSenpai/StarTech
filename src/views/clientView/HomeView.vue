@@ -1,53 +1,155 @@
 <script setup>
   import Header from '@/components/header.vue'
   import Footer from '@/components/footer.vue'
-  import ShopByCategory from '@/components/shopByCategory.vue'
   import ProductCard from '@/components/productCard.vue'
-  import DiscountBanner from '@/components/discountBanner.vue'
   import { ref, onMounted } from 'vue'
-  
+
   const isLoaded = ref(false)
-  
-  onMounted(() => {
+  const products = ref([])
+
+  function isNewArrival(product) {
+    if (!product.createdAt && !product.stockAt) return false
+    const created = new Date(product.createdAt || product.stockAt)
+    const now = new Date()
+    const diffDays = (now - created) / (1000 * 60 * 60 * 24)
+    return diffDays <= 7
+  }
+
+  function getDiscount(product) {
+    if (typeof product.discount === 'number' && product.discount > 0) return product.discount
+    const price = product.price ?? 0
+    const oldPrice = product.oldPrice ?? product.originalPrice ?? 0
+    if (oldPrice > price) {
+      return Math.round(((oldPrice - price) / oldPrice) * 100)
+    }
+    return 0
+  }
+
+  function addToCart(product) {
+    if ((product.inStock || 0) === 0) {
+      alert(`Sorry, "${product.name}" is currently out of stock.`)
+      return
+    }
+
+    let cart = []
+    try {
+      const cartData = localStorage.getItem('cart')
+      if (cartData) {
+        cart = JSON.parse(cartData)
+      }
+    } catch (error) {
+      console.error('Error reading cart:', error)
+    }
+    
+    const existingIndex = cart.findIndex(item => item.id === product._id)
+    
+    if (existingIndex !== -1) {
+      if (cart[existingIndex].qty >= product.inStock) {
+        alert(`Cannot add more. Only ${product.inStock} items available in stock.`)
+        return
+      }
+      cart[existingIndex].qty = (cart[existingIndex].qty || 1) + 1
+      alert(`Increased quantity of "${product.name}" in cart!`)
+    } else {
+      cart.push({
+        id: product._id,
+        name: product.name,
+        image: product.image,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        qty: 1,
+        maxStock: product.inStock || 0
+      })
+      alert(`Added "${product.name}" to cart!`)
+    }
+    
+    try {
+      localStorage.setItem('cart', JSON.stringify(cart))
+      
+      window.dispatchEvent(new CustomEvent('cart-updated', { 
+        detail: { itemCount: cart.reduce((sum, item) => sum + item.qty, 0) }
+      }))
+    } catch (error) {
+      console.error('Error saving cart:', error)
+      alert('Failed to add item to cart. Please try again.')
+    }
+  }
+
+  onMounted(async () => {
     setTimeout(() => {
       isLoaded.value = true
     }, 100)
-  })
-  
-  const categories = [
-    { title: 'Air Conditioner',     count: 24, img: '/categories/1_AC.png',    link: '/category/AC' },
-    { title: 'Audio & Video',       count: 38, img: '/categories/2_audio.png' , link: '/category/Audio' },
-    { title: 'Gadgets',             count: 56, img: '/categories/3_gadget.png', link: '/Gadgets' },
-    { title: 'Home Appliances',     count: 19, img: '/categories/4_wash.png',   link: '/category/Home' },
-    { title: 'Kitchen Appliances',  count: 15, img: '/categories/5_oven.png',   link: '/category/Kitchen' },
-    { title: 'PC & Laptops',        count: 82, img: '/categories/6_pc.png',     link: '/category/Laptops' },
-    { title: 'Refrigerator',        count: 82, img: '/categories/7_fridge.png', link: '/category/Fridge' },
-    { title: 'Smart Home',          count: 82, img: '/categories/8_smart.png',  link: '/category/Smart' },
-  ]
-  
-  const products = [
-    { title: 'Multigroomer All-in-One Trimmer Series 5000', price: 44.00, oldPrice: 69.00, rating: 4.0, reviews: 128, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Wireless Bluetooth Headphones – Noise Cancelling', price: 89.99, oldPrice: 129.99, rating: 4.5, reviews: 342, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Smart LED TV 55″ 4K UHD', price: 599.00, oldPrice: 799.00, rating: 4.8, reviews: 87, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Portable Air Conditioner 12000 BTU', price: 349.00, oldPrice: 499.00, rating: 4.3, reviews: 201, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Gaming Laptop RTX 4070 16GB RAM', price: 1299.00, oldPrice: 1599.00, rating: 4.9, reviews: 523, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Smart Watch Series 8 GPS + Cellular', price: 399.00, rating: 4.7, reviews: 892, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Coffee Maker Automatic Espresso', price: 179.00, oldPrice: 249.00, rating: 4.6, reviews: 176, sale: true, img: '/categories/6_pc.png' },
-    { title: 'Robot Vacuum Cleaner with Mop', price: 299.00, oldPrice: 399.00, rating: 4.4, reviews: 412, sale: true, img: '/categories/6_pc.png' },
-  ]
-  
-  console.log("HomeView loaded – StarTech style!")
-  </script>
-  
-  <template>
-    <div class="home-layout" :class="{ loaded: isLoaded }">
-      <header class="headerClass">
-        <Header />
-      </header>
+
+    try {
+      const productsRes = await fetch('http://localhost:3000/products')
+      const productsData = await productsRes.json()
       
-      <main class="main-content">
+      const promotionsRes = await fetch('http://localhost:3000/promotions/active')
+      const promotionsData = await promotionsRes.json()
+      
+      console.log('Products loaded:', productsData.length)
+      console.log('Active promotions:', promotionsData.length)
+      
+      products.value = Array.isArray(productsData)
+        ? productsData.slice(0, 8).map(p => {
+            const promotion = promotionsData.find(promo => 
+              promo.product_id === p._id || promo.productId === p._id
+            )
+            
+            let displayPrice = p.price
+            let originalPrice = null
+            let discount = 0
+            
+            if (promotion) {
+              originalPrice = p.price
+              displayPrice = promotion.sale_price || promotion.salePrice || p.price
+              discount = promotion.discount || promotion.discountPercentage || 0
+              
+              console.log(`Product "${p.name}" has promotion:`, {
+                originalPrice,
+                displayPrice,
+                discount
+              })
+            } else {
+              discount = getDiscount(p)
+              if (discount > 0) {
+                originalPrice = p.oldPrice || p.originalPrice
+              }
+            }
+            
+            return {
+              _id: p._id,
+              name: p.name,
+              price: displayPrice,
+              originalPrice: originalPrice,
+              discount: discount,
+              image: p.imageSrc || p.image || p.image_src || p.img || '',
+              isNew: isNewArrival(p),
+              inStock: p.inStock || 0
+            }
+          })
+        : []
+      
+      console.log('Processed products:', products.value)
+      console.log('Products with discount:', products.value.filter(p => p.discount > 0).length)
+      console.log('New products:', products.value.filter(p => p.isNew).length)
+    } catch (err) {
+      console.error('Failed to load products:', err)
+      products.value = []
+    }
+  })
+
+  console.log("HomeView loaded – StarTech style!")
+</script>
   
-        <section class="banner">
+<template>
+  <div class="home-layout" :class="{ loaded: isLoaded }">
+    <header class="headerClass">
+      <Header />
+    </header>
+    
+    <main class="main-content">
+      <section class="banner">
           <div class="hero-section" style="--hero-image: url('/banner_image.jpg');">
             <div class="floating-shapes">
               <div class="shape shape-1"></div>
@@ -86,75 +188,53 @@
           </div>
         </section>
   
-        <section class="products-section">
-          <div class="container">
-            <div class="section-header">
-              <div class="section-header-left">
-                <span class="section-tag">Trending</span>
-                <h2 class="section-title">Featured Products</h2>
-              </div>
+      <section class="products-section">
+        <div class="container">
+          <div class="section-header">
+            <div class="section-header-left">
+              <span class="section-tag">Trending</span>
+              <h2 class="section-title">Featured Products</h2>
             </div>
-            <div class="products-grid">
+          </div>
+          <div class="products-grid">
+            <div
+              v-for="(product, i) in products"
+              :key="product._id || i"
+              :style="{ animationDelay: `${i * 0.08}s`, position: 'relative' }"
+            >
+              <div v-if="product.discount > 0" class="discount-badge">
+                -{{ product.discount }}%
+              </div>
+              
+              <div v-if="product.isNew" class="new-badge">
+                NEW
+              </div>
+
               <ProductCard
-                v-for="(product, i) in products"
-                :key="i"
-                :title="product.title"
+                :title="product.name"
                 :price="product.price"
-                :oldPrice="product.oldPrice"
-                :rating="product.rating"
-                :reviewCount="product.reviews"
-                :isOnSale="product.sale"
-                :image="product.img"
-                :style="{ animationDelay: `${i * 0.08}s` }"
-                class="product-item"
+                :oldPrice="product.discount > 0 ? product.originalPrice : undefined"
+                :rating="4.5"
+                :reviewCount="100"
+                :isOnSale="product.discount > 0"
+                :image="product.image"
+                :productId="product._id"
+                @add-to-cart="addToCart(product)"
               />
             </div>
-            <div class="load-more">
-              <router-link to="/products" class="load-more-btn">Load More Products</router-link>
-            </div>
           </div>
-        </section>
-      </main>
-  
-      <section class="brand-deal-banner">
-        <div class="brand-deal-inner">
-          <div class="deal-text">
-            <span class="deal-badge">Brand's Deal</span>
-            <h2>Save up to <span class="highlight">$200</span> on select<br><strong>Samsung washing machines</strong></h2>
-            <p class="desc">Limited time offer • Free delivery & installation</p>
-            <div class="deal-features">
-              <div class="feature">
-                <img src="/verifiedIcon.png" class="feature-icon">
-                <span>Free Installation</span>
-              </div>
-              <div class="feature">
-                <img src="/verifiedIcon.png" class="feature-icon">
-                <span>1 Year Warranty</span>
-              </div>
-            </div>
-            <router-link to="/products" class="shop-now-link">
-              Shop now
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </router-link>
-          </div>
-          <div class="deal-image">
-            <img 
-              src="/washingMachine.jpg" 
-              alt="Samsung Washing Machine Deal" 
-              loading="lazy"
-            />
+          <div class="load-more">
+            <router-link to="/products" class="load-more-btn">Load More Products</router-link>
           </div>
         </div>
       </section>
+    </main>
   
-      <Footer />
-  
-    </div>
-  </template>
-  
-  <style scoped>
+    <Footer />
+  </div>
+</template>
+
+<style scoped>
   :root {
     --primary: #3b82f6;
     --primary-dark: #2563eb;
@@ -501,84 +581,7 @@
     border-color: #3b82f6;
     color: #3b82f6;
     box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
-  }
-  
-  .brand-deal-banner {
-    max-width: 1400px;
-    margin: 0 auto 80px;
-    padding: 0 20px;
-  }
-  
-  .brand-deal-inner {
-    display: flex;
-    align-items: center;
-    background: linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%);
-    border-radius: 24px;
-    overflow: hidden;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.8);
-  }
-  
-  .deal-text {
-    flex: 1;
-    padding: 60px;
-  }
-  
-  .deal-badge {
-    display: inline-block;
-    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-    color: white;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 6px 16px;
-    border-radius: 50px;
-    margin-bottom: 20px;
-  }
-  
-  .deal-text h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    color: #1e293b;
-    line-height: 1.2;
-    margin: 0 0 16px;
-  }
-  
-  .deal-text h2 .highlight {
-    color: #3b82f6;
-  }
-  
-  .deal-text .desc {
-    font-size: 1.1rem;
-    color: #64748b;
-    margin: 0 0 24px;
-  }
-  
-  .deal-features {
-    display: flex;
-    gap: 24px;
-    margin-bottom: 32px;
-  }
-  
-  .feature {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.95rem;
-    color: #1e293b;
-    font-weight: 500;
-  }
-  
-  .feature-icon {
-    width: 20px;
-    height: 20px;
-    background: #10b981;
-    color: white;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.75rem;
-  }
+  } 
   
   .shop-now-link {
     display: inline-flex;
@@ -600,17 +603,6 @@
     box-shadow: 0 10px 30px rgba(30, 41, 59, 0.3);
   }
   
-  .deal-image {
-    flex: 1;
-    height: 450px;
-    position: relative;
-  }
-  
-  .deal-image img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
 
   @media (max-width: 1024px) {
     .hero-section h1 {
@@ -619,14 +611,6 @@
     
     .section-title {
       font-size: 1.75rem;
-    }
-    
-    .deal-text {
-      padding: 40px;
-    }
-    
-    .deal-text h2 {
-      font-size: 2rem;
     }
   }
   
@@ -658,24 +642,6 @@
     .section-header {
       flex-direction: column;
       align-items: flex-start;
-    }
-    
-    .brand-deal-inner {
-      flex-direction: column;
-    }
-    
-    .deal-text {
-      padding: 40px 24px;
-      text-align: center;
-    }
-    
-    .deal-features {
-      justify-content: center;
-    }
-    
-    .deal-image {
-      height: 280px;
-      width: 100%;
     }
     
     .newsletter-inner {
@@ -717,10 +683,6 @@
       grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
       gap: 16px;
     }
-    
-    .deal-text h2 {
-      font-size: 1.5rem;
-    }
   }
 
   .headerClass {
@@ -731,4 +693,42 @@
     z-index: 1000;
   }
 
+  .discount-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: #ef4444;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  }
+  
+  .new-badge {
+    position: absolute;
+    top: 12px;
+    left: 210px;
+    background: #10b981;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 10;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.8; transform: scale(1.05); }
+  }
+  
   </style>

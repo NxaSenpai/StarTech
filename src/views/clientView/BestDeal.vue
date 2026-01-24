@@ -65,27 +65,26 @@ onMounted(() => {
       <section class="products-section">
         <div class="container">
           <div class="section-header">
-            <h2><span class="emoji">🔥</span> Hot Offers</h2>
+            <h2>
+              <img class="fireIcon" src="/hotIcon.png" alt="">
+              Hot Offers
+            </h2>
           </div>
           
-          <!-- Loading State -->
           <div v-if="isLoading" class="loading-state">
             <div class="spinner"></div>
             <p>Loading deals...</p>
           </div>
 
-          <!-- Error State -->
           <div v-else-if="error" class="error-state">
             <p class="error-message">{{ error }}</p>
             <button @click="fetchActivePromotions" class="retry-btn">Try Again</button>
           </div>
 
-          <!-- Empty State -->
           <div v-else-if="dealProducts.length === 0" class="empty-state">
             <p>No active promotions at the moment. Check back soon!</p>
           </div>
 
-          <!-- Products Grid -->
           <div v-else class="products-grid">
             <div v-for="(product, index) in dealProducts" :key="index" class="product-wrapper">
               <div class="discount-tag">
@@ -170,6 +169,7 @@ onMounted(() => {
 }
 
 .section-header h2 {
+  display: flex;
   font-size: 1.8rem;
   color: #1a1a1a;
   font-weight: 800;
@@ -182,6 +182,12 @@ onMounted(() => {
   justify-content: center;
   padding: 80px 20px;
   gap: 20px;
+}
+
+.fireIcon {
+  width: 30px;
+  height: 30px;
+  margin-right: 10px;
 }
 
 .spinner {

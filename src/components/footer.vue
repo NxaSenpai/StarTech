@@ -17,9 +17,9 @@
           <div class="footer-col">
             <h3 class="footer-title">Shop</h3>
             <ul class="footer-links">
-              <li><a href="#">Hot deals</a></li>
-              <li><a href="#">Categories</a></li>
-              <li><a href="#">Weekly deals</a></li>
+              <li><router-link to="/best-deals">Best deals</router-link></li>
+              <li><router-link to="/products">Categories</router-link></li>
+              <li><router-link to="/eventview">Today deals</router-link></li>
             </ul>
           </div>
 

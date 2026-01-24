@@ -3,38 +3,33 @@ import { useRouter } from 'vue-router'
 
 function getImageUrl(imageSrc) {
   const API_URL = 'http://localhost:3000';
-
-      console.log("This is image url : " + imageSrc)
-      if (!imageSrc) {
-        return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect width="200" height="200" fill="%23f1f5f9"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="16" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
-      }
-      
-      // If it's already a full URL, return it
-      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) {
-        return imageSrc;
-      }
-      
-      // If it's a data URL, return it
-      if (imageSrc.startsWith('data:')) {
-        return imageSrc;
-      }
-      
-      // If it's a relative path starting with /uploads/, return with API_URL
-      if (imageSrc.startsWith('/uploads/')) {
-        return `${API_URL}${imageSrc}`;
-      }
-      
-      // If it's just a filename, add the /uploads/ prefix
-      if (!imageSrc.startsWith('/')) {
-        return `${API_URL}/uploads/${imageSrc}`;
-      }
-      
-      return imageSrc;
-    }
+  
+  if (!imageSrc) {
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"%3E%3Crect width="200" height="200" fill="%23f1f5f9"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-family="system-ui" font-size="16" fill="%2394a3b8"%3ENo Image%3C/text%3E%3C/svg%3E';
+  }
+  
+  if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) {
+    return imageSrc;
+  }
+  
+  if (imageSrc.startsWith('data:')) {
+    return imageSrc;
+  }
+  
+  if (imageSrc.startsWith('/uploads/')) {
+    return `${API_URL}${imageSrc}`;
+  }
+  
+  if (!imageSrc.startsWith('/')) {
+    return `${API_URL}/uploads/${imageSrc}`;
+  }
+  
+  return imageSrc;
+}
 
 const router = useRouter()
 
-defineProps<{
+const props = defineProps<{
   image?: string
   title: string
   price: number
@@ -45,14 +40,18 @@ defineProps<{
   productId?: string
 }>()
 
+const emit = defineEmits(['add-to-cart'])
+
 const navigateToDetails = () => {
-  router.push({ name: 'pdetails' })
+  if (props.productId) {
+    router.push({ name: 'pdetails', params: { id: props.productId } })
+  }
 }
+
 </script>
 
 <template>
   <div class="product-card" @click="navigateToDetails">
-
     <div class="image-wrapper">
       <img
         :src="getImageUrl(image || 'https://via.placeholder.com/400x500/white/ccc?text=Product')"
@@ -78,7 +77,7 @@ const navigateToDetails = () => {
         <span v-if="oldPrice" class="old">${{ oldPrice.toFixed(2) }}</span>
       </div>
 
-      <button class="add-btn" @click.stop="$emit('add-to-cart')">Add +</button>
+      <button class="add-btn">View</button>
     </div>
   </div>
 </template>
