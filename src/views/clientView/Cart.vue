@@ -31,7 +31,7 @@
                 class="cart-item"
               >
                 <div class="item-image-wrapper">
-                  <img :src="item.image" :alt="item.name" class="item-image">
+                  <img :src="getImageUrl(item.image)" :alt="item.name" class="item-image">
                 </div>
 
                 <div class="item-details">
@@ -62,7 +62,9 @@
                   <p class="item-subtotal">${{ (item.qty * item.price).toFixed(2) }}</p>
 
                   <button class="remove-btn" @click="removeItem(item.id)">
-                    <img class="remove-icon" src="/deleteIcon.png" alt="">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
                   </button>
                 </div>
               </div>
@@ -76,7 +78,7 @@
               <div class="summary-rows">
                 <div class="summary-row">
                   <span class="summary-label">Subtotal</span>
-                  <span class="summary-value">${{ totalAmount }}</span>
+                  <span class="summary-value">${{ subtotalAmount }}</span>
                 </div>
 
                 <div class="summary-row">
@@ -85,8 +87,16 @@
                 </div>
 
                 <div class="summary-row">
-                  <span class="summary-label">Tax (Estimated)</span>
+                  <span class="summary-label">Tax (5%)</span>
                   <span class="summary-value">${{ taxAmount }}</span>
+                </div>
+
+                <div v-if="appliedCoupon" class="summary-row discount-row">
+                  <span class="summary-label">
+                    Discount -{{ appliedCoupon.type === 'percentage' ? appliedCoupon.value + '%' : '$' + appliedCoupon.value }}
+                    <button class="remove-coupon-btn" @click="removeCoupon">×</button>
+                  </span>
+                  <span class="summary-value discount-value">-${{ discountAmount }}</span>
                 </div>
 
                 <div class="summary-divider"></div>
@@ -98,18 +108,33 @@
               </div>
 
               <div class="coupon-section">
-                <p class="coupon-label">Coupon</p>
+                <p class="coupon-label">Have a coupon code?</p>
                 <div class="coupon-input-wrapper">
                   <input 
                     type="text" 
+                    v-model="couponCode"
                     placeholder="Enter code" 
                     class="coupon-input"
+                    :disabled="!!appliedCoupon"
+                    @keyup.enter="applyCoupon"
                   >
-                  <button class="apply-btn">Apply</button>
+                  <button 
+                    class="apply-btn" 
+                    @click="applyCoupon"
+                    :disabled="!couponCode || !!appliedCoupon || applyingCoupon"
+                  >
+                    {{ applyingCoupon ? 'Checking...' : 'Apply' }}
+                  </button>
                 </div>
+                <p v-if="couponError" class="coupon-error">{{ couponError }}</p>
+                <p v-if="appliedCoupon" class="coupon-success">
+                  Coupon applied successfully!
+                </p>
               </div>
 
-              <button class="checkout-btn" @click="$router.push('/checkout')">Proceed to Checkout</button>
+              <button class="checkout-btn" @click="proceedToCheckout">
+                Proceed to Checkout
+              </button>
 
               <div class="continue-shopping">
                 <button @click="$router.push('/products')" class="continue-btn">
@@ -128,6 +153,9 @@
 <script>
 import Header from "@/components/header.vue";
 import Footer from "@/components/footer.vue";
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: "Cart",
@@ -139,102 +167,146 @@ export default {
   data() {
     return {
       Cart_data: [],
-      notice: {
-        show: false,
-        message: ""
-      },
-      deletedItem: null,
-      undoTimeout: null
+      couponCode: '',
+      appliedCoupon: null,
+      couponError: '',
+      applyingCoupon: false
     }
   },
 
   computed: {
-    totalAmount() {
+    subtotalAmount() {
       return this.Cart_data.reduce(
         (sum, item) => sum + item.price * item.qty,
         0
       ).toFixed(2);
     },
     taxAmount() {
-      return (this.totalAmount * 0.08).toFixed(2);
+      return (this.subtotalAmount * 0.05).toFixed(2);
+    },
+    discountAmount() {
+      if (!this.appliedCoupon) return '0.00';
+      
+      const subtotal = parseFloat(this.subtotalAmount);
+      let discount = 0;
+      
+      if (this.appliedCoupon.type === 'percentage') {
+        discount = subtotal * (this.appliedCoupon.value / 100);
+      } else {
+        discount = this.appliedCoupon.value;
+      }
+      
+      return Math.min(discount, subtotal).toFixed(2);
     },
     finalTotal() {
-      return (parseFloat(this.totalAmount) + parseFloat(this.taxAmount)).toFixed(2);
+      const subtotal = parseFloat(this.subtotalAmount);
+      const tax = parseFloat(this.taxAmount);
+      const discount = parseFloat(this.discountAmount);
+      
+      return Math.max(0, subtotal + tax - discount).toFixed(2);
     }
   },
 
   methods: {
+    getImageUrl(imageSrc) {
+      if (!imageSrc) return '/placeholder.png';
+      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) return imageSrc;
+      if (imageSrc.startsWith('/uploads/')) return `${API_URL}${imageSrc}`;
+      if (!imageSrc.startsWith('/')) return `${API_URL}/uploads/${imageSrc}`;
+      return imageSrc;
+    },
+
+    loadCart() {
+      try {
+        const cartData = localStorage.getItem('cart');
+        if (cartData) {
+          this.Cart_data = JSON.parse(cartData);
+        }
+      } catch (error) {
+        console.error('Error loading cart:', error);
+        this.Cart_data = [];
+      }
+    },
+
+    saveCart() {
+      try {
+        localStorage.setItem('cart', JSON.stringify(this.Cart_data));
+        window.dispatchEvent(new Event('cart-updated'));
+      } catch (error) {
+        console.error('Error saving cart:', error);
+      }
+    },
+
     updateQty(id, newQty) {
       if (newQty < 1) newQty = 1;
       const item = this.Cart_data.find(p => p.id === id);
       if (item) {
         item.qty = newQty;
+        this.saveCart();
       }
     },
 
     removeItem(id) {
       const index = this.Cart_data.findIndex(p => p.id === id);
       if (index !== -1) {
-        this.deletedItem = this.Cart_data[index];
         this.Cart_data.splice(index, 1);
-        
-        // Show undo notice
-        this.notice = {
-          show: true,
-          message: `Removed "${this.deletedItem.name}" from cart`
-        };
-        
-        // Clear any existing timeout
-        if (this.undoTimeout) {
-          clearTimeout(this.undoTimeout);
-        }
-        
-        // Auto-hide after 5 seconds
-        this.undoTimeout = setTimeout(() => {
-          this.notice.show = false;
-          this.deletedItem = null;
-        }, 5000);
+        this.saveCart();
       }
     },
 
-    undoDelete() {
-      if (this.deletedItem) {
-        this.Cart_data.push(this.deletedItem);
-        this.deletedItem = null;
-        this.notice.show = false;
+    async applyCoupon() {
+      if (!this.couponCode.trim()) return;
+      
+      this.applyingCoupon = true;
+      this.couponError = '';
+      
+      try {
+        const response = await axios.get(`${API_URL}/coupons/validate`, {
+          params: { code: this.couponCode.toUpperCase() }
+        });
         
-        if (this.undoTimeout) {
-          clearTimeout(this.undoTimeout);
-          this.undoTimeout = null;
+        const coupon = response.data;
+        
+        if (coupon.minPurchase && parseFloat(this.subtotalAmount) < coupon.minPurchase) {
+          this.couponError = `Minimum purchase of $${coupon.minPurchase.toFixed(2)} required`;
+          return;
         }
+        
+        this.appliedCoupon = coupon;
+        this.couponCode = '';
+        this.couponError = '';
+        
+      } catch (error) {
+        console.error('Coupon validation error:', error);
+        this.couponError = error.response?.data?.message || 'Invalid or expired coupon code';
+      } finally {
+        this.applyingCoupon = false;
       }
+    },
+
+    removeCoupon() {
+      this.appliedCoupon = null;
+      this.couponError = '';
+    },
+
+    proceedToCheckout() {
+      if (this.Cart_data.length === 0) {
+        alert('Your cart is empty');
+        return;
+      }
+      
+      if (this.appliedCoupon) {
+        sessionStorage.setItem('appliedCoupon', JSON.stringify(this.appliedCoupon));
+      } else {
+        sessionStorage.removeItem('appliedCoupon');
+      }
+      
+      this.$router.push('/checkout');
     }
   },
 
   mounted() {
-    const staticItems = [
-      {
-        id: "static-1",
-        name: "Multigroomer All-in-One Trimmer Series 5000, 23 Piece Mens Grooming Kit",
-        image: "smart_wifi.png",
-        price: 44.00,
-        qty: 3
-      },
-      {
-        id: "static-2",
-        name: "0.9 Cubic Feet Capacity 900 Watts Kitchen Essentials for the Countertop Stainless Steel",
-        image: "background_log.jpg",
-        price: 559.00,
-        qty: 5
-      }
-    ];
-    this.Cart_data = [...staticItems];
-  },
-
-  beforeUnmount() {
-    if (this.undoTimeout) {
-      clearTimeout(this.undoTimeout);
-    }
+    this.loadCart();
   }
 };
 </script>
@@ -255,6 +327,7 @@ export default {
 .container {
   max-width: 1400px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 .page-header {
@@ -478,7 +551,7 @@ export default {
   padding: 4px;
 }
 
-.qty-btn {
+ .qty-btn {
   width: 36px;
   height: 36px;
   background: #f8fafc;
@@ -492,17 +565,17 @@ export default {
   color: #1e293b;
 }
 
-.qty-btn:hover:not(:disabled) {
+ .qty-btn:hover:not(:disabled) {
   background: #3b82f6;
   color: white;
 }
 
-.qty-btn:disabled {
+ .qty-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
 
-.qty-input {
+ .qty-input {
   width: 50px;
   height: 36px;
   border: none;
@@ -513,8 +586,8 @@ export default {
   background: transparent;
 }
 
-.qty-input::-webkit-outer-spin-button,
-.qty-input::-webkit-inner-spin-button {
+ .qty-input::-webkit-outer-spin-button,
+ .qty-input::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
@@ -585,13 +658,33 @@ export default {
 .summary-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  justify-items: center;
   font-size: 1rem;
 }
 
 .summary-label {
   color: #64748b;
   font-weight: 500;
+}
+
+.remove-coupon-btn {
+  margin-left: 8px;
+  background: #e1eaff;
+  border: none;
+  border-radius: 30px;
+  color: black;
+  font-size: 1.25rem;
+  cursor: pointer;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  transition: all 0.3s;
+}
+
+.remove-coupon-btn:hover {
+  background: #ffbebe;
+  border: solid 1px #f63b3b;
+  color: rgb(0, 0, 0);
 }
 
 .summary-value {
@@ -656,6 +749,20 @@ export default {
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
+.coupon-success {
+  color: #10b981;
+  font-size: 0. nine five rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+.coupon-error {
+  color: #ef4444;
+  font-size: 0. nine five rem;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
 .apply-btn {
   padding: 10px 20px;
   background: #f8fafc;
@@ -667,6 +774,8 @@ export default {
   cursor: pointer;
   transition: all 0.3s;
 }
+
+
 
 .apply-btn:hover {
   background: #3b82f6;

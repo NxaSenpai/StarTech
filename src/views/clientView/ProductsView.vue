@@ -66,9 +66,6 @@
 
           <div v-else-if="error" class="error-state">
             <div class="error-content">
-              <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
               <h3>Failed to load products</h3>
               <p>{{ error }}</p>
               <button @click="fetchProducts" class="retry-btn">Try Again</button>
@@ -511,11 +508,6 @@ export default {
   margin: 0 auto;
 }
 
-.error-content svg {
-  color: #ef4444;
-  margin-bottom: 24px;
-}
-
 .error-content h3 {
   font-size: 1.5rem;
   color: #1e293b;
@@ -595,7 +587,7 @@ export default {
 .stock-badge {
   position: absolute;
   top: 12px;
-  right: 12px;
+  right: 85px;
   padding: 6px 12px;
   border-radius: 6px;
   font-size: 12px;

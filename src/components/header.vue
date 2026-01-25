@@ -4,11 +4,21 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const searchQuery = ref('')
+const cartCount = ref(0)
 
 const handleSearch = () => {
   if (searchQuery.value.trim()) {
     router.push({ path: '/search', query: { q: searchQuery.value.trim() } })
     searchQuery.value = ''
+  }
+}
+
+const updateCartCount = () => {
+  try {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]')
+    cartCount.value = cart.reduce((sum: number, item: any) => sum + (item.qty || 1), 0)
+  } catch {
+    cartCount.value = 0
   }
 }
 
@@ -18,6 +28,13 @@ const storageHandler = (e: StorageEvent) => {
   if (e.key === 'user') {
     try { user.value = JSON.parse(e.newValue || '{}') } catch { user.value = {} }
   }
+  if (e.key === 'cart') {
+    updateCartCount()
+  }
+}
+
+const cartUpdatedHandler = () => {
+  updateCartCount()
 }
 
 const userChangedHandler = (ev: Event) => {
@@ -39,12 +56,15 @@ const initial = computed(() => {
 
 onMounted(() => {
   try { user.value = JSON.parse(localStorage.getItem('user') || '{}') } catch { user.value = {} }
+  updateCartCount()
   window.addEventListener('storage', storageHandler)
+  window.addEventListener('cart-updated', cartUpdatedHandler)
   window.addEventListener('user-changed', userChangedHandler as EventListener)
 })
 
 onUnmounted(() => {
   window.removeEventListener('storage', storageHandler)
+  window.removeEventListener('cart-updated', cartUpdatedHandler)
   window.removeEventListener('user-changed', userChangedHandler as EventListener)
 })
 </script>
@@ -57,13 +77,13 @@ onUnmounted(() => {
       </router-link>
 
       <div class="user-section">
-
         <router-link class="cart-btn" to="/wishlist">
           <img class="cart-icon" src="/wishlistIcon.png" alt="">
         </router-link>
 
-        <router-link class="cart-btn" to="/cart">
+        <router-link class="cart-btn cart-btn-with-badge" to="/cart">
           <img class="cart-icon" src="/cart.png" alt="">
+          <span v-if="cartCount > 0" class="cart-badge">{{ cartCount }}</span>
         </router-link>
 
         <router-link to="/profile" class="profile-avatar">
@@ -317,6 +337,41 @@ onUnmounted(() => {
   }
   .nav-list {
     padding-left: 0;              
+  }
+}
+
+.cart-btn-with-badge {
+  position: relative;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
+  animation: popIn 0.3s ease;
+}
+
+@keyframes popIn {
+  0% {
+    transform: scale(0);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
   }
 }
 

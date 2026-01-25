@@ -26,8 +26,8 @@
           <div class="stat-card">
             <div class="stat-icon blue"><img class="manage-icon" src="/orderIcon.png" alt=""></div>
             <div class="stat-info">
-              <p class="stat-label">Orders Today</p>
-              <h3 class="stat-value">{{ todaysOrderTotal }}</h3>
+              <p class="stat-label">Total Orders</p>
+              <h3 class="stat-value">{{ orders.length }}</h3>
             </div>
           </div>
           
@@ -42,16 +42,16 @@
           <div class="stat-card">
             <div class="stat-icon red"><img class="manage-icon" src="/cashIcon.png" alt=""></div>
             <div class="stat-info">
-              <p class="stat-label">Revenue Waiting</p>
-              <h3 class="stat-value">${{ revenueWaiting }}</h3>
+              <p class="stat-label">Processing Orders</p>
+              <h3 class="stat-value">{{ processingTotal }}</h3>
             </div>
           </div>
           
           <div class="stat-card">
             <div class="stat-icon green"><img class="manage-icon" src="/benefitIcon.png" alt=""></div>
             <div class="stat-info">
-              <p class="stat-label">Total Sales (Month)</p>
-              <h3 class="stat-value">${{ totalSalesThisMonth }}</h3>
+              <p class="stat-label">Total Revenue</p>
+              <h3 class="stat-value">${{ totalRevenue.toFixed(2) }}</h3>
             </div>
           </div>
         </section>
@@ -72,14 +72,9 @@
                 <option value="all">All Status</option>
                 <option value="pending">Pending</option>
                 <option value="processing">Processing</option>
-                <option value="completed">Completed</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
-              </select>
-              <select v-model="dateFilter" class="filter-select">
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
               </select>
               <button 
                 v-if="selectedOrderIds.length > 0" 
@@ -92,7 +87,17 @@
             </div>
           </div>
           
-          <div class="table-wrapper">
+          <div v-if="loading" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading orders...</p>
+          </div>
+
+          <div v-else-if="error" class="error-state">
+            <p>{{ error }}</p>
+            <button class="retry-btn" @click="fetchOrders">Retry</button>
+          </div>
+
+          <div v-else class="table-wrapper">
             <table>
               <thead>
                 <tr>
@@ -127,28 +132,28 @@
                     >
                   </td>
                   <td class="order-id-cell">
-                    <span class="order-id">{{ order.id }}</span>
+                    <span class="order-id">{{ order.orderNumber }}</span>
                   </td>
                   <td class="customer-cell">
                     <div class="customer-info">
                       <div class="customer-details">
-                        <span class="customer-name">{{ order.customer }}</span>
+                        <span class="customer-name">{{ order.customerName }}</span>
                         <span class="customer-email">{{ order.email }}</span>
                       </div>
                     </div>
                   </td>
                   <td class="date-cell">
                     <div class="date-info">
-                      <span class="date">{{ order.date }}</span>
-                      <span class="time">{{ order.time }}</span>
+                      <span class="date">{{ formatDate(order.createdAt) }}</span>
+                      <span class="time">{{ formatTime(order.createdAt) }}</span>
                     </div>
                   </td>
                   <td>
-                    <span class="items-badge">{{ order.items }} items</span>
+                    <span class="items-badge">{{ order.itemCount }} items</span>
                   </td>
-                  <td class="price-cell">${{ order.total }}</td>
+                  <td class="price-cell">${{ order.total.toFixed(2) }}</td>
                   <td>
-                    <span :class="['payment-badge', order.payment.toLowerCase().replace(' ', '-')]">
+                    <span :class="['payment-badge', getPaymentClass(order.payment)]">
                       {{ order.payment }}
                     </span>
                   </td>
@@ -159,7 +164,7 @@
                         @click="toggleDropdown(order.id)"
                       >
                         <span class="status-dot"></span>
-                        {{ order.status }}
+                        {{ formatStatus(order.status) }}
                         <span class="dropdown-arrow">▼</span>
                       </span>
                       <div 
@@ -168,9 +173,9 @@
                         @click.stop
                       >
                         <button 
-                          v-for="status in availableStatuses.filter(s => s !== order.status)"
+                          v-for="status in availableStatuses.filter(s => s.toLowerCase() !== order.status.toLowerCase())"
                           :key="status"
-                          @click="updateStatus(order, status)"
+                          @click="updateStatus(order, status.toLowerCase())"
                           class="dropdown-item"
                         >
                           {{ status }}
@@ -202,12 +207,12 @@
           </div>
         </section>
 
-        <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
+        <div v-if="showDetailsModal && selectedOrder" class="modal-overlay" @click.self="closeDetailsModal">
           <div class="modal-container large-modal">
             <div class="modal-header">
               <div>
-                <h3>Order Details - {{ selectedOrder.id }}</h3>
-                <p class="modal-subtitle">{{ selectedOrder.date }} at {{ selectedOrder.time }}</p>
+                <h3>Order Details - {{ selectedOrder.orderNumber }}</h3>
+                <p class="modal-subtitle">{{ formatDate(selectedOrder.createdAt) }} at {{ formatTime(selectedOrder.createdAt) }}</p>
               </div>
               <button class="close-btn" @click="closeDetailsModal">✕</button>
             </div>
@@ -217,7 +222,7 @@
                 <div class="info-grid">
                   <div class="info-item">
                     <span class="info-label">Name:</span>
-                    <span class="info-value">{{ selectedOrder.customer }}</span>
+                    <span class="info-value">{{ selectedOrder.customerName }}</span>
                   </div>
                   <div class="info-item">
                     <span class="info-label">Email:</span>
@@ -225,7 +230,7 @@
                   </div>
                   <div class="info-item">
                     <span class="info-label">Phone:</span>
-                    <span class="info-value">{{ selectedOrder.phone }}</span>
+                    <span class="info-value">{{ selectedOrder.phone || 'N/A' }}</span>
                   </div>
                   <div class="info-item">
                     <span class="info-label">Address:</span>
@@ -244,18 +249,18 @@
                     <span>Subtotal</span>
                   </div>
                   <div 
-                    v-for="item in selectedOrder.products" 
-                    :key="item.id" 
+                    v-for="item in selectedOrder.items" 
+                    :key="item.productId" 
                     class="item-row"
                   >
                     <div class="item-product">
-                      <img :src="item.image" :alt="item.name" class="item-image">
+                      <img :src="getImageUrl(item.image)" :alt="item.name" class="item-image">
                       <div class="item-details">
                         <span class="item-name">{{ item.name }}</span>
-                        <span class="item-sku">SKU: {{ item.sku }}</span>
+                        <span class="item-sku">ID: {{ item.productId }}</span>
                       </div>
                     </div>
-                    <span class="item-price">${{ item.price }}</span>
+                    <span class="item-price">${{ item.price.toFixed(2) }}</span>
                     <span class="item-quantity">{{ item.quantity }}</span>
                     <span class="item-subtotal">${{ (item.price * item.quantity).toFixed(2) }}</span>
                   </div>
@@ -267,19 +272,25 @@
                 <div class="summary-box">
                   <div class="summary-row">
                     <span class="summary-label">Subtotal:</span>
-                    <span class="summary-value">${{ selectedOrder.subtotal }}</span>
+                    <span class="summary-value">${{ selectedOrder.subtotal.toFixed(2) }}</span>
                   </div>
                   <div class="summary-row">
-                    <span class="summary-label">Shipping:</span>
-                    <span class="summary-value">${{ selectedOrder.shipping }}</span>
+                    <span class="summary-label">Delivery Fee:</span>
+                    <span class="summary-value">${{ selectedOrder.deliveryFee.toFixed(2) }}</span>
                   </div>
                   <div class="summary-row">
-                    <span class="summary-label">Tax (10%):</span>
-                    <span class="summary-value">${{ selectedOrder.tax }}</span>
+                    <span class="summary-label">Tax:</span>
+                    <span class="summary-value">${{ selectedOrder.tax.toFixed(2) }}</span>
+                  </div>
+                  <div v-if="selectedOrder.coupon" class="summary-row discount-row">
+                    <span class="summary-label">
+                      Discount ({{ selectedOrder.coupon.code }}):
+                    </span>
+                    <span class="summary-value">-${{ selectedOrder.coupon.discountAmount.toFixed(2) }}</span>
                   </div>
                   <div class="summary-row total">
                     <span class="summary-label">Total:</span>
-                    <span class="summary-value">${{ selectedOrder.total }}</span>
+                    <span class="summary-value">${{ selectedOrder.total.toFixed(2) }}</span>
                   </div>
                 </div>
               </div>
@@ -288,7 +299,7 @@
                 <div class="info-grid">
                   <div class="info-item">
                     <span class="info-label">Payment Method:</span>
-                    <span :class="['payment-badge', selectedOrder.payment.toLowerCase().replace(' ', '-')]">
+                    <span :class="['payment-badge', getPaymentClass(selectedOrder.payment)]">
                       {{ selectedOrder.payment }}
                     </span>
                   </div>
@@ -296,7 +307,7 @@
                     <span class="info-label">Order Status:</span>
                     <span :class="['status-badge', selectedOrder.status.toLowerCase()]">
                       <span class="status-dot"></span>
-                      {{ selectedOrder.status }}
+                      {{ formatStatus(selectedOrder.status) }}
                     </span>
                   </div>
                 </div>
@@ -311,9 +322,12 @@
 </template>
 
 <script>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import AdminHeader from '@/components/AdminHeader.vue';
 import AdminSidebar from '@/components/AdminSidebar.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'ManageOrder',
@@ -326,133 +340,15 @@ export default {
     const notifications = ref(3);
     const searchQuery = ref('');
     const statusFilter = ref('all');
-    const dateFilter = ref('all');
     const dropdownVisible = ref(null);
     const showDetailsModal = ref(false);
     const selectedOrder = ref(null);
+    const loading = ref(true);
+    const error = ref(null);
 
-    const orders = ref([
-      { 
-        id: '#0001', 
-        customer: 'Kitty Smith', 
-        email: 'kitty@example.com',
-        phone: '+1 234 567 8901',
-        address: '123 Main St, New York, NY 10001',
-        date: 'Nov 16, 2025', 
-        time: '10:30 AM',
-        items: 3,
-        total: '999.00',
-        subtotal: '909.09',
-        shipping: '0.00',
-        tax: '89.91',
-        payment: 'Credit Card',
-        status: 'Pending',
-        products: [
-          { id: 1, name: 'ASUS Controller', sku: 'ASC-001', price: 250.00, quantity: 2, image: '/Asus_controller.png' },
-          { id: 2, name: 'Samsung Galaxy Note 9', sku: 'SGN-009', price: 499.00, quantity: 1, image: '/Samsung_Galaxy_Note9.png' }
-        ]
-      },
-      { 
-        id: '#0002', 
-        customer: 'Puthika Johnson', 
-        email: 'puthika@example.com',
-        phone: '+1 234 567 8902',
-        address: '456 Oak Ave, Los Angeles, CA 90001',
-        date: 'Nov 16, 2025', 
-        time: '11:45 AM',
-        items: 2,
-        total: '529.00',
-        subtotal: '481.82',
-        shipping: '0.00',
-        tax: '47.18',
-        payment: 'PayPal',
-        status: 'Processing',
-        products: [
-          { id: 3, name: 'ASUS Controller', sku: 'ASC-001', price: 250.00, quantity: 1, image: '/Asus_controller.png' },
-          { id: 4, name: 'Wireless Mouse', sku: 'WM-101', price: 29.99, quantity: 1, image: '/placeholder.png' }
-        ]
-      },
-      { 
-        id: '#0003', 
-        customer: 'Srey Nuth Brown', 
-        email: 'sreynuth@example.com',
-        phone: '+1 234 567 8903',
-        address: '789 Pine Rd, Chicago, IL 60601',
-        date: 'Nov 16, 2025', 
-        time: '02:15 PM',
-        items: 1,
-        total: '129.00',
-        subtotal: '117.27',
-        shipping: '0.00',
-        tax: '11.73',
-        payment: 'Cash',
-        status: 'Pending',
-        products: [
-          { id: 5, name: 'Gaming Headset', sku: 'GH-201', price: 129.00, quantity: 1, image: '/placeholder.png' }
-        ]
-      },
-      { 
-        id: '#0004', 
-        customer: 'Dara Wilson', 
-        email: 'dara@example.com',
-        phone: '+1 234 567 8904',
-        address: '321 Elm St, Houston, TX 77001',
-        date: 'Nov 15, 2025', 
-        time: '09:20 AM',
-        items: 2,
-        total: '59.00',
-        subtotal: '53.64',
-        shipping: '0.00',
-        tax: '5.36',
-        payment: 'Credit Card',
-        status: 'Completed',
-        products: [
-          { id: 6, name: 'USB Cable', sku: 'UC-301', price: 15.00, quantity: 2, image: '/placeholder.png' }
-        ]
-      },
-      { 
-        id: '#0005', 
-        customer: 'Daro Martinez', 
-        email: 'daro@example.com',
-        phone: '+1 234 567 8905',
-        address: '654 Maple Dr, Phoenix, AZ 85001',
-        date: 'Nov 15, 2025', 
-        time: '03:45 PM',
-        items: 1,
-        total: '19.00',
-        subtotal: '17.27',
-        shipping: '0.00',
-        tax: '1.73',
-        payment: 'PayPal',
-        status: 'Completed',
-        products: [
-          { id: 7, name: 'Phone Case', sku: 'PC-401', price: 19.00, quantity: 1, image: '/placeholder.png' }
-        ]
-      },
-      { 
-        id: '#0006', 
-        customer: 'Liza Anderson', 
-        email: 'liza@example.com',
-        phone: '+1 234 567 8906',
-        address: '987 Birch Ln, Philadelphia, PA 19101',
-        date: 'Nov 15, 2025', 
-        time: '04:30 PM',
-        items: 4,
-        total: '129.00',
-        subtotal: '117.27',
-        shipping: '0.00',
-        tax: '11.73',
-        payment: 'Credit Card',
-        status: 'Completed',
-        products: [
-          { id: 8, name: 'Keyboard', sku: 'KB-501', price: 89.00, quantity: 1, image: '/placeholder.png' },
-          { id: 9, name: 'Mouse Pad', sku: 'MP-601', price: 19.99, quantity: 2, image: '/placeholder.png' }
-        ]
-      },
-    ]);
-
+    const orders = ref([]);
     const selectedOrderIds = ref([]);
-    const availableStatuses = ['Pending', 'Processing', 'Completed', 'Cancelled'];
+    const availableStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
 
     const selectAll = computed({
       get: () => selectedOrderIds.value.length === filteredOrders.value.length && filteredOrders.value.length > 0,
@@ -461,26 +357,18 @@ export default {
       }
     });
 
-    const todaysOrderTotal = computed(() =>
-      orders.value.filter(order => order.date === 'Nov 16, 2025').length
-    );
-
     const pendingTotal = computed(() =>
-      orders.value.filter(order => order.status === 'Pending').length
+      orders.value.filter(order => order.status === 'pending').length
     );
 
-    const revenueWaiting = computed(() =>
-      orders.value
-        .filter(order => order.status === 'Pending')
-        .reduce((sum, order) => sum + parseFloat(order.total), 0)
-        .toFixed(2)
+    const processingTotal = computed(() =>
+      orders.value.filter(order => order.status === 'processing').length
     );
 
-    const totalSalesThisMonth = computed(() =>
+    const totalRevenue = computed(() =>
       orders.value
-        .filter(order => order.status === 'Completed' && order.date.includes('Nov'))
+        .filter(order => ['delivered', 'processing', 'shipped'].includes(order.status))
         .reduce((sum, order) => sum + parseFloat(order.total), 0)
-        .toFixed(2)
     );
 
     const filteredOrders = computed(() => {
@@ -488,8 +376,8 @@ export default {
 
       if (searchQuery.value) {
         filtered = filtered.filter(o => 
-          o.id.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-          o.customer.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          o.orderNumber.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+          o.customerName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
           o.email.toLowerCase().includes(searchQuery.value.toLowerCase())
         );
       }
@@ -500,21 +388,106 @@ export default {
         );
       }
 
-      if (dateFilter.value === 'today') {
-        filtered = filtered.filter(o => o.date === 'Nov 16, 2025');
-      }
-
       return filtered;
     });
+
+    async function fetchOrders() {
+      loading.value = true;
+      error.value = null;
+
+      try {
+        const response = await axios.get(`${API_URL}/orders/all`);
+        
+        console.log('Admin orders response:', response.data);
+        
+        orders.value = response.data.map(order => ({
+          id: order._id,
+          orderNumber: order.orderNumber,
+          customerName: order.userName || 'Guest',
+          email: order.userEmail,
+          phone: order.delivery?.phone || 'N/A',
+          address: `${order.delivery?.address}, ${order.delivery?.city}`,
+          createdAt: order.createdAt,
+          itemCount: order.items?.length || 0,
+          items: order.items || [],
+          total: order.total,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          deliveryFee: order.deliveryFee,
+          payment: order.payment,
+          status: order.status,
+          coupon: order.coupon || null
+        }));
+        
+        console.log('Transformed admin orders:', orders.value);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        error.value = err.response?.data?.message || 'Failed to load orders';
+      } finally {
+        loading.value = false;
+      }
+    }
+
+    function getImageUrl(imageSrc) {
+      if (!imageSrc) return '/placeholder.png';
+      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) return imageSrc;
+      if (imageSrc.startsWith('/uploads/')) return `${API_URL}${imageSrc}`;
+      if (!imageSrc.startsWith('/')) return `${API_URL}/uploads/${imageSrc}`;
+      return imageSrc;
+    }
+
+    function formatDate(dateString) {
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch {
+        return dateString;
+      }
+    }
+
+    function formatTime(dateString) {
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+      } catch {
+        return '';
+      }
+    }
+
+    function formatStatus(status) {
+      return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    function getPaymentClass(payment) {
+      const normalized = payment.toLowerCase().replace(/\s+/g, '-');
+      return normalized;
+    }
 
     function toggleDropdown(id) {
       dropdownVisible.value = dropdownVisible.value === id ? null : id;
     }
 
-    function updateStatus(order, status) {
-      order.status = status;
-      dropdownVisible.value = null;
-      alert(`Order ${order.id} status updated to ${status}`);
+    async function updateStatus(order, newStatus) {
+      try {
+        await axios.patch(`${API_URL}/orders/${order.id}/status`, { 
+          status: newStatus 
+        });
+        
+        order.status = newStatus;
+        dropdownVisible.value = null;
+        
+        await fetchOrders();
+      } catch (err) {
+        console.error('Error updating status:', err);
+        alert('Failed to update order status');
+      }
     }
 
     function viewOrderDetails(order) {
@@ -527,15 +500,21 @@ export default {
       selectedOrder.value = null;
     }
 
-    function deleteOrder(id) {
+    async function deleteOrder(id) {
       if (confirm('Are you sure you want to delete this order?')) {
-        orders.value = orders.value.filter(o => o.id !== id);
-        selectedOrderIds.value = selectedOrderIds.value.filter(sid => sid !== id);
-        alert('Order deleted successfully!');
+        try {
+          await axios.delete(`${API_URL}/orders/${id}`);
+          
+          orders.value = orders.value.filter(o => o.id !== id);
+          selectedOrderIds.value = selectedOrderIds.value.filter(sid => sid !== id);
+        } catch (err) {
+          console.error('Error deleting order:', err);
+          alert('Failed to delete order');
+        }
       }
     }
 
-    function bulkDeleteOrders() {
+    async function bulkDeleteOrders() {
       const count = selectedOrderIds.value.length;
       if (count === 0) {
         alert('Please select at least one order to delete.');
@@ -543,55 +522,58 @@ export default {
       }
 
       if (confirm(`Are you sure you want to delete ${count} selected order(s)?`)) {
-        orders.value = orders.value.filter(o => !selectedOrderIds.value.includes(o.id));
-        selectedOrderIds.value = [];
-        alert(`${count} order(s) deleted successfully!`);
+        try {
+          await Promise.all(
+            selectedOrderIds.value.map(id => axios.delete(`${API_URL}/orders/${id}`))
+          );
+          
+          orders.value = orders.value.filter(o => !selectedOrderIds.value.includes(o.id));
+          selectedOrderIds.value = [];
+        } catch (err) {
+          console.error('Error deleting orders:', err);
+          alert('Failed to delete some orders');
+        }
       }
-    }
-
-    function printOrder(order) {
-      alert(`Printing invoice for order ${order.id}...`);
-    }
-
-    function exportOrders() {
-      alert('Exporting orders...');
-    }
-
-    function printOrders() {
-      alert('Printing all orders...');
     }
 
     function handleSettingsClick() {
       console.log('Settings clicked');
     }
 
+    onMounted(() => {
+      fetchOrders();
+    });
+
     return {
       adminName,
       notifications,
       searchQuery,
       statusFilter,
-      dateFilter,
       dropdownVisible,
       showDetailsModal,
       selectedOrder,
+      loading,
+      error,
       orders,
       selectedOrderIds,
       availableStatuses,
       selectAll,
-      todaysOrderTotal,
       pendingTotal,
-      revenueWaiting,
-      totalSalesThisMonth,
+      processingTotal,
+      totalRevenue,
       filteredOrders,
+      fetchOrders,
+      getImageUrl,
+      formatDate,
+      formatTime,
+      formatStatus,
+      getPaymentClass,
       toggleDropdown,
       updateStatus,
       viewOrderDetails,
       closeDetailsModal,
       deleteOrder,
       bulkDeleteOrders,
-      printOrder,
-      exportOrders,
-      printOrders,
       handleSettingsClick
     };
   }
@@ -627,6 +609,78 @@ export default {
   background: #f8f9fa;
   display: flex;
   flex-direction: column;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #0b6cf0;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-size: 1rem;
+  color: #6c757d;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+  background: white;
+  border-radius: 12px;
+  margin: 20px 0;
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: #dc3545;
+  margin-bottom: 20px;
+}
+
+.retry-btn {
+  padding: 12px 32px;
+  background: #0b6cf0;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.retry-btn:hover {
+  background: #0958c9;
+  transform: translateY(-2px);
+}
+
+.discount-row {
+  background: #f0fdf4;
+  padding: 4px 0;
+  border-radius: 4px;
 }
 
 .top-row {
@@ -990,6 +1044,11 @@ tbody {
   color: #0b6cf0;
 }
 
+.payment-badge.cash-on-delivery {
+  background: #d4edda;
+  color: #28a745;
+}
+
 .status-dropdown {
   position: relative;
 }
@@ -1014,6 +1073,16 @@ tbody {
 .status-badge.processing {
   background: #e6f0ff;
   color: #0b6cf0;
+}
+
+.status-badge.shipped {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.status-badge.delivered {
+  background: #d4edda;
+  color: #28a745;
 }
 
 .status-badge.completed {
@@ -1130,7 +1199,6 @@ tbody {
   align-items: center;
   gap: 12px;
 }
-
 
 .empty-content p {
   color: #6c757d;
@@ -1442,5 +1510,4 @@ tbody {
   color: #0b6cf0;
   font-weight: 600;
 }
-
 </style>

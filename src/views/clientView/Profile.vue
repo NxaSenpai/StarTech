@@ -56,7 +56,6 @@
           </aside>
 
           <div class="profile-content">
-            <!-- Profile Tab -->
             <div v-show="activeTab === 'profile'" class="content-section">
               <div class="profile-card">
                 <div class="card-header">
@@ -66,9 +65,6 @@
                     @click="handleEditBasic" 
                     class="edit-btn"
                   >
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
                     Edit
                   </button>
                 </div>
@@ -130,7 +126,6 @@
               </div>
             </div>
 
-            <!-- Security Tab -->
             <div v-show="activeTab === 'security'" class="content-section">
               <div class="profile-card">
                 <div class="card-header">
@@ -482,6 +477,7 @@ export default {
 
     handleLogout() {
       localStorage.removeItem('user');
+      localStorage.removeItem('cart');
       
       window.dispatchEvent(new CustomEvent('user-changed', { 
         detail: {} 
@@ -491,7 +487,7 @@ export default {
       
       setTimeout(() => {
         this.$router.push('/login');
-      }, 1000);
+      }, 500);
     }
   },
 

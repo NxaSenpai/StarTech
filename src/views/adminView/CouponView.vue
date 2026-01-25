@@ -77,7 +77,6 @@
                   <th>Discount</th>
                   <th>Type</th>
                   <th>Expiry Date</th>
-                  <th>Usage</th>
                   <th>Status</th>
                   <th class="action-col">Actions</th>
                 </tr>
@@ -113,14 +112,6 @@
                     }">
                       {{ formatDate(coupon.expiryDate) }}
                     </span>
-                  </td>
-                  <td>
-                    <div class="usage-info">
-                      <span>{{ coupon.usedCount || 0 }} / {{ coupon.maxUses || '∞' }}</span>
-                      <div v-if="coupon.maxUses" class="usage-bar">
-                        <div class="usage-fill" :style="{ width: (coupon.usedCount / coupon.maxUses * 100) + '%' }"></div>
-                      </div>
-                    </div>
                   </td>
                   <td>
                     <div 
@@ -217,32 +208,6 @@
                       required
                     >
                     <span v-if="dateError" class="form-error">{{ dateError }}</span>
-                  </div>
-                </div>
-
-                <div class="form-row two-col">
-                  <div class="form-group">
-                    <label>Max Uses</label>
-                    <input 
-                      v-model.number="form.maxUses" 
-                      type="number" 
-                      class="form-input"
-                      placeholder="Unlimited"
-                      min="1"
-                    >
-                    <span class="form-hint">Leave empty for unlimited uses</span>
-                  </div>
-
-                  <div class="form-group">
-                    <label>Min Purchase Amount ($)</label>
-                    <input 
-                      v-model.number="form.minPurchase" 
-                      type="number" 
-                      class="form-input"
-                      placeholder="0.00"
-                      min="0"
-                      step="0.01"
-                    >
                   </div>
                 </div>
 

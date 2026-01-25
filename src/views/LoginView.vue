@@ -161,7 +161,8 @@
      margin-bottom: 5rem; 
     }
   .logo-img {
-     max-width: 150px; height: auto; 
+     max-width: 200px;
+     height: auto; 
     }
   .login-content {
      width: 100%; max-width: 400px; margin: 0; 

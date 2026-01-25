@@ -8,7 +8,17 @@
           <p class="page-subtitle">View and manage your order history</p>
         </div>
 
-        <div v-if="filteredOrders.length > 0" class="orders-list">
+        <div v-if="loading" class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading your orders...</p>
+        </div>
+
+        <div v-else-if="error" class="error-state">
+          <p>{{ error }}</p>
+          <button class="retry-btn" @click="fetchOrders">Retry</button>
+        </div>
+
+        <div v-else-if="filteredOrders.length > 0" class="orders-list">
           <div 
             v-for="order in filteredOrders" 
             :key="order.id"
@@ -34,7 +44,7 @@
                     :key="index"
                     class="product-thumb"
                   >
-                    <img :src="item.image" :alt="item.name">
+                    <img :src="getImageUrl(item.image)" :alt="item.name">
                   </div>
                   <div v-if="order.items.length > 3" class="more-badge">
                     +{{ order.items.length - 3 }}
@@ -54,7 +64,7 @@
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                   </svg>
-                  <span>{{ order.date }}</span>
+                  <span>{{ formatDate(order.date) }}</span>
                 </div>
                 <div class="detail-item price-highlight">
                   <span>${{ order.total.toFixed(2) }}</span>
@@ -74,7 +84,6 @@
           </div>
         </div>
 
-        <!-- Empty State -->
         <div v-else class="empty-state">
           <div class="empty-content">
             <h3>No orders found</h3>
@@ -125,17 +134,16 @@
             </div>
           </div>
 
-          <!-- Order Items -->
           <div class="items-section">
             <h3 class="section-title">Order Items</h3>
             <div class="modal-items-list">
               <div 
-                v-for="item in selectedOrder.items" 
-                :key="item.id"
+                v-for="(item, index) in selectedOrder.items" 
+                :key="index"
                 class="modal-item-row"
               >
                 <div class="item-image-wrapper">
-                  <img :src="item.image" :alt="item.name" class="item-image">
+                  <img :src="getImageUrl(item.image)" :alt="item.name" class="item-image">
                 </div>
                 <div class="item-info">
                   <h4 class="item-name">{{ item.name }}</h4>
@@ -148,7 +156,6 @@
             </div>
           </div>
 
-          <!-- Order Information Grid -->
           <div class="info-grid">
             <div class="info-card">
               <h3 class="info-title">
@@ -160,6 +167,7 @@
               </h3>
               <p class="info-content">{{ selectedOrder.delivery.address }}</p>
               <p class="info-content">{{ selectedOrder.delivery.city }}</p>
+              <p v-if="selectedOrder.delivery.phone" class="info-content">Phone: {{ selectedOrder.delivery.phone }}</p>
             </div>
 
             <div class="info-card">
@@ -174,7 +182,6 @@
             </div>
           </div>
 
-          <!-- Order Summary -->
           <div class="modal-summary">
             <h3 class="section-title">Order Summary</h3>
             <div class="summary-rows">
@@ -190,6 +197,17 @@
                 <span class="summary-label">Tax</span>
                 <span class="summary-value">${{ selectedOrder.tax.toFixed(2) }}</span>
               </div>
+              
+              <div v-if="selectedOrder.coupon" class="summary-row discount-row">
+                <span class="summary-label">
+                  Discount 
+                  <span class="discount-badge">
+                    {{ selectedOrder.coupon.type === 'percentage' ? selectedOrder.coupon.value + '%' : '$' + selectedOrder.coupon.value }}
+                  </span>
+                </span>
+                <span class="summary-value discount-value">-${{ selectedOrder.coupon.discountAmount.toFixed(2) }}</span>
+              </div>
+              
               <div class="summary-row total-row">
                 <span class="summary-label">Total</span>
                 <span class="summary-value">${{ selectedOrder.total.toFixed(2) }}</span>
@@ -211,6 +229,9 @@
 <script>
 import Header from '@/components/header.vue';
 import Footer from '@/components/footer.vue';
+import axios from 'axios';
+
+const API_URL = 'http://localhost:3000';
 
 export default {
   name: 'MyOrder',
@@ -222,102 +243,24 @@ export default {
     return {
       searchQuery: '',
       statusFilter: 'all',
-      dateFilter: 'all',
       selectedOrder: null,
-      orders: [
-        {
-          id: '932512742319015',
-          date: 'Dec 21, 2025',
-          status: 'processing',
-          items: [
-            {
-              id: 1,
-              name: '15.6" FHD Display Laptop – Intel i7 – Intel HD Graphics 6000',
-              image: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=200&h=200&fit=crop',
-              price: 999.00,
-              quantity: 1
-            }
-          ],
-          payment: 'Visa **69',
-          delivery: {
-            address: '812 Khan Mean Chey, Phnom Penh',
-            city: 'Cambodia',
-            fee: 0
-          },
-          subtotal: 999.00,
-          tax: 49.95,
-          total: 1048.95
-        },
-        {
-          id: '932512742319016',
-          date: 'Dec 18, 2025',
-          status: 'delivered',
-          items: [
-            {
-              id: 1,
-              name: 'Wireless Bluetooth Headphones Pro Max',
-              image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=200&h=200&fit=crop',
-              price: 299.00,
-              quantity: 2
-            },
-            {
-              id: 2,
-              name: 'Smart Watch Series 7 GPS',
-              image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200&h=200&fit=crop',
-              price: 449.00,
-              quantity: 1
-            }
-          ],
-          payment: 'Mastercard **42',
-          delivery: {
-            address: '812 Khan Mean Chey, Phnom Penh',
-            city: 'Cambodia',
-            fee: 5.00
-          },
-          subtotal: 1047.00,
-          tax: 52.35,
-          total: 1104.35
-        },
-        {
-          id: '932512742319017',
-          date: 'Dec 15, 2025',
-          status: 'shipped',
-          items: [
-            {
-              id: 1,
-              name: '4K Ultra HD Smart TV 55 inch',
-              image: 'https://images.unsplash.com/photo-1593359677879-a4bb92f829d1?w=200&h=200&fit=crop',
-              price: 799.00,
-              quantity: 1
-            }
-          ],
-          payment: 'PayPal',
-          delivery: {
-            address: '812 Khan Mean Chey, Phnom Penh',
-            city: 'Cambodia',
-            fee: 15.00
-          },
-          subtotal: 799.00,
-          tax: 39.95,
-          total: 853.95
-        }
-      ]
+      orders: [],
+      loading: true,
+      error: null
     }
   },
   computed: {
     filteredOrders() {
       let filtered = this.orders;
 
-      // Filter by status
       if (this.statusFilter !== 'all') {
         filtered = filtered.filter(order => order.status === this.statusFilter);
       }
 
-      // Filter by search query
       if (this.searchQuery.trim()) {
         const query = this.searchQuery.toLowerCase();
         filtered = filtered.filter(order => {
-          const idMatch = order.id.toLowerCase().includes(query);
+          const idMatch = order.id?.toLowerCase().includes(query);
           const itemsMatch = order.items.some(item => 
             item.name.toLowerCase().includes(query)
           );
@@ -332,31 +275,127 @@ export default {
       
       const status = this.selectedOrder.status;
       return [
-        { label: 'Order Placed', completed: true, date: this.selectedOrder.date },
-        { label: 'Processing', completed: ['processing', 'shipped', 'delivered'].includes(status), current: status === 'processing' },
-        { label: 'Shipped', completed: ['shipped', 'delivered'].includes(status), current: status === 'shipped' },
-        { label: 'Delivered', completed: status === 'delivered', current: status === 'delivered' }
+        { 
+          label: 'Order Placed', 
+          completed: true, 
+          date: this.formatDate(this.selectedOrder.date),
+          current: false 
+        },
+        { 
+          label: 'Processing', 
+          completed: ['processing', 'shipped', 'delivered'].includes(status), 
+          current: status === 'processing' 
+        },
+        { 
+          label: 'Shipped', 
+          completed: ['shipped', 'delivered'].includes(status), 
+          current: status === 'shipped' 
+        },
+        { 
+          label: 'Delivered', 
+          completed: status === 'delivered', 
+          current: status === 'delivered' 
+        }
       ];
     }
   },
   methods: {
+    async fetchOrders() {
+      this.loading = true;
+      this.error = null;
+      
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        if (!user.email) {
+          this.$router.push('/login');
+          return;
+        }
+
+        const response = await axios.get(`${API_URL}/orders`, {
+          params: { userEmail: user.email }
+        });
+        
+        console.log('Orders response:', response.data);
+        
+        this.orders = response.data.map(order => ({
+          id: order.orderNumber || order._id,
+          date: order.date || order.createdAt,
+          status: order.status,
+          items: order.items.map(item => ({
+            id: item.productId,
+            name: item.name,
+            image: item.image,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          payment: order.payment,
+          delivery: {
+            address: order.delivery.address,
+            city: order.delivery.city,
+            phone: order.delivery.phone,
+            fee: order.deliveryFee || 0
+          },
+          coupon: order.coupon || null,
+          subtotal: order.subtotal,
+          tax: order.tax,
+          total: order.total
+        }));
+        
+        console.log('Transformed orders:', this.orders);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        this.error = err.response?.data?.message || 'Failed to load orders';
+      } finally {
+        this.loading = false;
+      }
+    },
+    
+    getImageUrl(imageSrc) {
+      if (!imageSrc) return '/placeholder.png';
+      if (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) return imageSrc;
+      if (imageSrc.startsWith('/uploads/')) return `${API_URL}${imageSrc}`;
+      if (!imageSrc.startsWith('/')) return `${API_URL}/uploads/${imageSrc}`;
+      return imageSrc;
+    },
+    
+    formatDate(dateString) {
+      try {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        });
+      } catch {
+        return dateString;
+      }
+    },
+    
     formatStatus(status) {
       return status.charAt(0).toUpperCase() + status.slice(1);
     },
+    
     getProductPreview(order) {
       const firstItem = order.items[0].name;
       if (order.items.length === 1) return firstItem;
       return `${firstItem} and ${order.items.length - 1} more`;
     },
+    
     openOrderModal(order) {
       this.selectedOrder = order;
       document.body.style.overflow = 'hidden';
     },
+    
     closeOrderModal() {
       this.selectedOrder = null;
       document.body.style.overflow = '';
     }
   },
+  
+  mounted() {
+    this.fetchOrders();
+  },
+  
   beforeUnmount() {
     document.body.style.overflow = '';
   }
@@ -402,7 +441,66 @@ export default {
   margin: 0;
 }
 
-/* Controls Section */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 20px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-state p {
+  font-size: 1rem;
+  color: #64748b;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  text-align: center;
+}
+
+.error-state p {
+  font-size: 1rem;
+  color: #ef4444;
+  margin-bottom: 20px;
+}
+
+.retry-btn {
+  padding: 12px 32px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.retry-btn:hover {
+  background: #2563eb;
+  transform: translateY(-2px);
+}
+
 .controls-section {
   display: flex;
   gap: 16px;
@@ -563,6 +661,15 @@ export default {
   animation: pulse 2s infinite;
 }
 
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
 .order-item-body {
   display: flex;
   justify-content: space-between;
@@ -680,7 +787,6 @@ export default {
   background: #2563eb;
 }
 
-/* Empty State */
 .empty-state {
   padding: 80px 20px;
   text-align: center;
@@ -897,7 +1003,6 @@ export default {
   margin: 0;
 }
 
-/* Modal Items */
 .items-section {
   margin-bottom: 32px;
 }
@@ -962,7 +1067,6 @@ export default {
   color: #3b82f6;
 }
 
-/* Info Grid */
 .info-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -998,7 +1102,6 @@ export default {
   line-height: 1.6;
 }
 
-/* Modal Summary */
 .modal-summary {
   background: #f8fafc;
   padding: 24px;
@@ -1042,7 +1145,30 @@ export default {
   color: #3b82f6;
 }
 
-/* Modal Footer */
+.discount-row {
+  border-radius: 8px;
+}
+
+.discount-row .summary-label {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.discount-badge {
+  background: #10b981;
+  color: white;
+  font-size: 0.75rem;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.discount-value {
+  color: #1e293b !important;
+  font-weight: 600;
+}
+
 .modal-footer {
   padding: 20px 32px;
   border-top: 2px solid #f1f5f9;
@@ -1082,7 +1208,6 @@ export default {
   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
 }
 
-/* Responsive */
 @media (max-width: 1024px) {
   .info-grid {
     grid-template-columns: 1fr;

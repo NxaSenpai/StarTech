@@ -20,9 +20,8 @@ async function fetchWishlist() {
     
     console.log('Wishlist items:', res.data);
     
-    // Fetch product details for each wishlist item
     const productPromises = res.data.map(item => {
-      // Extract the productId string (handle both string and ObjectId formats)
+      // Extract the productId string
       const productId = typeof item.productId === 'string' 
         ? item.productId 
         : item.productId?.$oid || item.productId?.toString();
@@ -39,7 +38,6 @@ async function fetchWishlist() {
       .filter(response => response && response.data)
       .map(response => {
         const product = response.data;
-        // Ensure _id is a string
         return {
           ...product,
           _id: typeof product._id === 'string' 
@@ -63,7 +61,6 @@ onMounted(fetchWishlist);
 
 async function removeFromWishlist(productId) {
   try {
-    // Ensure productId is a string
     const productIdStr = typeof productId === 'string' 
       ? productId 
       : productId?.$oid || productId?.toString();
@@ -75,7 +72,6 @@ async function removeFromWishlist(productId) {
       productId: productIdStr
     });
     
-    // Remove from local state
     wishlist.value = wishlist.value.filter(item => {
       const itemProductId = typeof item.productId === 'string' 
         ? item.productId 
@@ -175,13 +171,13 @@ function addToCart(product) {
 }
 
 .page-header {
-  text-align: center;
+  text-align: left;
   margin-bottom: 48px;
 }
 
 .page-title {
   font-size: 2.5rem;
-  font-weight: 700;
+  font-weight: 800;
   color: #0f172a;
   margin-bottom: 12px;
 }

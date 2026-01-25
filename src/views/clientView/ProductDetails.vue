@@ -22,7 +22,9 @@ export default {
       error: null,
       relatedProducts: [],
       isInWishlist: false,
-      checkingWishlist: false
+      checkingWishlist: false,
+      isInCart: false,
+      cartQuantity: 0
     };
   },
   computed: {
@@ -56,12 +58,15 @@ export default {
           this.error = null;
           this.isInWishlist = false;
           this.checkingWishlist = false;
+          this.isInCart = false;
+          this.cartQuantity = 0;
           
           window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
           
           await this.fetchProductDetails();
           await this.fetchRelatedProducts();
           await this.checkIfInWishlist();
+          this.checkIfInCart();
         }
       },
       immediate: false
@@ -72,6 +77,12 @@ export default {
     await this.fetchProductDetails();
     await this.fetchRelatedProducts();
     await this.checkIfInWishlist();
+    this.checkIfInCart();
+    
+    window.addEventListener('cart-updated', this.checkIfInCart);
+  },
+  beforeUnmount() {
+    window.removeEventListener('cart-updated', this.checkIfInCart);
   },
   methods: {
     getImageUrl(imageSrc) {
@@ -152,12 +163,6 @@ export default {
             originalPrice = product.price;
             displayPrice = promotion.sale_price || promotion.salePrice || product.price;
             discount = promotion.discount || promotion.discountPercentage || 0;
-            
-            console.log(`Related product "${product.name}" has promotion:`, {
-              originalPrice,
-              displayPrice,
-              discount
-            });
           }
           
           return {
@@ -171,9 +176,6 @@ export default {
             isOnSale: discount > 0
           };
         });
-        
-        console.log('Related products loaded:', this.relatedProducts.length);
-        console.log('Related products with discounts:', this.relatedProducts.filter(p => p.isOnSale).length);
       } catch (error) {
         console.error('Failed to fetch related products:', error);
       }
@@ -192,6 +194,27 @@ export default {
     decreaseQuantity() {
       if (this.quantity > 1) {
         this.quantity--;
+      }
+    },
+    
+    checkIfInCart() {
+      if (!this.product) return;
+      
+      try {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const cartItem = cart.find(item => item.id === this.product._id);
+        
+        if (cartItem) {
+          this.isInCart = true;
+          this.cartQuantity = cartItem.qty;
+        } else {
+          this.isInCart = false;
+          this.cartQuantity = 0;
+        }
+      } catch (error) {
+        console.error('Error checking cart:', error);
+        this.isInCart = false;
+        this.cartQuantity = 0;
       }
     },
     
@@ -222,7 +245,18 @@ export default {
           return;
         }
         cart[existingIndex].qty = newQty;
-        alert(`Updated quantity of "${this.product.name}" in cart!`);
+        
+        const confirmUpdate = confirm(
+          `"${this.product.name}" is already in your cart.\n\n` +
+          `Current quantity: ${cart[existingIndex].qty - this.quantity}\n` +
+          `Adding: ${this.quantity}\n` +
+          `New quantity: ${newQty}\n\n` +
+          `Update cart?`
+        );
+        
+        if (!confirmUpdate) {
+          return;
+        }
       } else {
         cart.push({
           id: this.product._id,
@@ -233,7 +267,6 @@ export default {
           qty: this.quantity,
           maxStock: this.product.inStock
         });
-        alert(`Added "${this.product.name}" to cart!`);
       }
       
       try {
@@ -241,10 +274,16 @@ export default {
         window.dispatchEvent(new CustomEvent('cart-updated', { 
           detail: { itemCount: cart.reduce((sum, item) => sum + item.qty, 0) }
         }));
+        
+        this.checkIfInCart();
       } catch (error) {
         console.error('Error saving cart:', error);
         alert('Failed to add item to cart. Please try again.');
       }
+    },
+    
+    viewCart() {
+      this.$router.push('/cart');
     },
     
     async checkIfInWishlist() {
@@ -281,14 +320,12 @@ export default {
             productId: this.product._id
           });
           this.isInWishlist = false;
-          alert('Removed from wishlist!');
         } else {
           await axios.post(`${API_URL}/wishlist`, {
             userId: userId,
             productId: this.product._id
           });
           this.isInWishlist = true;
-          alert('Added to wishlist!');
         }
       } catch (err) {
         console.error('Wishlist error:', err.response?.data);
@@ -323,7 +360,6 @@ export default {
       
       if (existingIndex !== -1) {
         cart[existingIndex].qty = (cart[existingIndex].qty || 1) + 1;
-        alert(`Increased quantity of "${product.name}" in cart!`);
       } else {
         cart.push({
           id: product.id,
@@ -333,7 +369,6 @@ export default {
           originalPrice: product.oldPrice,
           qty: 1
         });
-        alert(`Added "${product.name}" to cart!`);
       }
       
       try {
@@ -473,10 +508,18 @@ export default {
                   </div>
 
                   <div class="action-buttons">
-                    <button class="add-to-cart-btn" @click="addToCart" :disabled="product.inStock === 0">
+                    <button 
+                      class="add-to-cart-btn" 
+                      :class="{ 'already-in-cart': isInCart }"
+                      @click="addToCart" 
+                      :disabled="product.inStock === 0"
+                    >
                       <img class="cart-icon" src="/cart.png" alt="">
-                      {{ product.inStock > 0 ? 'Add to Cart' : 'Out of Stock' }}
+                      <span v-if="product.inStock === 0">Out of Stock</span>
+                      <span v-else-if="isInCart">Add More</span>
+                      <span v-else>Add to Cart</span>
                     </button>
+                    
                     <button 
                       class="wishlist-btn" 
                       :class="{ 'in-wishlist': isInWishlist }"
